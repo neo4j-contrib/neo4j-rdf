@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+	<parent>
+		<groupId>org.neo4j</groupId>
+		<artifactId>parent-pom</artifactId>
+		<version>1</version>
+		<relativePath>../../../pom.xml</relativePath>    		
+	</parent>
+
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.neo4j</groupId>
+	<artifactId>neo-triple-store</artifactId>
+	<version>0.1-SNAPSHOT</version>
+	<name>Neo Triple Store</name>
+	<description>Neo as a regular triple store</description>
+	
+	<dependencies>
+		<dependency>
+			<groupId>org.neo4j</groupId>
+			<artifactId>neo</artifactId>
+			<version>1.0-rc1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.neo4j</groupId>
+			<artifactId>shell</artifactId>
+			<version>1.0-rc1-SNAPSHOT</version>
+			<scope>provided</scope>
+		</dependency>        
+		<dependency>
+			<groupId>org.neo4j</groupId>
+			<artifactId>neo-meta-new</artifactId>
+			<version>0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.neo4j</groupId>
+			<artifactId>neo-utils</artifactId>
+			<version>1.0-rc1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.neo4j</groupId>
+			<artifactId>index-util</artifactId>
+			<version>0.3-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.1</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+</project>
