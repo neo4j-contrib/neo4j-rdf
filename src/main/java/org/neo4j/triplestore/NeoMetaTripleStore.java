@@ -32,22 +32,31 @@ public class NeoMetaTripleStore extends NeoTripleStore
 		super( meta.neo(), model );
 		this.meta = meta;
 	}
+	
+	protected MetaStructure meta()
+	{
+		return this.meta;
+	}
+	
+	private Collection<MetaStructureClass> getClasses( Node instance )
+	{
+		return new InstanceClassesCollection( meta(), instance );
+	}
 
 	@Override
 	protected Object datatypeObjectToRealObject( Node subjectNode,
 		String predicate, String object )
 	{
 		MetaStructureProperty metaProperty =
-			meta.getGlobalNamespace().getMetaProperty( predicate, false );
+			meta().getGlobalNamespace().getMetaProperty( predicate, false );
 		if ( metaProperty == null )
 		{
 			throw new RuntimeException( "Unsupported predicate '" +
 				predicate + "'" );
 		}
 		
-		Collection<MetaStructureClass> classes = new InstanceClassesCollection(
-			meta, subjectNode );
-		PropertyRange range = meta.lookup( metaProperty,
+		Collection<MetaStructureClass> classes = getClasses( subjectNode );
+		PropertyRange range = meta().lookup( metaProperty,
 			MetaStructure.LOOKUP_PROPERTY_RANGE, classes.toArray(
 				new MetaStructureClass[ classes.size() ] ) );
 		try
@@ -67,7 +76,7 @@ public class NeoMetaTripleStore extends NeoTripleStore
 		Node result = null;
 		if ( isRdfType( predicate ) )
 		{
-			MetaStructureClass metaClass = meta.getGlobalNamespace().
+			MetaStructureClass metaClass = meta().getGlobalNamespace().
 				getMetaClass( objectUri.toString(), false );
 			if ( metaClass == null )
 			{
@@ -83,6 +92,34 @@ public class NeoMetaTripleStore extends NeoTripleStore
 		return result;
 	}
 	
+	@Override
+	protected boolean connectWithoutModel( Node subjectNode, String predicate,
+		Node objectNode )
+	{
+		if ( !isRdfType( predicate ) )
+		{
+			return false;
+		}
+		MetaStructureClass metaClass = new MetaStructureClass( meta(),
+			objectNode );
+		metaClass.getInstances().add( subjectNode );
+		return true;
+	}
+	
+	@Override
+	protected boolean disconnectWithoutModel( Node subjectNode,
+		String predicate, Node objectNode )
+	{
+		if ( !isRdfType( predicate ) )
+		{
+			return false;
+		}
+		MetaStructureClass metaClass = new MetaStructureClass( meta(),
+			objectNode );
+		getClasses( subjectNode ).remove( metaClass );
+		return true;
+	}
+
 	protected boolean isRdfType( String uri )
 	{
 		return uri.equals( RDF_TYPE_URI );

@@ -140,11 +140,19 @@ public class NeoTripleStore implements TripleStore
 			Node objectNode = getObjectNode( predicate, objectUri );
 			if ( connect )
 			{
-				model.connect( subjectNode, predicate, objectNode );
+				if ( !connectWithoutModel( subjectNode, predicate,
+					objectNode ) )
+				{
+					model.connect( subjectNode, predicate, objectNode );
+				}
 			}
 			else
 			{
-				model.disconnect( subjectNode, predicate, objectNode );
+				if ( !disconnectWithoutModel( subjectNode, predicate,
+					objectNode ) )
+				{
+					model.disconnect( subjectNode, predicate, objectNode );
+				}
 			}
 			tx.success();
 		}
@@ -152,6 +160,42 @@ public class NeoTripleStore implements TripleStore
 		{
 			tx.finish();
 		}
+	}
+	
+	/**
+	 * Hooks provided for the triple store to make some changes without
+	 * going through the model, f.ex. connecting an instance to a type if
+	 * rdf:type is supplied as predicate.
+	 * 
+	 * @param subjectNode the subject.
+	 * @param predicate the predicate.
+	 * @param objectNode the object.
+	 * @return {@code true} if the change was handled in this method so that
+	 * it doesn't have to go to the model to do the change. Returns
+	 * {@code false} if the model should take care of the change.
+	 */
+	protected boolean connectWithoutModel( Node subjectNode, String predicate,
+		Node objectNode )
+	{
+		return false;
+	}
+	
+	/**
+	 * Hooks provided for the triple store to make some changes without
+	 * going through the model, f.ex. connecting an instance to a type if
+	 * rdf:type is supplied as predicate.
+	 * 
+	 * @param subjectNode the subject.
+	 * @param predicate the predicate.
+	 * @param objectNode the object.
+	 * @return {@code true} if the change was handled in this method so that
+	 * it doesn't have to go to the model to do the change. Returns
+	 * {@code false} if the model should take care of the change.
+	 */
+	protected boolean disconnectWithoutModel( Node subjectNode,
+		String predicate, Node objectNode )
+	{
+		return false;
 	}
 
 	private static enum TripleStoreRelTypes implements RelationshipType
