@@ -102,7 +102,7 @@ public class NeoMetaTripleStore extends NeoTripleStore
 		}
 		MetaStructureClass metaClass = new MetaStructureClass( meta(),
 			objectNode );
-		metaClass.getInstances().add( subjectNode );
+		getClasses( subjectNode ).add( metaClass );
 		return true;
 	}
 	

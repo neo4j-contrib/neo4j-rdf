@@ -3,6 +3,7 @@ package org.neo4j.triplestore;
 import java.net.URI;
 
 import org.neo4j.neometa.structure.MetaStructure;
+import org.neo4j.neometa.structure.MetaStructureClass;
 
 /**
  * Tests the triple store.
@@ -42,7 +43,8 @@ public class TestTripleStore extends NeoTestCase
 		String baseUri = "http://test.org/test#";
 		String personUri = baseUri + "Person";
 		String nameUri = baseUri + "name";
-		meta.getGlobalNamespace().getMetaClass( personUri, true );
+		MetaStructureClass person =
+			meta.getGlobalNamespace().getMetaClass( personUri, true );
 		meta.getGlobalNamespace().getMetaProperty( nameUri, true );
 		
 		TripleStore store = new NeoMetaTripleStore( meta,
@@ -58,9 +60,16 @@ public class TestTripleStore extends NeoTestCase
 		{ // Good
 		}
 		
+		assertEquals( 0, person.getInstances().size() );
 		store.writeStatement( mathew, NeoMetaTripleStore.RDF_TYPE_URI,
 			new URI( personUri ) );
+		assertEquals( 1, person.getInstances().size() );
 		store.writeStatement( mathew, nameUri, "Mattias" );
+		assertEquals( 1, person.getInstances().size() );
+		store.deleteStatement( mathew, nameUri, "Mattias" );
+		store.deleteStatement( mathew, NeoMetaTripleStore.RDF_TYPE_URI,
+			new URI( personUri ) );
+		assertEquals( 0, person.getInstances().size() );
 		deleteEntireNodeSpace();
 	}
 }
