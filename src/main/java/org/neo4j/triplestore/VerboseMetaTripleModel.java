@@ -1,5 +1,6 @@
 package org.neo4j.triplestore;
 
+import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.neometa.structure.MetaStructureProperty;
@@ -12,11 +13,12 @@ public class VerboseMetaTripleModel extends VerboseTripleModel
 	private MetaStructure meta;
 	
 	/**
+	 * @param neo the {@link NeoService}.
 	 * @param meta the {@link MetaStructure}.
 	 */
-	public VerboseMetaTripleModel( MetaStructure meta )
+	public VerboseMetaTripleModel( NeoService neo, MetaStructure meta )
 	{
-		super( meta.neo() );
+		super( neo );
 		this.meta = meta;
 	}
 	

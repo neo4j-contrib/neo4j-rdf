@@ -4,6 +4,7 @@ import java.net.URI;
 import java.text.ParseException;
 import java.util.Collection;
 
+import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.neometa.structure.MetaStructureClass;
@@ -24,12 +25,14 @@ public class NeoMetaTripleStore extends NeoTripleStore
 	private MetaStructure meta;
 	
 	/**
+	 * @param neo the {@link NeoService}.
 	 * @param meta the {@link MetaStructure}.
 	 * @param model the {@link TripleModel}.
 	 */
-	public NeoMetaTripleStore( MetaStructure meta, TripleModel model )
+	public NeoMetaTripleStore( NeoService neo, MetaStructure meta,
+		TripleModel model )
 	{
-		super( meta.neo(), model );
+		super( neo, model );
 		this.meta = meta;
 	}
 	

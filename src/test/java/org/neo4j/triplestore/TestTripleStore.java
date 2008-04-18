@@ -4,6 +4,7 @@ import java.net.URI;
 
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.neometa.structure.MetaStructureClass;
+import org.neo4j.neometa.structure.MetaStructureImpl;
 
 /**
  * Tests the triple store.
@@ -47,7 +48,7 @@ public class TestTripleStore extends NeoTestCase
 	 */
 	public void testWithMeta() throws Exception
 	{
-		MetaStructure meta = new MetaStructure( neo() );
+		MetaStructure meta = new MetaStructureImpl( neo() );
 		String baseUri = "http://test.org/test#";
 		String personUri = baseUri + "Person";
 		String nameUri = baseUri + "name";
@@ -55,8 +56,8 @@ public class TestTripleStore extends NeoTestCase
 			meta.getGlobalNamespace().getMetaClass( personUri, true );
 		meta.getGlobalNamespace().getMetaProperty( nameUri, true );
 		
-		TripleStore store = new NeoMetaTripleStore( meta,
-			new VerboseMetaTripleModel( meta ) );
+		TripleStore store = new NeoMetaTripleStore( neo(), meta,
+			new VerboseMetaTripleModel( neo(), meta ) );
 		URI mathew = new URI( baseUri + "mathew" );
 		try
 		{
