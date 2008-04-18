@@ -9,7 +9,7 @@ import org.neo4j.neometa.structure.MetaStructureRelTypes;
 import org.neo4j.util.NeoRelationshipSet;
 
 /**
- * The classes an instance is "instanceof".
+ * The {@link MetaStructureClass} an instance (node) is "instanceof".
  */
 public class InstanceClassesCollection
 	extends NeoRelationshipSet<MetaStructureClass>

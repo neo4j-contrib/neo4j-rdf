@@ -25,11 +25,19 @@ public class TestTripleStore extends NeoTestCase
 		String associatedWith = namespace + "associatedWith";
 		URI object1 = new URI( namespace + "object1" );
 		URI object2 = new URI( namespace + "object2" );
+		
 		store.writeStatement( object1, name, "Mattias" );
 		store.writeStatement( object1, nickName, "Matte" );
 		store.writeStatement( object1, nickName, "Mathew" );
 		store.writeStatement( object1, associatedWith, object2 );
 		store.writeStatement( object2, name, "Emil" );
+
+		store.deleteStatement( object1, name, "Mattias" );
+		store.deleteStatement( object1, nickName, "Matte" );
+		store.deleteStatement( object1, nickName, "Mathew" );
+		store.deleteStatement( object1, associatedWith, object2 );
+		store.deleteStatement( object2, name, "Emil" );
+		
 		deleteEntireNodeSpace();
 	}
 	
