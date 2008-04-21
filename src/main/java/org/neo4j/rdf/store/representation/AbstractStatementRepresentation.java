@@ -1,5 +1,9 @@
 package org.neo4j.rdf.store.representation;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * An abstract representation of a specific RDF statement in the node space.
  * It is abstract in the sense that it doesn't encapsulate "real" Neo nodes
@@ -9,13 +13,31 @@ package org.neo4j.rdf.store.representation;
  * a <i>specific</i> statement, i.e. the nodes and relationships are actually
  * populated with real values.
  */
-public interface AbstractStatementRepresentation
+public class AbstractStatementRepresentation
 {
+    private final List<AbstractNode> nodes = new ArrayList<AbstractNode>();
+    private final List<AbstractRelationship> relationships =
+    	new ArrayList<AbstractRelationship>();
+    
+    public void addNode( AbstractNode node )
+    {
+    	this.nodes.add( node );
+    }
+    
+    public void addRelationship( AbstractRelationship relationship )
+    {
+    	this.relationships.add( relationship );
+    }
+    
     /**
      * Returns the nodes that build up this statement in the node space 
      * @return the nodes that build up this statement in the node space
      */
-    Iterable<AbstractNode> nodes();
+    public Iterable<AbstractNode> nodes()
+    {
+        return Collections.unmodifiableList( nodes );
+    }
+    
     /**
      * Returns the relationships that connect the nodes of this statement in
      * the node space.<br>
@@ -24,5 +46,8 @@ public interface AbstractStatementRepresentation
      * {@link #nodes()}.
      * @return the relationships that connect this representation of a statement
      */
-    Iterable<AbstractRelationship> relationships();
+    public Iterable<AbstractRelationship> relationships()
+    {
+        return Collections.unmodifiableList( relationships );
+    }
 }

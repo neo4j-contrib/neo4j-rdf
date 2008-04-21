@@ -6,48 +6,37 @@ import java.util.Map;
 import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
 import org.neo4j.api.core.Relationship;
-import org.neo4j.api.core.RelationshipType;
 import org.neo4j.api.core.Transaction;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.store.representation.AbstractElement;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
-import org.neo4j.rdf.store.representation.AbstractRelationship;
+import org.neo4j.rdf.store.representation.MakeItSoer;
 import org.neo4j.rdf.store.representation.RdfRepresentationStrategy;
 
 public class RdfStoreImpl implements RdfStore
 {
-    private static final String URI_PROPERTY_KEY = "uri";
     private final NeoService neo;
     private final RdfRepresentationStrategy representationStrategy;
-    private final UriLookupService uriLookupService;
     
-    public RdfStoreImpl( NeoService neo, RdfRepresentationStrategy
-        representationStrategy, UriLookupService uriLookupService ) 
+    public RdfStoreImpl( NeoService neo,
+    	RdfRepresentationStrategy representationStrategy ) 
     {
         this.neo = neo;
         this.representationStrategy = representationStrategy;
-        this.uriLookupService = uriLookupService;
     }
     
     public void addStatement( Statement statement, Context... contexts )
     {
+    	System.out.println( "\t--- addStatement( " + statement.getSubject() +
+    		", " + statement.getPredicate() + ", " + statement.getObject() );
         Transaction tx = neo.beginTx();
         try
         {
              AbstractStatementRepresentation fragment = representationStrategy.
                  getAbstractRepresentation( statement );
-             
-             for ( AbstractNode node : fragment.nodes() )
-             {
-                 writeNode( node );
-             }
-             
-             for ( AbstractRelationship rel : fragment.relationships() )
-             {
-                 writeRelationship( rel );
-             }             
+             getMakeItSoer().apply( fragment );
              tx.success();
         }
         finally
@@ -55,48 +44,10 @@ public class RdfStoreImpl implements RdfStore
             tx.finish();
         }
     }
-
-    // assumes tx
-    private void writeNode( AbstractNode abstractNode )
+    
+    private MakeItSoer getMakeItSoer()
     {
-        // Get underlying node by URI
-        Node underlyingNode = uriLookupService.getNodeForUri(
-            abstractNode.getUriOrNull() );
-        
-        // Create new node if none found
-        if ( underlyingNode == null )
-        {
-            underlyingNode = neo.createNode();
-            underlyingNode.setProperty( URI_PROPERTY_KEY,
-                abstractNode.getUriOrNull().uriAsString() );
-        }
-        
-        // Attach properties
-        for ( Map.Entry<String, Object> property :
-            abstractNode.properties().entrySet() )
-        {
-            underlyingNode.setProperty( property.getKey(),
-                property.getValue() );
-        }
-    }
-
-    // assumes tx
-    private void writeRelationship( final AbstractRelationship rel )
-    {
-        // Both nodes must exist at this point since they were just lookup up
-        // or created in writeNodes()
-        Node startNode = uriLookupService.getNodeForUri(
-            rel.getStartNode().getUriOrNull() );
-        Node endNode = uriLookupService.getNodeForUri(
-            rel.getEndNode().getUriOrNull() );
-        // Probably really need to verify duplicates and stuff before we create
-        startNode.createRelationshipTo( endNode, new RelationshipType()
-        {
-            public String name()
-            {
-                return rel.getRelationshipTypeName();
-            }
-        } );        
+    	return this.representationStrategy.getMakeItSoer();
     }
 
     public Iterable<Statement> getStatements(
@@ -149,8 +100,7 @@ public class RdfStoreImpl implements RdfStore
         for ( AbstractNode abstractNode : fragment.nodes() )
         {
             // Get underlying node by URI
-            Node underlyingNode = uriLookupService.getNodeForUri(
-                abstractNode.getUriOrNull() );
+            Node underlyingNode = getMakeItSoer().lookupNode( abstractNode );
             mapping.put( abstractNode, underlyingNode != null
                 ? new NodeOrRelationship( underlyingNode )
                 : NodeOrRelationship.NOT_IN_NODE_SPACE ); 

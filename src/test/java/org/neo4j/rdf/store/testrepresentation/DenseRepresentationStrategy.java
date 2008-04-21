@@ -1,17 +1,23 @@
 package org.neo4j.rdf.store.testrepresentation;
 
-
+import org.neo4j.api.core.NeoService;
 import org.neo4j.rdf.model.Statement;
+import org.neo4j.rdf.store.representation.AbstractNode;
+import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
-import org.neo4j.rdf.store.representation.RdfRepresentationStrategy;
 
 /**
  * S/P/O represented as:
  * if object property: ( S ) -- predicate_uri_as_reltype --> ( O )
  * if data property: ( S ) with property [key=predicate_uri, value=O]
  */
-public class DenseRepresentationStrategy implements RdfRepresentationStrategy
+public class DenseRepresentationStrategy extends IndexRepresentationStrategy
 {
+	public DenseRepresentationStrategy( NeoService neo )
+	{
+		super( neo );
+	}
+	
     public AbstractStatementRepresentation getAbstractRepresentation( Statement
         statement )
     {
@@ -30,25 +36,14 @@ public class DenseRepresentationStrategy implements RdfRepresentationStrategy
     private AbstractStatementRepresentation createTwoNodeFragment( Statement
         statement )
     {
-        AbstractNodeTestImpl objectNode = new AbstractNodeTestImpl( statement.
-            getObject().getResourceOrNull().uriAsString() );
-        
-        return new DenseStatementRepresentation( getSubjectNode( statement ),
-            statement.getPredicate().uriAsString(), objectNode );
-    }
-
-    private AbstractStatementRepresentation createOneNodeFragment( Statement
-        statement )
-    {
-        AbstractNodeTestImpl subjectNode = getSubjectNode( statement );
-        subjectNode.addProperty( statement.getPredicate().uriAsString(),
-            statement.getObject().getLiteralValueOrNull() );
-        
-        return new DenseStatementRepresentation( subjectNode );
-    }
-
-    private AbstractNodeTestImpl getSubjectNode( Statement statement )
-    {
-        return new AbstractNodeTestImpl( statement.getSubject().uriAsString() );
+        AbstractStatementRepresentation representation =
+        	new AbstractStatementRepresentation();
+        AbstractNode subjectNode = getSubjectNode( statement );
+        AbstractNode objectNode = getObjectNode( statement );
+        representation.addNode( subjectNode );
+        representation.addNode( objectNode );
+        representation.addRelationship( new AbstractRelationship(
+        	subjectNode, statement.getPredicate().uriAsString(), objectNode ) );
+        return representation;
     }
 }
