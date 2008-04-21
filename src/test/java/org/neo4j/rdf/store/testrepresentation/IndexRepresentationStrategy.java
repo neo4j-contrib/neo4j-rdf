@@ -4,10 +4,10 @@ import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
 import org.neo4j.api.core.RelationshipType;
 import org.neo4j.rdf.model.Statement;
-import org.neo4j.rdf.store.UriMakeItSoer;
+import org.neo4j.rdf.store.UriAsrExecutor;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
-import org.neo4j.rdf.store.representation.MakeItSoer;
+import org.neo4j.rdf.store.representation.AsrExecutor;
 import org.neo4j.rdf.store.representation.RdfRepresentationStrategy;
 import org.neo4j.util.NeoUtil;
 import org.neo4j.util.index.Index;
@@ -16,11 +16,11 @@ import org.neo4j.util.index.SingleValueIndex;
 public abstract class IndexRepresentationStrategy
 	implements RdfRepresentationStrategy
 {
-	private final MakeItSoer makeItSoer;
+	private final AsrExecutor asrExecutor;
 	
 	public IndexRepresentationStrategy( NeoService neo )
 	{
-		this.makeItSoer = new UriMakeItSoer( neo, newIndex( neo ) );
+		this.asrExecutor = new UriAsrExecutor( neo, newIndex( neo ) );
 	}
 	
 	private static Index newIndex( NeoService neo )
@@ -30,13 +30,13 @@ public abstract class IndexRepresentationStrategy
 		return new SingleValueIndex( "blaaaa", indexNode, neo );
 	}
 
-	public MakeItSoer getMakeItSoer()
+	public AsrExecutor getAsrExecutor()
 	{
-		return this.makeItSoer;
+		return this.asrExecutor;
 	}
 
-    protected AbstractStatementRepresentation createOneNodeFragment( Statement
-        statement )
+    protected AbstractStatementRepresentation createSingleNodeWithDataProperty(
+        Statement statement )
     {
         AbstractNode subjectNode = getSubjectNode( statement );
         subjectNode.addProperty( statement.getPredicate().uriAsString(),

@@ -40,7 +40,7 @@ public class AbstractStatementRepresentation
     
     /**
      * Returns the relationships that connect the nodes of this statement in
-     * the node space.<br>
+     * the node space.<br/>
      * Invariant: the nodes at both ends of each relationship in this set
      * are guaranteed to be part of the set of nodes returned by
      * {@link #nodes()}.

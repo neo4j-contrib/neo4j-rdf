@@ -23,7 +23,7 @@ public class VerboseRepresentationStrategy extends IndexRepresentationStrategy
         }
         else
         {
-            return createOneNodeFragment( statement );
+            return createSingleNodeWithDataProperty( statement );
         }
 	}
 	

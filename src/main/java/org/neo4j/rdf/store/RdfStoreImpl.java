@@ -1,19 +1,11 @@
 package org.neo4j.rdf.store;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.neo4j.api.core.NeoService;
-import org.neo4j.api.core.Node;
-import org.neo4j.api.core.Relationship;
 import org.neo4j.api.core.Transaction;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Statement;
-import org.neo4j.rdf.store.representation.AbstractElement;
-import org.neo4j.rdf.store.representation.AbstractNode;
-import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
-import org.neo4j.rdf.store.representation.MakeItSoer;
+import org.neo4j.rdf.store.representation.AsrExecutor;
 import org.neo4j.rdf.store.representation.RdfRepresentationStrategy;
 
 public class RdfStoreImpl implements RdfStore
@@ -37,7 +29,7 @@ public class RdfStoreImpl implements RdfStore
         {
              AbstractStatementRepresentation fragment = representationStrategy.
                  getAbstractRepresentation( statement );
-             getMakeItSoer().apply( fragment );
+             getAsrExecutor().addToNodeSpace( fragment );
              tx.success();
         }
         finally
@@ -46,9 +38,9 @@ public class RdfStoreImpl implements RdfStore
         }
     }
     
-    private MakeItSoer getMakeItSoer()
+    private AsrExecutor getAsrExecutor()
     {
-    	return this.representationStrategy.getMakeItSoer();
+    	return this.representationStrategy.getAsrExecutor();
     }
 
     public Iterable<Statement> getStatements(
@@ -79,91 +71,12 @@ public class RdfStoreImpl implements RdfStore
         {
              AbstractStatementRepresentation fragment = representationStrategy.
                  getAbstractRepresentation( statement );
-             getMakeItSoer().remove( fragment );
+             getAsrExecutor().removeFromNodeSpace( fragment );
              tx.success();
         }
         finally
         {
             tx.finish();
         }
-    }
-    
-    // Ignore wildcards and named graphs => no null in statement, no contexts
-//    Iterable<? extends Statement> removeStatementsSimple( Statement statement,
-//        boolean includeInferredStatements )
-//    {
-//        // Example: <http://eifrem.com/emil> dc:author <http://.../article.html>
-//        assert !includeInferredStatements;
-//                
-//        AbstractStatementRepresentation fragment = representationStrategy.
-//            getAbstractRepresentation( statement );
-//        
-//        Map<AbstractElement, NodeOrRelationship> mapping =
-//            resolveFragment( fragment );
-//
-//        for ( NodeOrRelationship primitive : mapping.values() )
-//        {
-//            if ( primitive.relationship != null )
-//            {
-//                primitive.relationship.delete();
-//            }
-//        }
-//        for ( NodeOrRelationship primitive : mapping.values() )
-//        {
-//            if ( primitive.node != null )
-//            {
-//                primitive.node.delete();
-//            }
-//        }
-//        
-//        return null;
-//    }
-    
-    private Map<AbstractElement, NodeOrRelationship> resolveFragment(
-        AbstractStatementRepresentation fragment )
-    {
-        Map<AbstractElement, NodeOrRelationship> mapping =
-            new HashMap<AbstractElement, NodeOrRelationship>();
-        
-        for ( AbstractNode abstractNode : fragment.nodes() )
-        {
-            Node underlyingNode = getMakeItSoer().lookupNode( abstractNode );
-            mapping.put( abstractNode, underlyingNode != null
-                ? new NodeOrRelationship( abstractNode, underlyingNode )
-                : NodeOrRelationship.NOT_IN_NODE_SPACE ); 
-        }
-        
-        for ( AbstractRelationship abstractRelationship :
-        	fragment.relationships() )
-        {
-        	Relationship underlyingRelationship =
-        		getMakeItSoer().lookupRelationship( abstractRelationship );
-            mapping.put( abstractRelationship, underlyingRelationship != null
-                ? new NodeOrRelationship( abstractRelationship,
-                	underlyingRelationship )
-                : NodeOrRelationship.NOT_IN_NODE_SPACE ); 
-        }
-        return mapping;
-    }
-
-    private static class NodeOrRelationship
-    {
-        static final NodeOrRelationship NOT_IN_NODE_SPACE =
-            new NodeOrRelationship( null, ( Node ) null ); 
-        private Node node;
-        private Relationship relationship;
-        private AbstractElement abstractElement;
-        
-        NodeOrRelationship( AbstractNode abstractNode, Node node )
-        {
-        	this.abstractElement = abstractNode;
-            this.node = node;
-        }
-        NodeOrRelationship( AbstractRelationship abstractRelationship,
-        	Relationship relationship )
-        {
-        	this.abstractElement = abstractRelationship;
-            this.relationship = relationship;
-        }        
-    }
+    }    
 }

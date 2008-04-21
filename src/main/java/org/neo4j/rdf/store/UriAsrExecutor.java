@@ -12,7 +12,7 @@ import org.neo4j.api.core.RelationshipType;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
-import org.neo4j.rdf.store.representation.MakeItSoer;
+import org.neo4j.rdf.store.representation.AsrExecutor;
 import org.neo4j.util.NeoPropertyArraySet;
 import org.neo4j.util.PureNodeRelationshipSet;
 import org.neo4j.util.index.Index;
@@ -20,14 +20,14 @@ import org.neo4j.util.matching.PatternMatch;
 import org.neo4j.util.matching.PatternMatcher;
 import org.neo4j.util.matching.PatternNode;
 
-public class UriMakeItSoer implements MakeItSoer
+public class UriAsrExecutor implements AsrExecutor
 {
     public static final String URI_PROPERTY_KEY = "uri";
     
 	private NeoService neo;
 	private Index index;
 	
-	public UriMakeItSoer( NeoService neo, Index index )
+	public UriAsrExecutor( NeoService neo, Index index )
 	{
 		this.neo = neo;
 		this.index = index;
@@ -98,7 +98,7 @@ public class UriMakeItSoer implements MakeItSoer
 		return result;
 	}
 	
-	public void apply( AbstractStatementRepresentation representation )
+	public void addToNodeSpace( AbstractStatementRepresentation representation )
 	{
 		Map<AbstractNode, Node> nodeMapping = new HashMap<AbstractNode, Node>();
 		for ( AbstractNode abstractNode : representation.nodes() )
@@ -137,7 +137,8 @@ public class UriMakeItSoer implements MakeItSoer
 		}
 	}
 	
-	public void remove( AbstractStatementRepresentation representation )
+	public void removeFromNodeSpace( AbstractStatementRepresentation
+	    representation )
 	{
 		Map<AbstractNode, Node> nodeMapping = new HashMap<AbstractNode, Node>();
 		for ( AbstractNode abstractNode : representation.nodes() )

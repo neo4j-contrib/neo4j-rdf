@@ -7,11 +7,11 @@ import org.neo4j.neometa.structure.MetaStructureObject;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.util.index.Index;
 
-public class UriOrMetaMakeItSoer extends UriMakeItSoer
+public class MetaEnabledAsrExecutor extends UriAsrExecutor
 {
 	private final MetaStructure meta;
 	
-	public UriOrMetaMakeItSoer( NeoService neo, Index index,
+	public MetaEnabledAsrExecutor( NeoService neo, Index index,
 		MetaStructure meta )
 	{
 		super( neo, index );

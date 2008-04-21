@@ -7,5 +7,5 @@ public interface RdfRepresentationStrategy
     AbstractStatementRepresentation getAbstractRepresentation( Statement
         statement );
     
-    MakeItSoer getMakeItSoer();
+    AsrExecutor getAsrExecutor();
 }
