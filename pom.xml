@@ -9,10 +9,10 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.neo4j</groupId>
-	<artifactId>neo-triple-store</artifactId>
+	<artifactId>neo-rdf</artifactId>
 	<version>0.1-SNAPSHOT</version>
-	<name>Neo Triple Store</name>
-	<description>Neo as a regular triple store</description>
+	<name>Neo RDF</name>
+	<description>Neo-backed RDF store</description>
 	
 	<dependencies>
 		<dependency>
