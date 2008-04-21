@@ -27,6 +27,6 @@ public class TripleObjectResource implements TripleObject
 	@Override
 	public String toString()
 	{
-		return "Object[" + getResourceOrNull().uriAsString() + "]";
+		return "ObjectResource[" + getResourceOrNull().uriAsString() + "]";
 	}
 }

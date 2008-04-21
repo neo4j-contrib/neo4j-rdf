@@ -11,6 +11,7 @@ import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.store.representation.AbstractElement;
 import org.neo4j.rdf.store.representation.AbstractNode;
+import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
 import org.neo4j.rdf.store.representation.MakeItSoer;
 import org.neo4j.rdf.store.representation.RdfRepresentationStrategy;
@@ -29,7 +30,7 @@ public class RdfStoreImpl implements RdfStore
     
     public void addStatement( Statement statement, Context... contexts )
     {
-    	System.out.println( "\t--- addStatement( " + statement.getSubject() +
+    	System.out.println( "--- addStatement( " + statement.getSubject() +
     		", " + statement.getPredicate() + ", " + statement.getObject() );
         Transaction tx = neo.beginTx();
         try
@@ -60,36 +61,63 @@ public class RdfStoreImpl implements RdfStore
     public void removeStatements( Statement statementWithOptionalNulls,
         Context... contexts )
     {
-        throw new UnsupportedOperationException( "Not yet implemented" );
+    	if ( statementWithOptionalNulls.getSubject() == null ||
+    		statementWithOptionalNulls.getPredicate() == null ||
+    		statementWithOptionalNulls.getObject() == null )
+    	{
+            throw new UnsupportedOperationException( "Not yet implemented" );
+    	}
+    	removeStatementsSimple( statementWithOptionalNulls );
+    }
+    
+    private void removeStatementsSimple( Statement statement )
+    {
+    	System.out.println( "--- removeStatement( " + statement.getSubject() +
+    		", " + statement.getPredicate() + ", " + statement.getObject() );
+        Transaction tx = neo.beginTx();
+        try
+        {
+             AbstractStatementRepresentation fragment = representationStrategy.
+                 getAbstractRepresentation( statement );
+             getMakeItSoer().remove( fragment );
+             tx.success();
+        }
+        finally
+        {
+            tx.finish();
+        }
     }
     
     // Ignore wildcards and named graphs => no null in statement, no contexts
-    Iterable<? extends Statement> removeStatementsSimple( Statement statement,
-        boolean includeInferredStatements )
-    {
-        // Example: <http://eifrem.com/emil> dc:author <http://.../article.html>
-        assert !includeInferredStatements;
-                
-        AbstractStatementRepresentation fragment = representationStrategy.
-            getAbstractRepresentation( statement );
-        
-        Map<AbstractElement, NodeOrRelationship> mapping =
-            resolveFragment( fragment );
-
-        for ( NodeOrRelationship primitive : mapping.values() )
-        {
-            if ( primitive.node != null )
-            {
-                primitive.node.delete();
-            }
-            else
-            {
-                primitive.relationship.delete();
-            }
-        }
-        
-        return null;
-    }
+//    Iterable<? extends Statement> removeStatementsSimple( Statement statement,
+//        boolean includeInferredStatements )
+//    {
+//        // Example: <http://eifrem.com/emil> dc:author <http://.../article.html>
+//        assert !includeInferredStatements;
+//                
+//        AbstractStatementRepresentation fragment = representationStrategy.
+//            getAbstractRepresentation( statement );
+//        
+//        Map<AbstractElement, NodeOrRelationship> mapping =
+//            resolveFragment( fragment );
+//
+//        for ( NodeOrRelationship primitive : mapping.values() )
+//        {
+//            if ( primitive.relationship != null )
+//            {
+//                primitive.relationship.delete();
+//            }
+//        }
+//        for ( NodeOrRelationship primitive : mapping.values() )
+//        {
+//            if ( primitive.node != null )
+//            {
+//                primitive.node.delete();
+//            }
+//        }
+//        
+//        return null;
+//    }
     
     private Map<AbstractElement, NodeOrRelationship> resolveFragment(
         AbstractStatementRepresentation fragment )
@@ -99,29 +127,42 @@ public class RdfStoreImpl implements RdfStore
         
         for ( AbstractNode abstractNode : fragment.nodes() )
         {
-            // Get underlying node by URI
             Node underlyingNode = getMakeItSoer().lookupNode( abstractNode );
             mapping.put( abstractNode, underlyingNode != null
-                ? new NodeOrRelationship( underlyingNode )
+                ? new NodeOrRelationship( abstractNode, underlyingNode )
                 : NodeOrRelationship.NOT_IN_NODE_SPACE ); 
         }
         
-        // TODO map relationships as well
+        for ( AbstractRelationship abstractRelationship :
+        	fragment.relationships() )
+        {
+        	Relationship underlyingRelationship =
+        		getMakeItSoer().lookupRelationship( abstractRelationship );
+            mapping.put( abstractRelationship, underlyingRelationship != null
+                ? new NodeOrRelationship( abstractRelationship,
+                	underlyingRelationship )
+                : NodeOrRelationship.NOT_IN_NODE_SPACE ); 
+        }
         return mapping;
     }
 
     private static class NodeOrRelationship
     {
         static final NodeOrRelationship NOT_IN_NODE_SPACE =
-            new NodeOrRelationship( ( Node ) null ); 
-        private Node node = null;
-        private Relationship relationship = null;
-        NodeOrRelationship( Node node )
+            new NodeOrRelationship( null, ( Node ) null ); 
+        private Node node;
+        private Relationship relationship;
+        private AbstractElement abstractElement;
+        
+        NodeOrRelationship( AbstractNode abstractNode, Node node )
         {
+        	this.abstractElement = abstractNode;
             this.node = node;
         }
-        NodeOrRelationship( Relationship relationship )
+        NodeOrRelationship( AbstractRelationship abstractRelationship,
+        	Relationship relationship )
         {
+        	this.abstractElement = abstractRelationship;
             this.relationship = relationship;
         }        
     }

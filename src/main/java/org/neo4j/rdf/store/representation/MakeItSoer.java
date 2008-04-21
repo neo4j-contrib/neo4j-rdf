@@ -7,6 +7,8 @@ public interface MakeItSoer
 {
 	void apply( AbstractStatementRepresentation representation );
 	
+	void remove( AbstractStatementRepresentation representation );
+	
 	Node lookupNode( AbstractNode node );
 	
 	Relationship lookupRelationship( AbstractRelationship relationship );

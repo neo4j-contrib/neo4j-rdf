@@ -18,9 +18,14 @@ public class UriOrMetaMakeItSoer extends UriMakeItSoer
 		this.meta = meta;
 	}
 	
+	private String getMetaLookupInfo( AbstractNode node )
+	{
+		return node.lookupInfo( "meta" );
+	}
+	
 	private boolean isMeta( AbstractNode node )
 	{
-		return node.lookupInfo( "meta" ) != null;
+		return getMetaLookupInfo( node ) != null;
 	}
 
 	@Override
@@ -29,8 +34,22 @@ public class UriOrMetaMakeItSoer extends UriMakeItSoer
 		Node result = null;
 		if ( isMeta( node ) )
 		{
-			result = meta.getGlobalNamespace().getMetaClass(
-				node.getUriOrNull().uriAsString(), false ).node();
+			String metaInfo = getMetaLookupInfo( node );
+			if ( metaInfo.equals( "class" ) )
+			{
+				result = meta.getGlobalNamespace().getMetaClass(
+					node.getUriOrNull().uriAsString(), false ).node();
+			}
+			else if ( metaInfo.equals( "property" ) )
+			{
+				result = meta.getGlobalNamespace().getMetaProperty(
+					node.getUriOrNull().uriAsString(), false ).node();
+			}
+			else
+			{
+				throw new IllegalArgumentException( "Strange meta info '" +
+					metaInfo + "'" );
+			}
 		}
 		else
 		{

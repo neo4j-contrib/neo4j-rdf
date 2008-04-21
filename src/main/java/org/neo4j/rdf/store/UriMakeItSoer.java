@@ -47,7 +47,7 @@ public class UriMakeItSoer implements MakeItSoer
 			result = neo.createNode();
 			result.setProperty( URI_PROPERTY_KEY, uri );
 			index.index( result, uri );
-			System.out.println( "\tCreated node (" + result.getId() + ") '" +
+			System.out.println( "\t+Node (" + result.getId() + ") '" +
 				uri + "'" );
 		}
 		return result;
@@ -106,7 +106,7 @@ public class UriMakeItSoer implements MakeItSoer
 			if ( abstractNode.getUriOrNull() != null )
 			{
 				Node node = lookupNode( abstractNode, true );
-				applyNode( abstractNode, node );
+				applyOnNode( abstractNode, node );
 				nodeMapping.put( abstractNode, node );
 			}
 		}
@@ -122,9 +122,7 @@ public class UriMakeItSoer implements MakeItSoer
 				abstractRelationship.getRelationshipTypeName() );
 			if ( startNode != null && endNode != null )
 			{
-//				System.out.println( "\tSimple lookup rel" );
 				ensureConnected( startNode, relType, endNode );
-//				lookupRelationship( abstractRelationship, true );
 			}
 			else if ( startNode == null && endNode == null )
 			{
@@ -133,11 +131,122 @@ public class UriMakeItSoer implements MakeItSoer
 			}
 			else
 			{
-//				System.out.println( "\tHard lookup rel" );
-				lookupTheHardWay( abstractRelationship, representation,
-					nodeMapping );
+				findOtherNodePresumedBlank( abstractRelationship,
+					representation, nodeMapping, true );
 			}
 		}
+	}
+	
+	public void remove( AbstractStatementRepresentation representation )
+	{
+		Map<AbstractNode, Node> nodeMapping = new HashMap<AbstractNode, Node>();
+		for ( AbstractNode abstractNode : representation.nodes() )
+		{
+			if ( abstractNode.getUriOrNull() != null )
+			{
+				Node node = lookupNode( abstractNode, false );
+				if ( node == null )
+				{
+					return;
+				}
+				nodeMapping.put( abstractNode, node );
+			}
+		}
+		
+		Map<AbstractRelationship, Relationship> relationshipMapping =
+			new HashMap<AbstractRelationship, Relationship>();
+		for ( AbstractRelationship abstractRelationship :
+			representation.relationships() )
+		{
+			Node startNode =
+				nodeMapping.get( abstractRelationship.getStartNode() );
+			Node endNode =
+				nodeMapping.get( abstractRelationship.getEndNode() );
+			RelationshipType relType = new ARelationshipType(
+				abstractRelationship.getRelationshipTypeName() );
+			if ( startNode != null && endNode != null )
+			{
+				Relationship relationship =
+					lookupRelationship( startNode, relType, endNode );
+				if ( relationship == null )
+				{
+					return;
+				}
+				relationshipMapping.put( abstractRelationship, relationship );
+			}
+			else if ( startNode == null && endNode == null )
+			{
+				throw new UnsupportedOperationException(
+					"Both start and end null" );
+			}
+			else
+			{
+				Node otherNode = findOtherNodePresumedBlank(
+					abstractRelationship, representation, nodeMapping, false );
+				if ( otherNode == null )
+				{
+					return;
+				}
+				Relationship relationship = startNode != null ?
+					lookupRelationship( startNode, relType, otherNode ) :
+					lookupRelationship( otherNode, relType, startNode );
+				if ( relationship == null )
+				{
+					return;
+				}
+				relationshipMapping.put( abstractRelationship, relationship );
+			}
+		}
+		
+		for ( Relationship relationship : relationshipMapping.values() )
+		{
+			System.out.println( "\t-Relationship " +
+				relationship.getStartNode() + " ---[" +
+				relationship.getType().name() + "]--> " +
+				relationship.getEndNode() );
+			relationship.delete();
+		}
+		for ( Map.Entry<AbstractNode, Node> entry : nodeMapping.entrySet() )
+		{
+			AbstractNode abstractNode = entry.getKey();
+			Node node = entry.getValue();
+			removeFromNode( abstractNode, node );
+			if ( nodeIsEmpty( abstractNode, node ) )
+			{
+				System.out.println( "\t-Node " + node );
+				node.delete();
+			}
+		}
+	}
+	
+	private boolean nodeIsEmpty( AbstractNode abstractNode, Node node )
+	{
+		if ( node.hasRelationship() )
+		{
+			return false;
+		}
+		for ( String key : node.getPropertyKeys() )
+		{
+			if ( !key.equals( getNodeUriProperty( abstractNode ) ) )
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	private Relationship lookupRelationship( Node startNode,
+		RelationshipType relType, Node endNode )
+	{
+		for ( Relationship rel : startNode.getRelationships( relType,
+			Direction.OUTGOING ) )
+		{
+			if ( rel.getOtherNode( startNode ).equals( endNode ) )
+			{
+				return rel;
+			}
+		}
+		return null;
 	}
 	
 	private void ensureConnected( Node startNode, RelationshipType relType,
@@ -147,24 +256,45 @@ public class UriMakeItSoer implements MakeItSoer
 			startNode, relType ).add( endNode );
 		if ( added )
 		{
-			System.out.println( "\tRelationship " + startNode + " ---[" +
+			System.out.println( "\t+Relationship " + startNode + " ---[" +
 				relType.name() + "]--> " + endNode );
 		}
 	}
 	
-	private void applyNode( AbstractNode abstractNode, Node node )
+	private void applyOnNode( AbstractNode abstractNode, Node node )
 	{
 		for ( Map.Entry<String, Object> entry :
 			abstractNode.properties().entrySet() )
 		{
-			new NeoPropertyArraySet<Object>( neo, node, entry.getKey() ).add(
-				entry.getValue() );
+			boolean added = new NeoPropertyArraySet<Object>( neo, node,
+				entry.getKey() ).add( entry.getValue() );
+			if ( added )
+			{
+				System.out.println( "\t+Property (" + node + ") " +
+					entry.getKey() + " " + "[" + entry.getValue() + "]" );
+			}
 		}
 	}
 	
-	private void lookupTheHardWay( AbstractRelationship abstractRelationship,
+	private void removeFromNode( AbstractNode abstractNode, Node node )
+	{
+		for ( Map.Entry<String, Object> entry :
+			abstractNode.properties().entrySet() )
+		{
+			boolean removed = new NeoPropertyArraySet<Object>( neo, node,
+				entry.getKey() ).remove( entry.getValue() );
+			if ( removed )
+			{
+				System.out.println( "\t-Property (" + node + ") " +
+					entry.getKey() + " " + "[" + entry.getValue() + "]" );
+			}
+		}
+	}
+	
+	private Node findOtherNodePresumedBlank(
+		AbstractRelationship abstractRelationship,
 		AbstractStatementRepresentation representation,
-		Map<AbstractNode, Node> nodeMapping )
+		Map<AbstractNode, Node> nodeMapping, boolean createIfItDoesntExist )
 	{
 		Map<AbstractNode, PatternNode> patternNodes =
 			representationToPattern( representation );
@@ -180,11 +310,10 @@ public class UriMakeItSoer implements MakeItSoer
 		Node node = null;
 		if ( matches.hasNext() )
 		{
-			System.out.println( "\tFound graph match" );
 			node = matches.next().getNodeFor( patternNodes.get(
 				abstractRelationship.getOtherNode( startingAbstractNode ) ) );
 		}
-		else
+		else if ( createIfItDoesntExist )
 		{
 			node = neo.createNode();
 			System.out.println( "\tNo match, creating node (" + node.getId() +
@@ -195,7 +324,7 @@ public class UriMakeItSoer implements MakeItSoer
 			{
 				node.createRelationshipTo( nodeMapping.get(
 					abstractRelationship.getEndNode() ), relationshipType );
-				System.out.println( "\tRelationship " + node + " ---[" +
+				System.out.println( "\t+Relationship " + node + " ---[" +
 					relationshipType.name() + "]--> " + nodeMapping.get(
 						abstractRelationship.getEndNode() ) );
 			}
@@ -203,13 +332,14 @@ public class UriMakeItSoer implements MakeItSoer
 			{
 				nodeMapping.get( abstractRelationship.getStartNode() ).
 					createRelationshipTo( node, relationshipType );
-				System.out.println( "\tRelationship " +
+				System.out.println( "\t+Relationship " +
 					nodeMapping.get( abstractRelationship.getStartNode() ) +
 					" ---[" + relationshipType.name() + "]--> " + node );
 			}
 		}
 		nodeMapping.put( abstractRelationship.getOtherNode(
 			startingAbstractNode ), node );
+		return node;
 	}
 	
 	private Map<AbstractNode, PatternNode> representationToPattern(
@@ -246,7 +376,7 @@ public class UriMakeItSoer implements MakeItSoer
 		if ( node.getUriOrNull() != null )
 		{
 			patternNode.addPropertyEqualConstraint( getNodeUriProperty( node ),
-				node.getUriOrNull() );
+				node.getUriOrNull().uriAsString() );
 		}
 		for ( Map.Entry<String, Object> entry : node.properties().entrySet() )
 		{

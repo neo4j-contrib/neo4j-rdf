@@ -27,6 +27,6 @@ public class TripleObjectLiteral implements TripleObject
 	@Override
 	public String toString()
 	{
-		return "Object[" + getLiteralValueOrNull() + "]";
+		return "ObjectLiteral[" + getLiteralValueOrNull() + "]";
 	}
 }

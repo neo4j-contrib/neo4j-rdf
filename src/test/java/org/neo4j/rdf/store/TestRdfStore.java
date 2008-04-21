@@ -9,33 +9,87 @@ import org.neo4j.rdf.model.SubjectImpl;
 import org.neo4j.rdf.model.TripleObject;
 import org.neo4j.rdf.model.TripleObjectLiteral;
 import org.neo4j.rdf.model.TripleObjectResource;
+import org.neo4j.rdf.store.testrepresentation.DenseRepresentationStrategy;
 import org.neo4j.rdf.store.testrepresentation.VerboseRepresentationStrategy;
 import org.neo4j.triplestore.NeoTestCase;
 
 public class TestRdfStore extends NeoTestCase
 {
-	public void testIt() throws Exception
+	public void testDense() throws Exception
 	{
+		System.out.println( "DENSE" );
 		RdfStore store = new RdfStoreImpl( neo(),
-//			new DenseRepresentationStrategy( neo() ) );
+			new DenseRepresentationStrategy( neo() ) );
+		applyStatements( store );
+		deleteEntireNodeSpace();
+	}
+	
+	public void testVerbose() throws Exception
+	{
+		System.out.println( "VERBOSE" );
+		RdfStore store = new RdfStoreImpl( neo(),
 			new VerboseRepresentationStrategy( neo() ) );
+		applyStatements( store );
+		deleteEntireNodeSpace();
+	}
+	
+	private void add( RdfStore store, Statement statement, int numberOfTimes )
+	{
+		while ( numberOfTimes-- > 0 )
+		{
+			store.addStatement( statement );
+		}
+	}
+	
+	private void addTwice( RdfStore store, Statement statement )
+	{
+		add( store, statement, 2 );
+	}
+
+	private void remove( RdfStore store, Statement statement, int numberOfTimes )
+	{
+		while ( numberOfTimes-- > 0 )
+		{
+			store.removeStatements( statement );
+		}
+	}
+	
+	private void removeTwice( RdfStore store, Statement statement )
+	{
+		remove( store, statement, 2 );
+	}
+
+	private void applyStatements( RdfStore store )
+	{
 		Subject subject = new SubjectImpl( "http://henrik" );
 		Subject otherSubject = new SubjectImpl( "http://emil" );
+		Subject thirdSubject = new SubjectImpl( "http://mattias" );
 		Predicate namePredicate = new PredicateImpl( "http://name" );
 		Predicate knowsPredicate = new PredicateImpl( "http://knows" );
 		TripleObject object = new TripleObjectLiteral( "Henrik" );
 		TripleObject otherObject = new TripleObjectLiteral( "Emil" );
-		Statement statement = null;
+		TripleObject thirdObject = new TripleObjectLiteral( "Mattias" );
 		
-		statement = new StatementImpl( subject, namePredicate, object );
-		store.addStatement( statement );
-
-		statement = new StatementImpl( otherSubject, namePredicate,
-			otherObject );
-		store.addStatement( statement );
-
-		statement = new StatementImpl( subject, knowsPredicate,
+		Statement subjectNameStatement =
+			new StatementImpl( subject, namePredicate, object );
+		addTwice( store, subjectNameStatement );
+		Statement otherSubjectNameStatement = new StatementImpl( otherSubject,
+			namePredicate, otherObject );
+		addTwice( store, otherSubjectNameStatement );
+		Statement thirdSubjectNameStatement = new StatementImpl( thirdSubject,
+			namePredicate, thirdObject );
+		addTwice( store, thirdSubjectNameStatement );
+		Statement knowsStatement = new StatementImpl( subject, knowsPredicate,
 			new TripleObjectResource( otherSubject ) );
-		store.addStatement( statement );
+		addTwice( store, knowsStatement );
+		Statement otherKnowsStatement = new StatementImpl( subject,
+			knowsPredicate, new TripleObjectResource( thirdSubject ) );
+		addTwice( store, otherKnowsStatement );
+		
+		removeTwice( store, subjectNameStatement );
+		removeTwice( store, thirdSubjectNameStatement );
+		removeTwice( store, otherKnowsStatement );
+		removeTwice( store, otherSubjectNameStatement );
+		removeTwice( store, knowsStatement );
 	}
 }
