@@ -10,6 +10,9 @@ import org.neo4j.rdf.model.Statement;
  */
 public class DenseRepresentationStrategy extends IndexRepresentationStrategy
 {
+    /**
+     * @param neo the {@link NeoService}.
+     */
 	public DenseRepresentationStrategy( NeoService neo )
     {
         super( neo );

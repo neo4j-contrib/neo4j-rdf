@@ -1,9 +1,15 @@
 package org.neo4j.rdf.model;
 
+/**
+ * The default implementation of {@link Uri}.
+ */
 public class UriImpl implements Uri
 {
     private String uri;
 
+    /**
+     * @param uri the URI.
+     */
     public UriImpl( String uri )
     {
         this.uri = uri;

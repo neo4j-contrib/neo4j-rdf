@@ -4,8 +4,21 @@ import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.RelationshipType;
 import org.neo4j.rdf.model.Statement;
 
+/**
+ * Uses a more verbose representation of statements, like this:
+ * 
+ *                  (P)
+ *                   ^
+ *                   |
+ *                   |
+ *    (S) --------> ( ) --------> (O)
+ *    
+ */
 public class VerboseRepresentationStrategy extends IndexRepresentationStrategy
 {
+    /**
+     * @param neo the {@link NeoService}.
+     */
     public VerboseRepresentationStrategy( NeoService neo )
     {
         super( neo );
@@ -54,6 +67,9 @@ public class VerboseRepresentationStrategy extends IndexRepresentationStrategy
 
     private static enum RelTypes implements RelationshipType
     {
+        /**
+         * The connector node --> the predicate node.
+         */
         CONNECTOR_HAS_PREDICATE,
     }
 }

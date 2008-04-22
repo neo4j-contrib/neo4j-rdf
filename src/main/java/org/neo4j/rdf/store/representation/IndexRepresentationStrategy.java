@@ -9,11 +9,19 @@ import org.neo4j.util.NeoUtil;
 import org.neo4j.util.index.Index;
 import org.neo4j.util.index.SingleValueIndex;
 
-public abstract class IndexRepresentationStrategy implements
+/**
+ * Abstract class which holds common functionality for
+ * {@link RdfRepresentationStrategy} implementations using an
+ * {@link UriAsrExecutor}.
+ */
+abstract class IndexRepresentationStrategy implements
     RdfRepresentationStrategy
 {
     private final AsrExecutor executor;
 
+    /**
+     * @param neo the {@link NeoService}.
+     */
     public IndexRepresentationStrategy( NeoService neo )
     {
         this.executor = new UriAsrExecutor( neo, newIndex( neo ) );
@@ -56,6 +64,9 @@ public abstract class IndexRepresentationStrategy implements
 
     private static enum MyRelTypes implements RelationshipType
     {
+        /**
+         * Neo reference node --> Uri index node.
+         */
         INDEX_ROOT,
     }
 }

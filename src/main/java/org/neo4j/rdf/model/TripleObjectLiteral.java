@@ -1,9 +1,15 @@
 package org.neo4j.rdf.model;
 
+/**
+ * Implementation of {@link TripleObject} as a literal.
+ */
 public class TripleObjectLiteral implements TripleObject
 {
     private Object literalValue;
 
+    /**
+     * @param literalValue the literal value.
+     */
     public TripleObjectLiteral( Object literalValue )
     {
         this.literalValue = literalValue;

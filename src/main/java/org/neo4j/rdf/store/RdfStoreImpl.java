@@ -8,11 +8,19 @@ import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
 import org.neo4j.rdf.store.representation.AsrExecutor;
 import org.neo4j.rdf.store.representation.RdfRepresentationStrategy;
 
+/**
+ * Default implementation of an {@link RdfStore}.
+ */
 public class RdfStoreImpl implements RdfStore
 {
     private final NeoService neo;
     private final RdfRepresentationStrategy representationStrategy;
 
+    /**
+     * @param neo the {@link NeoService}.
+     * @param representationStrategy the {@link RdfRepresentationStrategy}
+     * to use when storing statements.
+     */
     public RdfStoreImpl( NeoService neo,
         RdfRepresentationStrategy representationStrategy )
     {

@@ -19,11 +19,19 @@ public class AbstractStatementRepresentation
     private final List<AbstractRelationship> relationships =
     	new ArrayList<AbstractRelationship>();
     
+    /**
+     * Adds an {@link AbstractNode} to the representation.
+     * @param node the node to add to the representation.
+     */
     public void addNode( AbstractNode node )
     {
     	this.nodes.add( node );
     }
     
+    /**
+     * Adds an {@link AbstractRelationship} to the representation.
+     * @param relationship the relationship to add to the representation.
+     */
     public void addRelationship( AbstractRelationship relationship )
     {
     	this.relationships.add( relationship );

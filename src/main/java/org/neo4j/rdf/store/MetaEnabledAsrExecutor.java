@@ -7,10 +7,18 @@ import org.neo4j.neometa.structure.MetaStructureObject;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.util.index.Index;
 
+/**
+ * Adds meta model suport to the {@link UriAsrExecutor}.
+ */
 public class MetaEnabledAsrExecutor extends UriAsrExecutor
 {
 	private final MetaStructure meta;
 	
+	/**
+	 * @param neo the {@link NeoService}.
+	 * @param index the {@link Index} to use as an object lookup.
+	 * @param meta the {@link MetaStructure} to use as a class/property lookup.
+	 */
 	public MetaEnabledAsrExecutor( NeoService neo, Index index,
 		MetaStructure meta )
 	{

@@ -9,6 +9,7 @@ import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
 import org.neo4j.api.core.Relationship;
 import org.neo4j.api.core.RelationshipType;
+import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
@@ -20,20 +21,29 @@ import org.neo4j.util.matching.PatternMatch;
 import org.neo4j.util.matching.PatternMatcher;
 import org.neo4j.util.matching.PatternNode;
 
+/**
+ * An implementation of {@link AsrExecutor} which uses an {@link Index},
+ * where the indexing key is each elements {@link Uri} as a way of looking up
+ * the objects.
+ */
 public class UriAsrExecutor implements AsrExecutor
 {
-    public static final String URI_PROPERTY_KEY = "uri";
+    static final String URI_PROPERTY_KEY = "uri";
 
     private NeoService neo;
     private Index index;
 
+    /**
+     * @param neo the {@link NeoService}.
+     * @param index the {@link Index} to use as the lookup for objects.
+     */
     public UriAsrExecutor( NeoService neo, Index index )
     {
         this.neo = neo;
         this.index = index;
     }
 
-    public Node lookupNode( AbstractNode node )
+    protected Node lookupNode( AbstractNode node )
     {
         return lookupNode( node, false );
     }
@@ -350,7 +360,7 @@ public class UriAsrExecutor implements AsrExecutor
     {
         private String name;
 
-        public ARelationshipType( String name )
+        ARelationshipType( String name )
         {
             this.name = name;
         }

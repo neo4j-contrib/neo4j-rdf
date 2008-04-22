@@ -1,11 +1,19 @@
 package org.neo4j.rdf.model;
 
+/**
+ * Default implementation of {@link Statement}.
+ */
 public class StatementImpl implements Statement
 {
     private Subject subject;
     private Predicate predicate;
     private TripleObject object;
 
+    /**
+     * @param subject the subject in this statement.
+     * @param predicate the predicate in this statement.
+     * @param object the object in this statement.
+     */
     public StatementImpl( Subject subject, Predicate predicate,
         TripleObject object )
     {

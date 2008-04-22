@@ -12,8 +12,15 @@ import org.neo4j.rdf.model.TripleObjectResource;
 import org.neo4j.rdf.store.representation.DenseRepresentationStrategy;
 import org.neo4j.rdf.store.representation.VerboseRepresentationStrategy;
 
+/**
+ * Tests an {@link RdfStore}.
+ */
 public class TestRdfStore extends NeoTestCase
 {
+    /**
+     * Tests an {@link RdfStore} with a {@link DenseRepresentationStrategy}.
+     * @throws Exception if there's an error in the test.
+     */
 	public void testDense() throws Exception
 	{
 		RdfStore store = new RdfStoreImpl( neo(),
@@ -22,6 +29,10 @@ public class TestRdfStore extends NeoTestCase
 		deleteEntireNodeSpace();
 	}
 	
+    /**
+     * Tests an {@link RdfStore} with a {@link VerboseRepresentationStrategy}.
+     * @throws Exception if there's an error in the test.
+     */
 	public void testVerbose() throws Exception
 	{
 		RdfStore store = new RdfStoreImpl( neo(),
