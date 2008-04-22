@@ -364,6 +364,16 @@ public class UriAsrExecutor implements AsrExecutor
         }
         return patternNode;
     }
+    
+    public Node lookupNode( AbstractNode abstractNode )
+    {
+        if ( abstractNode.getUriOrNull() == null )
+        {
+            return null;
+        }
+        return this.index.getSingleNodeFor(
+            abstractNode.getUriOrNull().uriAsString() );
+    }
 
     private static class ARelationshipType implements RelationshipType
     {

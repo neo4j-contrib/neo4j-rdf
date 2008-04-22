@@ -4,6 +4,7 @@ import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.neometa.structure.MetaStructureObject;
+import org.neo4j.neometa.structure.MetaStructureThing;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.util.index.Index;
 
@@ -48,27 +49,13 @@ public class MetaEnabledAsrExecutor extends UriAsrExecutor
 	}
 
 	@Override
-    public Node lookupNode( AbstractNode node, boolean createIfItDoesntExist )
+    protected Node lookupNode( AbstractNode node,
+        boolean createIfItDoesntExist )
     {
 		Node result = null;
 		if ( isMeta( node ) )
 		{
-			String metaInfo = getMetaLookupInfo( node );
-			if ( metaInfo.equals( "class" ) )
-			{
-				result = meta.getGlobalNamespace().getMetaClass(
-					node.getUriOrNull().uriAsString(), false ).node();
-			}
-			else if ( metaInfo.equals( "property" ) )
-			{
-				result = meta.getGlobalNamespace().getMetaProperty(
-					node.getUriOrNull().uriAsString(), false ).node();
-			}
-			else
-			{
-				throw new IllegalArgumentException( "Strange meta info '" +
-					metaInfo + "'" );
-			}
+		    result = getMetaStructureThing( node ).node();
 		}
 		else
 		{
@@ -76,10 +63,38 @@ public class MetaEnabledAsrExecutor extends UriAsrExecutor
 		}
 		return result;
     }
+	
+	private MetaStructureThing getMetaStructureThing( AbstractNode node )
+	{
+	    MetaStructureThing thing = null;
+	    String metaInfo = getMetaLookupInfo( node );
+        if ( metaInfo.equals( "class" ) )
+        {
+            thing = meta.getGlobalNamespace().getMetaClass(
+                node.getUriOrNull().uriAsString(), false );
+        }
+        else if ( metaInfo.equals( "property" ) )
+        {
+            thing = meta.getGlobalNamespace().getMetaProperty(
+                node.getUriOrNull().uriAsString(), false );
+        }
+        else
+        {
+            throw new IllegalArgumentException( "Strange meta info '" +
+                metaInfo + "'" );
+        }
+        return thing;
+	}
 
 	@Override
 	protected String getNodeUriProperty( AbstractNode node )
 	{
 		return isMeta( node ) ? MetaStructureObject.KEY_NAME : URI_PROPERTY_KEY;
+	}
+	
+	@Override
+	public Node lookupNode( AbstractNode abstractNode )
+	{
+	    return lookupNode( abstractNode, false );
 	}
 }
