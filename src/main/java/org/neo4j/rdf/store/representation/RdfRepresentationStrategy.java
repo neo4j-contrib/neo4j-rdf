@@ -9,18 +9,18 @@ import org.neo4j.rdf.model.Statement;
 public interface RdfRepresentationStrategy
 {
     /**
-     * Makes a representation of how {@code statement} would look like in
+     * Makes a representation of how {@code statements} would look like in
      * the node space.
-     * @param statement the {@link Statement} to make a representation of.
-     * @return the abstract representation of {@code statement}.
+     * @param statements the {@link Statement}s to make a representation of.
+     * @return the abstract representation of {@code statements}.
      */
     AbstractStatementRepresentation getAbstractRepresentation(
-        Statement statement );
+        Statement... statements );
     
     /**
      * @return a suitable {@link AsrExecutor} which is capable of handling
      * the {@link AbstractStatementRepresentation}s created in
-     * {@link #getAbstractRepresentation(Statement)}.
+     * {@link #getAbstractRepresentation(Statement...)}.
      */
     AsrExecutor getAsrExecutor();
 }

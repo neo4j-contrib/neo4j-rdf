@@ -12,7 +12,18 @@ import org.neo4j.util.index.Index;
  */
 public class MetaEnabledAsrExecutor extends UriAsrExecutor
 {
-	private final MetaStructure meta;
+    /**
+     * The URI which represents a type of an instance.
+     */
+    public static final String RDF_TYPE_URI =
+            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+    
+    /**
+     * The lookup info key for meta enabled nodes.
+     */
+    public static final String META_LOOKUP_KEY = "meta";
+
+    private final MetaStructure meta;
 	
 	/**
 	 * @param neo the {@link NeoService}.

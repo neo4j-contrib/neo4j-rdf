@@ -1,5 +1,7 @@
 package org.neo4j.rdf.store.representation;
 
+import java.util.Map;
+
 import org.neo4j.api.core.NeoService;
 import org.neo4j.rdf.model.Statement;
 
@@ -18,32 +20,35 @@ public class DenseRepresentationStrategy extends IndexRepresentationStrategy
         super( neo );
     }
 
-    public AbstractStatementRepresentation getAbstractRepresentation(
-        Statement statement )
+	@Override
+    protected boolean addToRepresentation(
+        AbstractStatementRepresentation representation,
+        Map<String, AbstractNode> nodeMapping, Statement statement )
     {
-        if ( statement.getObject().isObjectProperty() )
-        {
-            // ( S ) -- predicate_uri --> ( O )
-            return createTwoNodeFragment( statement );
-        }
-        else
-        {
-            // ( S ) with property [key=predicate_uri, value=O]
-            return createOneNodeFragment( statement );
-        }
+	    if ( !super.addToRepresentation(
+	        representation, nodeMapping, statement ) )
+	    {
+            if ( statement.getObject().isObjectProperty() )
+            {
+                // ( S ) -- predicate_uri --> ( O )
+                addTwoNodeFragment( representation, nodeMapping, statement );
+            }
+            else
+            {
+                // ( S ) with property [key=predicate_uri, value=O]
+                addOneNodeFragment( representation, nodeMapping, statement );
+            }
+	    }
+        return true;
     }
 
-    private AbstractStatementRepresentation createTwoNodeFragment(
-        Statement statement )
+    private void addTwoNodeFragment(
+        AbstractStatementRepresentation representation,
+        Map<String, AbstractNode> nodeMapping, Statement statement )
     {
-        AbstractStatementRepresentation representation =
-            new AbstractStatementRepresentation();
-        AbstractNode subjectNode = getSubjectNode( statement );
-        AbstractNode objectNode = getObjectNode( statement );
-        representation.addNode( subjectNode );
-        representation.addNode( objectNode );
+        AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
+        AbstractNode objectNode = getObjectNode( nodeMapping, statement );
         representation.addRelationship( new AbstractRelationship( subjectNode,
             statement.getPredicate().uriAsString(), objectNode ) );
-        return representation;
     }
 }
