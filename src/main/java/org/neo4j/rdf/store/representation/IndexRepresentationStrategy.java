@@ -1,5 +1,6 @@
 package org.neo4j.rdf.store.representation;
 
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -7,7 +8,9 @@ import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
 import org.neo4j.api.core.RelationshipType;
 import org.neo4j.neometa.structure.MetaStructure;
+import org.neo4j.neometa.structure.MetaStructureProperty;
 import org.neo4j.neometa.structure.MetaStructureRelTypes;
+import org.neo4j.neometa.structure.PropertyRange;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.store.MetaEnabledAsrExecutor;
 import org.neo4j.rdf.store.UriAsrExecutor;
@@ -115,18 +118,43 @@ abstract class IndexRepresentationStrategy implements
         Object literalValue = statement.getObject().getLiteralValueOrNull();
         
         // TODO Should this be here?
-        if ( literalValue != null && meta != null )
+        if ( literalValue != null )
         {
-            convertLiteralValueToRealValue( literalValue );
+            convertLiteralValueToRealValue( statement, literalValue );
         }
         
         subjectNode.addProperty( statement.getPredicate().uriAsString(),
             literalValue );
     }
     
-    protected Object convertLiteralValueToRealValue( Object literalValue )
+    protected Object convertLiteralValueToRealValue( Statement statement,
+        Object literalValue )
     {
-        return literalValue;
+        Object result = literalValue;
+        if ( result != null && result instanceof String && meta != null )
+        {
+            MetaStructureProperty property =
+                meta.getGlobalNamespace().getMetaProperty(
+                    statement.getPredicate().uriAsString(), false );
+            if ( property != null )
+            {
+                PropertyRange range = meta.lookup( property,
+                    MetaStructure.LOOKUP_PROPERTY_RANGE );
+                if ( range != null && range.isDatatype() )
+                {
+                    try
+                    {
+                        result = range.rdfLiteralToJavaObject(
+                            literalValue.toString() );
+                    }
+                    catch ( ParseException e )
+                    {
+                        // Ok?
+                    }
+                }
+            }
+        }
+        return result;
     }
     
     protected AbstractNode getOrCreateNode(

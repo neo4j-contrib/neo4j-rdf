@@ -48,7 +48,7 @@ public class MetaEnabledAsrExecutor extends UriAsrExecutor
 	}
 
 	@Override
-    public Node lookupNode( AbstractNode node )
+    public Node lookupNode( AbstractNode node, boolean createIfItDoesntExist )
     {
 		Node result = null;
 		if ( isMeta( node ) )
@@ -72,7 +72,7 @@ public class MetaEnabledAsrExecutor extends UriAsrExecutor
 		}
 		else
 		{
-			result = super.lookupNode( node );
+			result = super.lookupNode( node, createIfItDoesntExist );
 		}
 		return result;
     }

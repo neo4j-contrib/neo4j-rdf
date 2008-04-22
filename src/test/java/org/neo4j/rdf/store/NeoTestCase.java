@@ -1,6 +1,7 @@
 package org.neo4j.rdf.store;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 import junit.framework.TestCase;
 
@@ -83,5 +84,17 @@ public abstract class NeoTestCase extends TestCase
             buffer.append( item.toString() );
         }
         return buffer.toString();
+    }
+    
+    protected <T> int countIterable( Iterable<T> iterable )
+    {
+        int counter = 0;
+        Iterator<T> itr = iterable.iterator();
+        while ( itr.hasNext() )
+        {
+            itr.next();
+            counter++;
+        }
+        return counter;
     }
 }

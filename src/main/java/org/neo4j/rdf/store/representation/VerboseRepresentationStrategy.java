@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.RelationshipType;
+import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.rdf.model.Statement;
 
 /**
@@ -24,6 +25,15 @@ public class VerboseRepresentationStrategy extends IndexRepresentationStrategy
     public VerboseRepresentationStrategy( NeoService neo )
     {
         super( neo );
+    }
+    
+    /**
+     * @param neo {@link NeoService}.
+     * @param meta {@link MetaStructure}.
+     */
+    public VerboseRepresentationStrategy( NeoService neo, MetaStructure meta )
+    {
+        super( neo, meta );
     }
     
     @Override
@@ -69,7 +79,10 @@ public class VerboseRepresentationStrategy extends IndexRepresentationStrategy
         representation.addRelationship( connectorToPredicate );
     }
 
-    private static enum RelTypes implements RelationshipType
+    /**
+     * Some relationship types used in the representation.
+     */
+    public static enum RelTypes implements RelationshipType
     {
         /**
          * The connector node --> the predicate node.

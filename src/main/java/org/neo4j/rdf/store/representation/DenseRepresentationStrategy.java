@@ -3,6 +3,7 @@ package org.neo4j.rdf.store.representation;
 import java.util.Map;
 
 import org.neo4j.api.core.NeoService;
+import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.rdf.model.Statement;
 
 /**
@@ -20,7 +21,16 @@ public class DenseRepresentationStrategy extends IndexRepresentationStrategy
         super( neo );
     }
 
-	@Override
+    /**
+     * @param neo the {@link NeoService}.
+     * @param meta the {@link MetaStructure}.
+     */
+    public DenseRepresentationStrategy( NeoService neo, MetaStructure meta )
+    {
+        super( neo );
+    }
+
+    @Override
     protected boolean addToRepresentation(
         AbstractStatementRepresentation representation,
         Map<String, AbstractNode> nodeMapping, Statement statement )

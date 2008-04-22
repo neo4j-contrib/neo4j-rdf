@@ -43,17 +43,13 @@ public class UriAsrExecutor implements AsrExecutor
         this.index = index;
     }
 
-    protected Node lookupNode( AbstractNode node )
-    {
-        return lookupNode( node, false );
-    }
-    
     protected void debug( String message )
     {
 //        System.out.println( message );
     }
 
-    private Node lookupNode( AbstractNode node, boolean createIfItDoesntExist )
+    protected Node lookupNode( AbstractNode node,
+        boolean createIfItDoesntExist )
     {
         String uri = node.getUriOrNull().uriAsString();
         Node result = index.getSingleNodeFor( uri );
@@ -64,7 +60,20 @@ public class UriAsrExecutor implements AsrExecutor
             index.index( result, uri );
             debug( "\t+Node (" + result.getId() + ") '" + uri + "'" );
         }
+//        else if ( result != null )
+//        {
+//            debug( "\tIndex has node (" + result.getId() + ")" );
+//        }
         return result;
+    }
+    
+    private void removeNode( Node node, Uri uri )
+    {
+        node.delete();
+        if ( uri != null )
+        {
+            this.index.remove( node, uri.uriAsString() );
+        }
     }
 
     public void addToNodeSpace( AbstractStatementRepresentation representation )
@@ -182,7 +191,7 @@ public class UriAsrExecutor implements AsrExecutor
             if ( nodeIsEmpty( abstractNode, node ) )
             {
                 debug( "\t-Node " + node );
-                node.delete();
+                removeNode( node, abstractNode.getUriOrNull() );
             }
         }
     }

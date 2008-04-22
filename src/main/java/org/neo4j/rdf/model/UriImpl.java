@@ -19,4 +19,10 @@ public class UriImpl implements Uri
     {
         return this.uri;
     }
+    
+    @Override
+    public String toString()
+    {
+        return "Uri[" + uriAsString() + "]";
+    }
 }
