@@ -2,31 +2,31 @@ package org.neo4j.rdf.model;
 
 public class TripleObjectLiteral implements TripleObject
 {
-	private Object literalValue;
-	
-	public TripleObjectLiteral( Object literalValue )
-	{
-		this.literalValue = literalValue;
-	}
+    private Object literalValue;
 
-	public Object getLiteralValueOrNull()
-	{
-		return this.literalValue;
-	}
+    public TripleObjectLiteral( Object literalValue )
+    {
+        this.literalValue = literalValue;
+    }
 
-	public Uri getResourceOrNull()
-	{
-		return null;
-	}
+    public Object getLiteralValueOrNull()
+    {
+        return this.literalValue;
+    }
 
-	public boolean isObjectProperty()
-	{
-		return false;
-	}
+    public Uri getResourceOrNull()
+    {
+        return null;
+    }
 
-	@Override
-	public String toString()
-	{
-		return "ObjectLiteral[" + getLiteralValueOrNull() + "]";
-	}
+    public boolean isObjectProperty()
+    {
+        return false;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "ObjectLiteral[" + getLiteralValueOrNull() + "]";
+    }
 }

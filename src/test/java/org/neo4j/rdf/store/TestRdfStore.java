@@ -9,15 +9,13 @@ import org.neo4j.rdf.model.SubjectImpl;
 import org.neo4j.rdf.model.TripleObject;
 import org.neo4j.rdf.model.TripleObjectLiteral;
 import org.neo4j.rdf.model.TripleObjectResource;
-import org.neo4j.rdf.store.testrepresentation.DenseRepresentationStrategy;
-import org.neo4j.rdf.store.testrepresentation.VerboseRepresentationStrategy;
-import org.neo4j.triplestore.NeoTestCase;
+import org.neo4j.rdf.store.representation.DenseRepresentationStrategy;
+import org.neo4j.rdf.store.representation.VerboseRepresentationStrategy;
 
 public class TestRdfStore extends NeoTestCase
 {
 	public void testDense() throws Exception
 	{
-		System.out.println( "DENSE" );
 		RdfStore store = new RdfStoreImpl( neo(),
 			new DenseRepresentationStrategy( neo() ) );
 		applyStatements( store );
@@ -26,7 +24,6 @@ public class TestRdfStore extends NeoTestCase
 	
 	public void testVerbose() throws Exception
 	{
-		System.out.println( "VERBOSE" );
 		RdfStore store = new RdfStoreImpl( neo(),
 			new VerboseRepresentationStrategy( neo() ) );
 		applyStatements( store );

@@ -2,31 +2,31 @@ package org.neo4j.rdf.model;
 
 public class TripleObjectResource implements TripleObject
 {
-	private Uri uri;
-	
-	public TripleObjectResource( Uri resourceUri )
-	{
-		this.uri = resourceUri;
-	}
+    private Uri uri;
 
-	public Object getLiteralValueOrNull()
-	{
-		return null;
-	}
+    public TripleObjectResource( Uri resourceUri )
+    {
+        this.uri = resourceUri;
+    }
 
-	public Uri getResourceOrNull()
-	{
-		return this.uri;
-	}
+    public Object getLiteralValueOrNull()
+    {
+        return null;
+    }
 
-	public boolean isObjectProperty()
-	{
-		return true;
-	}
+    public Uri getResourceOrNull()
+    {
+        return this.uri;
+    }
 
-	@Override
-	public String toString()
-	{
-		return "ObjectResource[" + getResourceOrNull().uriAsString() + "]";
-	}
+    public boolean isObjectProperty()
+    {
+        return true;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "ObjectResource[" + getResourceOrNull().uriAsString() + "]";
+    }
 }

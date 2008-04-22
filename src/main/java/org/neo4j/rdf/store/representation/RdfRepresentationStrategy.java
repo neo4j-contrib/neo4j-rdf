@@ -4,8 +4,8 @@ import org.neo4j.rdf.model.Statement;
 
 public interface RdfRepresentationStrategy
 {
-    AbstractStatementRepresentation getAbstractRepresentation( Statement
-        statement );
+    AbstractStatementRepresentation getAbstractRepresentation(
+        Statement statement );
     
     AsrExecutor getAsrExecutor();
 }

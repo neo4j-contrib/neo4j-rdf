@@ -1,49 +1,46 @@
-package org.neo4j.rdf.store.testrepresentation;
+package org.neo4j.rdf.store.representation;
 
 import org.neo4j.api.core.NeoService;
 import org.neo4j.rdf.model.Statement;
-import org.neo4j.rdf.store.representation.AbstractNode;
-import org.neo4j.rdf.store.representation.AbstractRelationship;
-import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
 
 /**
- * S/P/O represented as:<br/>
+ * S/P/O represented as:
  * if object property: ( S ) -- predicate_uri_as_reltype --> ( O )
  * if data property: ( S ) with property [key=predicate_uri, value=O]
  */
 public class DenseRepresentationStrategy extends IndexRepresentationStrategy
 {
 	public DenseRepresentationStrategy( NeoService neo )
-	{
-		super( neo );
-	}
-	
-    public AbstractStatementRepresentation getAbstractRepresentation( Statement
-        statement )
+    {
+        super( neo );
+    }
+
+    public AbstractStatementRepresentation getAbstractRepresentation(
+        Statement statement )
     {
         if ( statement.getObject().isObjectProperty() )
         {
             // ( S ) -- predicate_uri --> ( O )
-            return createTwoNodesWithRelationship( statement );
+            return createTwoNodeFragment( statement );
         }
         else
         {
             // ( S ) with property [key=predicate_uri, value=O]
-            return createSingleNodeWithDataProperty( statement );
+            return createOneNodeFragment( statement );
         }
     }
-    
-    private AbstractStatementRepresentation createTwoNodesWithRelationship(
+
+    private AbstractStatementRepresentation createTwoNodeFragment(
         Statement statement )
     {
         AbstractStatementRepresentation representation =
-        	new AbstractStatementRepresentation();
+            new AbstractStatementRepresentation();
         AbstractNode subjectNode = getSubjectNode( statement );
         AbstractNode objectNode = getObjectNode( statement );
         representation.addNode( subjectNode );
         representation.addNode( objectNode );
-        representation.addRelationship( new AbstractRelationship(
-        	subjectNode, statement.getPredicate().uriAsString(), objectNode ) );
+        representation.addRelationship( new AbstractRelationship( subjectNode,
+            statement.getPredicate().uriAsString(), objectNode ) );
         return representation;
     }
 }

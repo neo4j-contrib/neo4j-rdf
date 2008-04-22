@@ -12,71 +12,90 @@ public class RdfStoreImpl implements RdfStore
 {
     private final NeoService neo;
     private final RdfRepresentationStrategy representationStrategy;
-    
+
     public RdfStoreImpl( NeoService neo,
-    	RdfRepresentationStrategy representationStrategy ) 
+        RdfRepresentationStrategy representationStrategy )
     {
         this.neo = neo;
         this.representationStrategy = representationStrategy;
     }
-    
+
     public void addStatement( Statement statement, Context... contexts )
     {
-    	System.out.println( "--- addStatement( " + statement.getSubject() +
-    		", " + statement.getPredicate() + ", " + statement.getObject() );
         Transaction tx = neo.beginTx();
         try
         {
-             AbstractStatementRepresentation fragment = representationStrategy.
-                 getAbstractRepresentation( statement );
-             getAsrExecutor().addToNodeSpace( fragment );
-             tx.success();
+            AbstractStatementRepresentation fragment = representationStrategy
+                .getAbstractRepresentation( statement );
+            getExecutor().addToNodeSpace( fragment );
+            tx.success();
         }
         finally
         {
             tx.finish();
         }
     }
-    
-    private AsrExecutor getAsrExecutor()
+
+    private AsrExecutor getExecutor()
     {
-    	return this.representationStrategy.getAsrExecutor();
+        return this.representationStrategy.getAsrExecutor();
     }
 
     public Iterable<Statement> getStatements(
         Statement statementWithOptionalNulls,
         boolean includeInferredStatements, Context... contexts )
     {
-        throw new UnsupportedOperationException( "Not yet implemented" );
+        // if ( theseAreNull( statementWithOptionalNulls, true, false, false ) )
+        // {
+        //    		
+        // }
+        // else if ( theseAreNull( statementWithOptionalNulls,
+        // false, false, true ) )
+        // {
+        //    		
+        // }
+        throw new UnsupportedOperationException();
+    }
+
+    private boolean theseAreNull( Statement statementWithOptionalNulls,
+        boolean subjectIsNull, boolean predicateIsNull, boolean objectIsNull )
+    {
+        return objectComparesToNull( statementWithOptionalNulls.getSubject(),
+            subjectIsNull )
+            && objectComparesToNull( statementWithOptionalNulls.getPredicate(),
+                predicateIsNull )
+            && objectComparesToNull( statementWithOptionalNulls.getObject(),
+                objectIsNull );
+    }
+
+    private boolean objectComparesToNull( Object object, boolean shouldBeNull )
+    {
+        return shouldBeNull ? object == null : object != null;
     }
 
     public void removeStatements( Statement statementWithOptionalNulls,
         Context... contexts )
     {
-    	if ( statementWithOptionalNulls.getSubject() == null ||
-    		statementWithOptionalNulls.getPredicate() == null ||
-    		statementWithOptionalNulls.getObject() == null )
-    	{
+        if ( !theseAreNull( statementWithOptionalNulls, false, false, false ) )
+        {
             throw new UnsupportedOperationException( "Not yet implemented" );
-    	}
-    	removeStatementsSimple( statementWithOptionalNulls );
+        }
+        removeStatementsSimple( statementWithOptionalNulls );
     }
-    
+
     private void removeStatementsSimple( Statement statement )
     {
-    	System.out.println( "--- removeStatement( " + statement.getSubject() +
-    		", " + statement.getPredicate() + ", " + statement.getObject() );
         Transaction tx = neo.beginTx();
         try
         {
-             AbstractStatementRepresentation fragment = representationStrategy.
-                 getAbstractRepresentation( statement );
-             getAsrExecutor().removeFromNodeSpace( fragment );
-             tx.success();
+            AbstractStatementRepresentation fragment = representationStrategy
+                .getAbstractRepresentation( statement );
+            getExecutor().removeFromNodeSpace( fragment );
+            tx.success();
         }
         finally
         {
             tx.finish();
         }
-    }    
+    }
 }
