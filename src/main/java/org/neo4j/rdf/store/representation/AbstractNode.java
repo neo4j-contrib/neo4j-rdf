@@ -11,17 +11,6 @@ import org.neo4j.rdf.model.Wildcard;
 public class AbstractNode extends AbstractElement
 {
     private final Value valueOrNull;
-    private NodeMatcher nodeMatcher;
-    
-    public void setOptionalMatcher( NodeMatcher matcher )
-    {
-        this.nodeMatcher = matcher;
-    }
-    
-    public NodeMatcher getOptionalMatcher()
-    {
-        return this.nodeMatcher;
-    }
 
     /**
      * @param valueOrNull the URI of this node, a wildcard, or {@code null} if
