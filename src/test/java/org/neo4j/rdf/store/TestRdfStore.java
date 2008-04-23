@@ -3,17 +3,12 @@ package org.neo4j.rdf.store;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 import org.neo4j.api.core.Node;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.neometa.structure.MetaStructureClass;
 import org.neo4j.neometa.structure.MetaStructureImpl;
 import org.neo4j.neometa.structure.MetaStructureProperty;
-import org.neo4j.rdf.model.CompleteStatement;
-import org.neo4j.rdf.model.Context;
-import org.neo4j.rdf.model.Literal;
-import org.neo4j.rdf.model.Resource;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.store.representation.DenseRepresentationStrategy;
@@ -23,13 +18,8 @@ import org.neo4j.rdf.store.representation.VerboseRepresentationStrategy;
 /**
  * Tests an {@link RdfStore}.
  */
-public class TestRdfStore extends NeoTestCase
+public class TestRdfStore extends StoreTestCase
 {
-    private static final String PERSON_CLASS = "http://classes#Person";
-    private static final String NAME_PROPERTY = "http://properties#name";
-    private static final String KNOWS_PROPERTY = "http://properties#knows";
-    private static final Context TEST_CONTEXT = new Context( "aTest" );
-    
     /**
      * Tests an {@link RdfStore} with a {@link DenseRepresentationStrategy}.
      * @throws Exception if there's an error in the test.
@@ -83,33 +73,6 @@ public class TestRdfStore extends NeoTestCase
 	    deleteEntireNodeSpace();
 	}
 	
-	private void add( RdfStore store, Statement statement, int numberOfTimes )
-	{
-		while ( numberOfTimes-- > 0 )
-		{
-			store.addStatement( statement );
-		}
-	}
-	
-	private void addTwice( RdfStore store, Statement statement )
-	{
-		add( store, statement, 2 );
-	}
-
-	private void remove( RdfStore store, Statement statement,
-	    int numberOfTimes )
-	{
-		while ( numberOfTimes-- > 0 )
-		{
-			store.removeStatements( statement );
-		}
-	}
-	
-	private void removeTwice( RdfStore store, Statement statement )
-	{
-		remove( store, statement, 2 );
-	}
-
 	private List<Statement> applyStatements( RdfStore store )
 	{
 	    String typePredicate = MetaEnabledAsrExecutor.RDF_TYPE_URI;
@@ -161,30 +124,6 @@ public class TestRdfStore extends NeoTestCase
 		        thirdSubjectNameStatement,
 		        knowsStatement,
 		        otherKnowsStatement ) );
-	}
-	
-	private Statement statement( String subject, String predicate,
-	    Resource object )
-	{
-	    return new CompleteStatement( new Uri( subject ), new Uri( predicate ),
-	        object, TEST_CONTEXT );
-	}
-	
-    private Statement statement( String subject, String predicate,
-        Object object )
-    {
-        return new CompleteStatement( new Uri( subject ), new Uri( predicate ),
-            new Literal( object ), TEST_CONTEXT );
-    }
-
-    private void removeStatements( RdfStore store, List<Statement> statements )
-	{
-        while ( !statements.isEmpty() )
-        {
-            Statement statement = statements.remove(
-                new Random().nextInt( statements.size() ) );
-            removeTwice( store, statement );
-        }
 	}
 	
 	private void applyAndRemoveStatements( RdfStore store )

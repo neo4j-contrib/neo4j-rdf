@@ -76,20 +76,28 @@ public class VerboseRepresentationStrategy extends IndexRepresentationStrategy
             connectorNode, RelTypes.CONNECTOR_HAS_PREDICATE.name(),
             predicateNode );
         
-        for ( Context context : statement.getContexts() )
-        {
-            subjectToConnectorRel.addProperty( CONTEXT_PROPERTY_POSTFIX,
-                context.getUriAsString() );
-        }
-        Map<String, String> contextKeys = new HashMap<String, String>();
-        contextKeys.put( CONTEXT_PROPERTY_POSTFIX, null );
-        subjectToConnectorRel.addLookupInfo( UriAsrExecutor.LOOKUP_CONTEXT_KEYS,
-            contextKeys );
+        addContextsToRelationship( statement, subjectToConnectorRel );
+        addContextsToRelationship( statement, connectorToObjectRel );
+        addContextsToRelationship( statement, connectorToPredicate );
 
         representation.addNode( connectorNode );
         representation.addRelationship( subjectToConnectorRel );
         representation.addRelationship( connectorToObjectRel );
         representation.addRelationship( connectorToPredicate );
+    }
+    
+    private void addContextsToRelationship( Statement statement,
+        AbstractRelationship relationship )
+    {
+        for ( Context context : statement.getContexts() )
+        {
+            relationship.addProperty( CONTEXT_PROPERTY_POSTFIX,
+                context.getUriAsString() );
+        }
+        Map<String, String> contextKeys = new HashMap<String, String>();
+        contextKeys.put( CONTEXT_PROPERTY_POSTFIX, null );
+        relationship.addLookupInfo( UriAsrExecutor.LOOKUP_CONTEXT_KEYS,
+            contextKeys );
     }
 
     /**

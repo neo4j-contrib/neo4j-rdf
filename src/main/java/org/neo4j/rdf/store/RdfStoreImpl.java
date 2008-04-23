@@ -2,6 +2,7 @@ package org.neo4j.rdf.store;
 
 import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Transaction;
+import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
 import org.neo4j.rdf.store.representation.AsrExecutor;
@@ -29,6 +30,7 @@ public class RdfStoreImpl implements RdfStore
 
     public void addStatement( Statement statement )
     {
+//        sysOutStatement( "add", statement );
         Transaction tx = neo.beginTx();
         try
         {
@@ -104,17 +106,22 @@ public class RdfStoreImpl implements RdfStore
         }
         removeStatementsSimple( statementWithOptionalNulls );
     }
+    
+    private void sysOutStatement( String what, Statement statement )
+    {
+        StringBuffer contexts = new StringBuffer();
+        for ( Context context : statement.getContexts() )
+        {
+            contexts.append( context.getUriAsString() + ", " );
+        }
+        System.out.println( what + ":" + statement.getSubject() +
+            ", " + statement.getPredicate() + ", " + statement.getObject() +
+            " | " + contexts.toString() );
+    }
 
     private void removeStatementsSimple( Statement statement )
     {
-//        StringBuffer contexts = new StringBuffer();
-//        for ( Context context : statement.getContexts() )
-//        {
-//            contexts.append( context.getUriAsString() + ", " );
-//        }
-//        System.out.println( "removeStatement:" + statement.getSubject() +
-//            ", " + statement.getPredicate() + ", " + statement.getObject() +
-//            " | " + contexts.toString() );
+//        sysOutStatement( "remove", statement );
         Transaction tx = neo.beginTx();
         try
         {

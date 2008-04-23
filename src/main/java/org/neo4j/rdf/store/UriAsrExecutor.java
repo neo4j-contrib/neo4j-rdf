@@ -264,21 +264,27 @@ public class UriAsrExecutor implements AsrExecutor
         }
         return null;
     }
-
-    private Relationship ensureConnected( Node startNode,
+    
+    private Relationship findRelationship( Node startNode,
         RelationshipType relType, Node endNode )
     {
         Relationship relationship = null;
-        for ( Relationship rel :
-            startNode.getRelationships( relType, Direction.OUTGOING ) )
+        for ( Relationship rel : startNode.getRelationships( relType ) )
         {
-            if ( rel.getEndNode().equals( endNode ) )
+            if ( rel.getOtherNode( startNode ).equals( endNode ) )
             {
                 relationship = rel;
                 break;
             }
         }
-        
+        return relationship;
+    }
+
+    private Relationship ensureConnected( Node startNode,
+        RelationshipType relType, Node endNode )
+    {
+        Relationship relationship =
+            findRelationship( startNode, relType, endNode );
         if ( relationship == null )
         {
             relationship = startNode.createRelationshipTo( endNode, relType );
@@ -356,7 +362,7 @@ public class UriAsrExecutor implements AsrExecutor
     private void removeFromNode( AbstractNode abstractNode, Node node )
     {
         // Take the context properties first.
-        Map<String, String> contextToReal = new HashMap<String, String>();
+        Map<String, String> realToContext = new HashMap<String, String>();
         for ( Map.Entry<String, Collection<Object>> entry :
             abstractNode.properties().entrySet() )
         {
@@ -369,7 +375,7 @@ public class UriAsrExecutor implements AsrExecutor
                 getPropertyKeyForContextKey( abstractNode, key );
             if ( realKey != null )
             {
-                contextToReal.put( key, realKey );
+                realToContext.put( realKey, key );
             }
             Collection<Object> neoValues = new NeoPropertyArraySet<Object>(
                 neo, node, key );
@@ -387,14 +393,14 @@ public class UriAsrExecutor implements AsrExecutor
             }
             Collection<Object> neoValues = new NeoPropertyArraySet<Object>(
                 neo, node, key );
-            String contextKey = contextToReal.get( key );
+            String contextKey = realToContext.get( key );
             if ( contextKey != null )
             {
                 // This means that we're trying to remove contexts, not the
                 // actual property, unless all the contexts has been removed.
                 for ( Object value : entry.getValue() )
                 {
-                    if ( !thereAreMoreContexts( node, key, neoValues ) )
+                    if ( !thereAreMoreContexts( node, key, neoValues, value ) )
                     {
                         boolean removed = neoValues.remove( value );
                         if ( removed )
@@ -429,17 +435,10 @@ public class UriAsrExecutor implements AsrExecutor
     }
     
     private boolean thereAreMoreContexts( Node node, String key,
-        Collection<Object> neoValues )
+        Collection<Object> neoValues, Object value )
     {
-        for ( Object value : neoValues )
-        {
-            String contextKey = formContextPropertyKey( key, value );
-            if ( node.hasProperty( contextKey ) )
-            {
-                return true;
-            }
-        }
-        return false;
+        String contextKey = formContextPropertyKey( key, value );
+        return node.hasProperty( contextKey );
     }
 
     private NodeAndRelationship findOtherNodePresumedBlank(
@@ -461,9 +460,14 @@ public class UriAsrExecutor implements AsrExecutor
         Relationship relationship = null;
         if ( matches.hasNext() )
         {
-            node = matches.next().getNodeFor(
+            PatternMatch match = matches.next();
+            node = match.getNodeFor(
                 patternNodes.get( abstractRelationship
                     .getOtherNode( startingAbstractNode ) ) );
+            Node otherNode =
+                match.getNodeFor( patternNodes.get( startingAbstractNode ) );
+            relationship = findRelationship( node, new ARelationshipType(
+                abstractRelationship.getRelationshipTypeName() ), otherNode );
         }
         else if ( createIfItDoesntExist )
         {
