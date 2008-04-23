@@ -201,7 +201,7 @@ public class UriAsrExecutor implements AsrExecutor
         }
         for ( String key : node.getPropertyKeys() )
         {
-            if ( !key.equals( getNodeUriProperty( abstractNode ) ) )
+            if ( !key.equals( getNodeUriPropertyKey( abstractNode ) ) )
             {
                 return false;
             }
@@ -359,17 +359,13 @@ public class UriAsrExecutor implements AsrExecutor
         return patternNodes;
     }
 
-    protected String getNodeUriProperty( AbstractNode node )
-    {
-        return URI_PROPERTY_KEY;
-    }
-
     private PatternNode abstractNodeToPatternNode( AbstractNode node )
     {
         PatternNode patternNode = new PatternNode();
         if ( node.getUriOrNull() != null )
         {
-            patternNode.addPropertyEqualConstraint( getNodeUriProperty( node ),
+            patternNode.addPropertyEqualConstraint(
+                getNodeUriPropertyKey( node ),
                 node.getUriOrNull().getUriAsString() );
         }
         for ( Map.Entry<String, Collection<Object>> entry :
@@ -389,6 +385,11 @@ public class UriAsrExecutor implements AsrExecutor
         }
         return this.index.getSingleNodeFor(
             abstractNode.getUriOrNull().getUriAsString() );
+    }
+    
+    public String getNodeUriPropertyKey( AbstractNode abstractNode )
+    {
+        return URI_PROPERTY_KEY;
     }
 
     private static class ARelationshipType implements RelationshipType

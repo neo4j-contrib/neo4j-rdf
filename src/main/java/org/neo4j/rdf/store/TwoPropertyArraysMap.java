@@ -15,7 +15,7 @@ import org.neo4j.util.NeoPropertyArraySet;
 /**
  * Mm.
  */
-public class TwoPropertyArraysMap implements Map<Object, Collection<String>>
+class TwoPropertyArraysMap implements Map<Object, Collection<String>>
 {
     private static final String DELIMITER = "š";
     

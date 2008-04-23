@@ -92,9 +92,10 @@ public class MetaEnabledAsrExecutor extends UriAsrExecutor
 	}
 
 	@Override
-	protected String getNodeUriProperty( AbstractNode node )
+	public String getNodeUriPropertyKey( AbstractNode abstractNode )
 	{
-		return isMeta( node ) ? MetaStructureObject.KEY_NAME : URI_PROPERTY_KEY;
+		return isMeta( abstractNode ) ? MetaStructureObject.KEY_NAME :
+		    super.getNodeUriPropertyKey( abstractNode );
 	}
 	
 	@Override

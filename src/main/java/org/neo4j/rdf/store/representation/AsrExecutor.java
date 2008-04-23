@@ -29,4 +29,12 @@ public interface AsrExecutor
 	 * @return the corresponding {@link Node}.
 	 */
 	Node lookupNode( AbstractNode abstractNode );
+	
+	/**
+	 * @param abstractNode the {@link AbstractNode} which represents the
+	 * neo {@link Node}.
+	 * @return the property key on the {@link Node} which represents the URI
+	 * of the node.
+	 */
+	String getNodeUriPropertyKey( AbstractNode abstractNode );
 }
