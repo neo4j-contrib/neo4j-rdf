@@ -1,5 +1,6 @@
 package org.neo4j.rdf.store;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -45,7 +46,7 @@ public class UriAsrExecutor implements AsrExecutor
 
     protected void debug( String message )
     {
-//        System.out.println( message );
+        System.out.println( message );
     }
 
     protected Node lookupNode( AbstractNode node,
@@ -60,10 +61,6 @@ public class UriAsrExecutor implements AsrExecutor
             index.index( result, uri );
             debug( "\t+Node (" + result.getId() + ") '" + uri + "'" );
         }
-//        else if ( result != null )
-//        {
-//            debug( "\tIndex has node (" + result.getId() + ")" );
-//        }
         return result;
     }
     
@@ -240,30 +237,48 @@ public class UriAsrExecutor implements AsrExecutor
 
     private void applyOnNode( AbstractNode abstractNode, Node node )
     {
-        for ( Map.Entry<String, Object> entry : abstractNode.properties()
-            .entrySet() )
+        applyOnNode( node, abstractNode.properties(), "Property" );
+    }
+    
+    private <T> void applyOnNode( Node node,
+        Map<String, Collection<T>> properties, String debugText )
+    {
+        for ( Map.Entry<String, Collection<T>> entry : properties.entrySet() )
         {
-            boolean added = new NeoPropertyArraySet<Object>( neo, node, entry
-                .getKey() ).add( entry.getValue() );
-            if ( added )
+            Collection<Object> neoValues = new NeoPropertyArraySet<Object>(
+                neo, node, entry.getKey() );
+            for ( T value : entry.getValue() )
             {
-                debug( "\t+Property (" + node + ") "
-                    + entry.getKey() + " " + "[" + entry.getValue() + "]" );
+                boolean added = neoValues.add( value );
+                if ( added )
+                {
+                    debug( "\t+" + debugText + " (" + node + ") "
+                        + entry.getKey() + " " + "[" + entry.getValue() + "]" );
+                }
             }
         }
     }
 
     private void removeFromNode( AbstractNode abstractNode, Node node )
     {
-        for ( Map.Entry<String, Object> entry : abstractNode.properties()
-            .entrySet() )
+        removeFromNode( node, abstractNode.properties(), "Property" );
+    }
+    
+    private <T> void removeFromNode( Node node,
+        Map<String, Collection<T>> properties, String debugText )
+    {
+        for ( Map.Entry<String, Collection<T>> entry : properties.entrySet() )
         {
-            boolean removed = new NeoPropertyArraySet<Object>( neo, node, entry
-                .getKey() ).remove( entry.getValue() );
-            if ( removed )
+            Collection<Object> neoValues = new NeoPropertyArraySet<Object>(
+                neo, node, entry.getKey() );
+            for ( T value : entry.getValue() )
             {
-                debug( "\t-Property (" + node + ") "
-                    + entry.getKey() + " " + "[" + entry.getValue() + "]" );
+                boolean removed = neoValues.remove( value );
+                if ( removed )
+                {
+                    debug( "\t-" + debugText  + " (" + node + ") "
+                        + entry.getKey() + " " + "[" + entry.getValue() + "]" );
+                }
             }
         }
     }
@@ -357,10 +372,11 @@ public class UriAsrExecutor implements AsrExecutor
             patternNode.addPropertyEqualConstraint( getNodeUriProperty( node ),
                 node.getUriOrNull().getUriAsString() );
         }
-        for ( Map.Entry<String, Object> entry : node.properties().entrySet() )
+        for ( Map.Entry<String, Collection<Object>> entry :
+            node.properties().entrySet() )
         {
-            patternNode.addPropertyEqualConstraint( entry.getKey(), entry
-                .getValue() );
+            patternNode.addPropertyEqualConstraint( entry.getKey(),
+                entry.getValue().toArray() );
         }
         return patternNode;
     }

@@ -14,11 +14,16 @@ import org.neo4j.util.index.Index;
 public class MetaEnabledAsrExecutor extends UriAsrExecutor
 {
     /**
+     * The RDF namespace base URI.
+     */
+    public static final String RDF_NAMESPACE =
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+    
+    /**
      * The URI which represents a type of an instance.
      */
-    public static final String RDF_TYPE_URI =
-            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
-    
+    public static final String RDF_TYPE_URI = RDF_NAMESPACE + "type";
+
     /**
      * The lookup info key for meta enabled nodes.
      */

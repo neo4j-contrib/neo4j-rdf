@@ -5,6 +5,7 @@ import java.util.Map;
 import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.RelationshipType;
 import org.neo4j.neometa.structure.MetaStructure;
+import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Statement;
 
 /**
@@ -44,7 +45,7 @@ public class VerboseRepresentationStrategy extends IndexRepresentationStrategy
         if ( !super.addToRepresentation( representation, nodeMapping,
             statement ) )
         {
-            if ( statement.getObject().isObjectProperty() )
+            if ( isObjectType( statement.getObject() ) )
             {
                 addFourNodeFragment( representation, nodeMapping, statement );
             }
@@ -62,7 +63,7 @@ public class VerboseRepresentationStrategy extends IndexRepresentationStrategy
     {
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
         AbstractNode objectNode = getObjectNode( nodeMapping, statement );
-        String predicate = statement.getPredicate().uriAsString();
+        String predicate = asUri( statement.getPredicate() );
         AbstractNode predicateNode = getPredicateNode( nodeMapping, statement );
         AbstractNode connectorNode = new AbstractNode( null );
         AbstractRelationship subjectToConnectorRel = new AbstractRelationship(
@@ -72,6 +73,11 @@ public class VerboseRepresentationStrategy extends IndexRepresentationStrategy
         AbstractRelationship connectorToPredicate = new AbstractRelationship(
             connectorNode, RelTypes.CONNECTOR_HAS_PREDICATE.name(),
             predicateNode );
+        
+        for ( Context context : statement.getContexts() )
+        {
+            // TODO
+        }
 
         representation.addNode( connectorNode );
         representation.addRelationship( subjectToConnectorRel );

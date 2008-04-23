@@ -1,8 +1,5 @@
 package org.neo4j.rdf.store.representation;
 
-import java.util.Collections;
-import java.util.Map;
-
 import org.neo4j.api.core.Relationship;
 
 /**
@@ -72,13 +69,5 @@ public class AbstractRelationship extends AbstractElement
     public AbstractNode[] getBothNodes()
     {
         return new AbstractNode[] { startNode, endNode };
-    }
-
-    /**
-     * @return the properties set on this relationship.
-     */
-    public Map<String, Object> properties()
-    {
-        return Collections.emptyMap();
     }
 }

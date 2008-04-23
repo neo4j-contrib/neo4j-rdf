@@ -25,7 +25,10 @@ public class AbstractStatementRepresentation
      */
     public void addNode( AbstractNode node )
     {
-    	this.nodes.add( node );
+        if ( !this.nodes.contains( node ) )
+        {
+            this.nodes.add( node );
+        }
     }
     
     /**
@@ -34,7 +37,10 @@ public class AbstractStatementRepresentation
      */
     public void addRelationship( AbstractRelationship relationship )
     {
-    	this.relationships.add( relationship );
+        if ( !this.relationships.contains( relationship ) )
+        {
+            this.relationships.add( relationship );
+        }
     }
     
     /**

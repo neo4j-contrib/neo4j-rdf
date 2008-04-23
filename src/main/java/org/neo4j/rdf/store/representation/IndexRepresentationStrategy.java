@@ -11,7 +11,12 @@ import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.neometa.structure.MetaStructureProperty;
 import org.neo4j.neometa.structure.MetaStructureRelTypes;
 import org.neo4j.neometa.structure.PropertyRange;
+import org.neo4j.rdf.model.Context;
+import org.neo4j.rdf.model.Literal;
+import org.neo4j.rdf.model.Resource;
 import org.neo4j.rdf.model.Statement;
+import org.neo4j.rdf.model.Uri;
+import org.neo4j.rdf.model.Value;
 import org.neo4j.rdf.store.MetaEnabledAsrExecutor;
 import org.neo4j.rdf.store.UriAsrExecutor;
 import org.neo4j.util.NeoUtil;
@@ -26,6 +31,12 @@ import org.neo4j.util.index.SingleValueIndex;
 abstract class IndexRepresentationStrategy implements
     RdfRepresentationStrategy
 {
+    /**
+     * The property postfix which is concatenated with a property key to get
+     * the context property key on a node (literal values).
+     */
+    public static final String CONTEXT_PROPERTY_POSTFIX = "____context";
+    
     private final AsrExecutor executor;
     private final MetaStructure meta;
 
@@ -59,7 +70,6 @@ abstract class IndexRepresentationStrategy implements
     public AbstractStatementRepresentation getAbstractRepresentation(
         Statement... statements )
     {
-        assert statements.length > 0;
         AbstractStatementRepresentation representation =
             new AbstractStatementRepresentation();
         Map<String, AbstractNode> nodeMapping =
@@ -83,7 +93,8 @@ abstract class IndexRepresentationStrategy implements
         AbstractStatementRepresentation representation,
         Map<String, AbstractNode> nodeMapping, Statement statement )
     {
-        String predicate = statement.getPredicate().uriAsString();
+        String predicate =
+            ( ( Uri ) statement.getPredicate() ).getUriAsString();
         if ( predicate.equals( MetaEnabledAsrExecutor.RDF_TYPE_URI ) )
         {
             addMetaInstanceOfFragment( representation, nodeMapping, statement );
@@ -115,7 +126,7 @@ abstract class IndexRepresentationStrategy implements
         Map<String, AbstractNode> nodeMapping, Statement statement )
     {
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
-        Object literalValue = statement.getObject().getLiteralValueOrNull();
+        Object literalValue = ( ( Literal ) statement.getObject() ).getValue();
         
         // TODO Should this be here?
         if ( literalValue != null )
@@ -123,8 +134,14 @@ abstract class IndexRepresentationStrategy implements
             convertLiteralValueToRealValue( statement, literalValue );
         }
         
-        subjectNode.addProperty( statement.getPredicate().uriAsString(),
-            literalValue );
+        String predicate =
+            ( ( Uri ) statement.getPredicate() ).getUriAsString();
+        subjectNode.addProperty( predicate, literalValue );
+        String predicateContext = predicate + CONTEXT_PROPERTY_POSTFIX;
+        for ( Context context : statement.getContexts() )
+        {
+            // TODO
+        }
     }
     
     protected Object convertLiteralValueToRealValue( Statement statement,
@@ -134,8 +151,8 @@ abstract class IndexRepresentationStrategy implements
         if ( result != null && result instanceof String && meta != null )
         {
             MetaStructureProperty property =
-                meta.getGlobalNamespace().getMetaProperty(
-                    statement.getPredicate().uriAsString(), false );
+                meta.getGlobalNamespace().getMetaProperty( ( ( Uri )
+                    statement.getPredicate() ).getUriAsString(), false );
             if ( property != null )
             {
                 PropertyRange range = meta.lookup( property,
@@ -168,28 +185,36 @@ abstract class IndexRepresentationStrategy implements
         }
         return node;
     }
+    
+    protected String asUri( Value value )
+    {
+        return ( ( Uri ) value ).getUriAsString();
+    }
 
     protected AbstractNode getSubjectNode(
         Map<String, AbstractNode> nodeMapping, Statement statement )
     {
-       return getOrCreateNode( nodeMapping,
-           statement.getSubject().uriAsString() );
+       return getOrCreateNode( nodeMapping, asUri( statement.getSubject() ) );
     }
 
     protected AbstractNode getObjectNode( Map<String, AbstractNode> nodeMapping,
         Statement statement )
     {
-        return getOrCreateNode( nodeMapping, 
-            statement.getObject().getResourceOrNull().uriAsString() );
+        return getOrCreateNode( nodeMapping, asUri( statement.getObject() ) );
     }
     
     protected AbstractNode getPredicateNode(
         Map<String, AbstractNode> nodeMapping, Statement statement )
     {
         AbstractNode node = getOrCreateNode( nodeMapping,
-            statement.getPredicate().uriAsString() );
+            asUri( statement.getPredicate() ) );
         node.addLookupInfo( "meta", "property" );
         return node;
+    }
+    
+    protected boolean isObjectType( Value value )
+    {
+        return value instanceof Resource;
     }
 
     private static enum MyRelTypes implements RelationshipType

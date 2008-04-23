@@ -10,16 +10,12 @@ import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.neometa.structure.MetaStructureClass;
 import org.neo4j.neometa.structure.MetaStructureImpl;
 import org.neo4j.neometa.structure.MetaStructureProperty;
-import org.neo4j.rdf.model.Predicate;
-import org.neo4j.rdf.model.PredicateImpl;
+import org.neo4j.rdf.model.CompleteStatement;
+import org.neo4j.rdf.model.Context;
+import org.neo4j.rdf.model.Literal;
+import org.neo4j.rdf.model.Resource;
 import org.neo4j.rdf.model.Statement;
-import org.neo4j.rdf.model.StatementImpl;
-import org.neo4j.rdf.model.Subject;
-import org.neo4j.rdf.model.SubjectImpl;
-import org.neo4j.rdf.model.TripleObject;
-import org.neo4j.rdf.model.TripleObjectLiteral;
-import org.neo4j.rdf.model.TripleObjectResource;
-import org.neo4j.rdf.model.UriImpl;
+import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.store.representation.DenseRepresentationStrategy;
 import org.neo4j.rdf.store.representation.RdfRepresentationStrategy;
 import org.neo4j.rdf.store.representation.VerboseRepresentationStrategy;
@@ -32,6 +28,7 @@ public class TestRdfStore extends NeoTestCase
     private static final String PERSON_CLASS = "http://classes#Person";
     private static final String NAME_PROPERTY = "http://properties#name";
     private static final String KNOWS_PROPERTY = "http://properties#knows";
+    private static final Context TEST_CONTEXT = new Context( "aTest" );
     
     /**
      * Tests an {@link RdfStore} with a {@link DenseRepresentationStrategy}.
@@ -115,45 +112,44 @@ public class TestRdfStore extends NeoTestCase
 
 	private List<Statement> applyStatements( RdfStore store )
 	{
-	    Predicate typePredicate = new PredicateImpl(
-	        MetaEnabledAsrExecutor.RDF_TYPE_URI );
-	    TripleObject personClass = new TripleObjectResource(
-	        new UriImpl( PERSON_CLASS ) );
-		Subject subject = new SubjectImpl( "http://henrik" );
-		Subject otherSubject = new SubjectImpl( "http://emil" );
-		Subject thirdSubject = new SubjectImpl( "http://mattias" );
-		Predicate namePredicate = new PredicateImpl( NAME_PROPERTY );
-		Predicate knowsPredicate = new PredicateImpl( KNOWS_PROPERTY );
-		TripleObject object = new TripleObjectLiteral( "Henrik" );
-		TripleObject otherObject = new TripleObjectLiteral( "Emil" );
-		TripleObject thirdObject = new TripleObjectLiteral( "Mattias" );
+	    String typePredicate = MetaEnabledAsrExecutor.RDF_TYPE_URI;
+	    Uri personClass = new Uri( PERSON_CLASS );
+		String subject = "http://henrik";
+		String otherSubject = "http://emil";
+		String thirdSubject = "http://mattias";
+		String namePredicate = NAME_PROPERTY;
+		String knowsPredicate = KNOWS_PROPERTY;
+		Object object = "Henrik";
+		Object otherObject = "Emil";
+		Object thirdObject = "Mattias";
+		Context[] aTestContext = new Context[] {};
 		
 		Statement subjectTypeStatement =
-		    new StatementImpl( subject, typePredicate, personClass );
+		    statement( subject, typePredicate, personClass );
 		addTwice( store, subjectTypeStatement );
 		Statement subjectNameStatement =
-			new StatementImpl( subject, namePredicate, object );
+			statement( subject, namePredicate, object );
 		addTwice( store, subjectNameStatement );
 		
         Statement otherSubjectTypeStatement =
-            new StatementImpl( otherSubject, typePredicate, personClass );
+            statement( otherSubject, typePredicate, personClass );
         addTwice( store, otherSubjectTypeStatement );
-		Statement otherSubjectNameStatement = new StatementImpl( otherSubject,
-			namePredicate, otherObject );
+		Statement otherSubjectNameStatement =
+		    statement( otherSubject, namePredicate, otherObject );
 		addTwice( store, otherSubjectNameStatement );
 		
-		Statement thirdSubjectNameStatement = new StatementImpl( thirdSubject,
-			namePredicate, thirdObject );
+		Statement thirdSubjectNameStatement =
+		    statement( thirdSubject, namePredicate, thirdObject );
 		addTwice( store, thirdSubjectNameStatement );
         Statement thirdSubjectTypeStatement =
-            new StatementImpl( thirdSubject, typePredicate, personClass );
+            statement( thirdSubject, typePredicate, personClass );
         addTwice( store, thirdSubjectTypeStatement );
 		
-		Statement knowsStatement = new StatementImpl( subject, knowsPredicate,
-			new TripleObjectResource( otherSubject ) );
+		Statement knowsStatement =
+		    statement( subject, knowsPredicate, new Uri( otherSubject ) );
 		addTwice( store, knowsStatement );
-		Statement otherKnowsStatement = new StatementImpl( subject,
-			knowsPredicate, new TripleObjectResource( thirdSubject ) );
+		Statement otherKnowsStatement =
+		    statement( subject, knowsPredicate, new Uri( thirdSubject ) );
 		addTwice( store, otherKnowsStatement );
 		
 		return new ArrayList<Statement>(
@@ -168,7 +164,21 @@ public class TestRdfStore extends NeoTestCase
 		        otherKnowsStatement ) );
 	}
 	
-	private void removeStatements( RdfStore store, List<Statement> statements )
+	private Statement statement( String subject, String predicate,
+	    Resource object )
+	{
+	    return new CompleteStatement( new Uri( subject ), new Uri( predicate ),
+	        object );
+	}
+	
+    private Statement statement( String subject, String predicate,
+        Object object )
+    {
+        return new CompleteStatement( new Uri( subject ), new Uri( predicate ),
+            new Literal( object ) );
+    }
+
+    private void removeStatements( RdfStore store, List<Statement> statements )
 	{
         while ( !statements.isEmpty() )
         {

@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.neo4j.api.core.NeoService;
 import org.neo4j.neometa.structure.MetaStructure;
+import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Statement;
 
 /**
@@ -38,7 +39,7 @@ public class DenseRepresentationStrategy extends IndexRepresentationStrategy
 	    if ( !super.addToRepresentation(
 	        representation, nodeMapping, statement ) )
 	    {
-            if ( statement.getObject().isObjectProperty() )
+            if ( isObjectType( statement.getObject() ) )
             {
                 // ( S ) -- predicate_uri --> ( O )
                 addTwoNodeFragment( representation, nodeMapping, statement );
@@ -58,7 +59,12 @@ public class DenseRepresentationStrategy extends IndexRepresentationStrategy
     {
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
         AbstractNode objectNode = getObjectNode( nodeMapping, statement );
-        representation.addRelationship( new AbstractRelationship( subjectNode,
-            statement.getPredicate().uriAsString(), objectNode ) );
+        AbstractRelationship relationship = new AbstractRelationship(
+            subjectNode, asUri( statement.getPredicate() ), objectNode );
+        for ( Context context : statement.getContexts() )
+        {
+            // TODO
+        }
+        representation.addRelationship( relationship );
     }
 }

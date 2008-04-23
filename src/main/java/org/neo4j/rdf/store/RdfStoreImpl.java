@@ -2,7 +2,6 @@ package org.neo4j.rdf.store;
 
 import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Transaction;
-import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
 import org.neo4j.rdf.store.representation.AsrExecutor;
@@ -28,7 +27,7 @@ public class RdfStoreImpl implements RdfStore
         this.representationStrategy = representationStrategy;
     }
 
-    public void addStatement( Statement statement, Context... contexts )
+    public void addStatement( Statement statement )
     {
         Transaction tx = neo.beginTx();
         try
@@ -51,17 +50,33 @@ public class RdfStoreImpl implements RdfStore
 
     public Iterable<Statement> getStatements(
         Statement statementWithOptionalNulls,
-        boolean includeInferredStatements, Context... contexts )
+        boolean includeInferredStatements )
     {
-        // if ( theseAreNull( statementWithOptionalNulls, true, false, false ) )
-        // {
-        //    		
-        // }
-        // else if ( theseAreNull( statementWithOptionalNulls,
-        // false, false, true ) )
-        // {
-        //    		
-        // }
+//        S, null, null         : No
+//        S, P, null            : Yes
+//        null, null, O         : No
+//        null, P, O            : Yes (for objecttype)
+        
+//        if ( theseAreNull( statementWithOptionalNulls, false, true, true ) )
+//        {
+//            
+//        }
+//        else if ( theseAreNull( statementWithOptionalNulls,
+//            false, false, true ) )
+//        {
+//        
+//        }
+//        else if ( theseAreNull( statementWithOptionalNulls,
+//            true, true, false ) )
+//        {
+//        }
+//        else if ( theseAreNull( statementWithOptionalNulls,
+//            true, false, false ) )
+//        {
+//            
+//        }
+//        String query = SparqlBuilder.getQuery( statementWithOptionalNulls );
+        
         throw new UnsupportedOperationException();
     }
 
@@ -81,8 +96,7 @@ public class RdfStoreImpl implements RdfStore
         return shouldBeNull ? object == null : object != null;
     }
 
-    public void removeStatements( Statement statementWithOptionalNulls,
-        Context... contexts )
+    public void removeStatements( Statement statementWithOptionalNulls )
     {
         if ( !theseAreNull( statementWithOptionalNulls, false, false, false ) )
         {
