@@ -9,6 +9,17 @@ import org.neo4j.rdf.model.Uri;
 public class AbstractNode extends AbstractElement
 {
     private final String uriOrNull;
+    private NodeMatcher nodeMatcher;
+    
+    public void setOptionalMatcher( NodeMatcher matcher )
+    {
+        this.nodeMatcher = matcher;
+    }
+    
+    public NodeMatcher getOptionalMatcher()
+    {
+        return this.nodeMatcher;
+    }
 
     /**
      * @param uriOrNull the URI of this node, or {@code null} if it's a
