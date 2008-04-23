@@ -18,8 +18,8 @@ public abstract class AbstractElement
 {
     private final Map<String, Collection<Object>> propertyMap = Collections
         .synchronizedMap( new HashMap<String, Collection<Object>>() );
-    private final Map<String, String> infoMap = Collections
-        .synchronizedMap( new HashMap<String, String>() );
+    private final Map<String, Object> infoMap = Collections
+        .synchronizedMap( new HashMap<String, Object>() );
 
     /**
      * Adds a property to this node.
@@ -56,18 +56,18 @@ public abstract class AbstractElement
      * @param key the data key.
      * @param value the value.
      */
-    public void addLookupInfo( String key, String value )
+    public void addLookupInfo( String key, Object value )
     {
         this.infoMap.put( key, value );
     }
 
     /**
-     * Looks up a value set with {@link #addLookupInfo(String, String)}.
+     * Looks up a value set with {@link #addLookupInfo(String, Object)}.
      * @param key the data key.
      * @return the value for the data key, or {@code null} if there were
      * no value associated with {@code key}.
      */
-    public String lookupInfo( String key )
+    public Object lookupInfo( String key )
     {
         return this.infoMap.get( key );
     }

@@ -19,5 +19,11 @@ public class Literal implements Value
     public Object getValue()
     {
         return this.value;
-    }   
+    }
+    
+    @Override
+    public String toString()
+    {
+        return "Literal[" + this.value + "]";
+    }
 }

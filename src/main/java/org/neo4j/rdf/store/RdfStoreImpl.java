@@ -2,6 +2,7 @@ package org.neo4j.rdf.store;
 
 import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Transaction;
+import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
 import org.neo4j.rdf.store.representation.AsrExecutor;
@@ -107,6 +108,14 @@ public class RdfStoreImpl implements RdfStore
 
     private void removeStatementsSimple( Statement statement )
     {
+//        StringBuffer contexts = new StringBuffer();
+//        for ( Context context : statement.getContexts() )
+//        {
+//            contexts.append( context.getUriAsString() + ", " );
+//        }
+//        System.out.println( "removeStatement:" + statement.getSubject() +
+//            ", " + statement.getPredicate() + ", " + statement.getObject() +
+//            " | " + contexts.toString() );
         Transaction tx = neo.beginTx();
         try
         {

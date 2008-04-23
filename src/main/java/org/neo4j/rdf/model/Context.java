@@ -11,4 +11,10 @@ public class Context extends Uri
     {
         super( contextUri );
     }
+    
+    @Override
+    public String toString()
+    {
+        return "Context[" + getUriAsString() + "]";
+    }
 }

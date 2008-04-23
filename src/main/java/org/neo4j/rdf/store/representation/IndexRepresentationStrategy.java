@@ -137,11 +137,17 @@ abstract class IndexRepresentationStrategy implements
         String predicate =
             ( ( Uri ) statement.getPredicate() ).getUriAsString();
         subjectNode.addProperty( predicate, literalValue );
-        String predicateContext = predicate + CONTEXT_PROPERTY_POSTFIX;
+        String predicateContext = UriAsrExecutor.formContextPropertyKey(
+            predicate, literalValue );
         for ( Context context : statement.getContexts() )
         {
-            // TODO
+            subjectNode.addProperty( predicateContext,
+                context.getUriAsString() );
         }
+        Map<String, String> contextKeys = new HashMap<String, String>();
+        contextKeys.put( predicateContext, predicate );
+        subjectNode.addLookupInfo( UriAsrExecutor.LOOKUP_CONTEXT_KEYS,
+            contextKeys );
     }
     
     protected Object convertLiteralValueToRealValue( Statement statement,
@@ -216,7 +222,7 @@ abstract class IndexRepresentationStrategy implements
     {
         return value instanceof Resource;
     }
-
+    
     private static enum MyRelTypes implements RelationshipType
     {
         /**

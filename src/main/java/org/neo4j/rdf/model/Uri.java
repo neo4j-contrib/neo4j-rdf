@@ -25,4 +25,10 @@ public class Uri implements Resource
     {
         return this.uriAsString;
     }
+
+    @Override
+    public String toString()
+    {
+        return "Uri[" + uriAsString + "]";
+    }
 }

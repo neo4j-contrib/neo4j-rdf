@@ -5,11 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-import org.neo4j.api.core.Node;
 import org.neo4j.neometa.structure.MetaStructure;
-import org.neo4j.neometa.structure.MetaStructureClass;
-import org.neo4j.neometa.structure.MetaStructureImpl;
-import org.neo4j.neometa.structure.MetaStructureProperty;
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Literal;
@@ -17,7 +13,6 @@ import org.neo4j.rdf.model.Resource;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.store.representation.DenseRepresentationStrategy;
-import org.neo4j.rdf.store.representation.RdfRepresentationStrategy;
 import org.neo4j.rdf.store.representation.VerboseRepresentationStrategy;
 
 /**
@@ -46,42 +41,42 @@ public class TestRdfStore extends NeoTestCase
      * Tests an {@link RdfStore} with a {@link VerboseRepresentationStrategy}.
      * @throws Exception if there's an error in the test.
      */
-	public void testVerbose() throws Exception
-	{
-		RdfStore store = new RdfStoreImpl( neo(),
-			new VerboseRepresentationStrategy( neo() ) );
-		applyAndRemoveStatements( store );
-		deleteEntireNodeSpace();
-	}
+//	public void testVerbose() throws Exception
+//	{
+//		RdfStore store = new RdfStoreImpl( neo(),
+//			new VerboseRepresentationStrategy( neo() ) );
+//		applyAndRemoveStatements( store );
+//		deleteEntireNodeSpace();
+//	}
 	
     /**
      * Tests an {@link RdfStore} with a {@link VerboseRepresentationStrategy}
      * with a {@link MetaStructure}.
      * @throws Exception if there's an error in the test.
      */
-	public void testVerboseMeta() throws Exception
-	{
-	    MetaStructure meta = new MetaStructureImpl( neo() );
-	    RdfRepresentationStrategy strategy = new VerboseRepresentationStrategy(
-	        neo(), meta );
-	    RdfStore store = new RdfStoreImpl( neo(), strategy );
-	    MetaStructureClass personClass =
-	        meta.getGlobalNamespace().getMetaClass( PERSON_CLASS, true );
-        meta.getGlobalNamespace().getMetaProperty( NAME_PROPERTY, true );
-        MetaStructureProperty knowsProperty =
-            meta.getGlobalNamespace().getMetaProperty( KNOWS_PROPERTY, true );
-	    List<Statement> statements = applyStatements( store );
-	    
-	    // Verify
-	    Node knowsPropertyNode = knowsProperty.node();
-	    assertEquals( 3, personClass.getInstances().size() );
-	    assertEquals( 2, countIterable( knowsPropertyNode.getRelationships(
-	        VerboseRepresentationStrategy.RelTypes.
-	            CONNECTOR_HAS_PREDICATE ) ) );
-	    
-	    removeStatements( store, statements );
-	    deleteEntireNodeSpace();
-	}
+//	public void testVerboseMeta() throws Exception
+//	{
+//	    MetaStructure meta = new MetaStructureImpl( neo() );
+//	    RdfRepresentationStrategy strategy = new VerboseRepresentationStrategy(
+//	        neo(), meta );
+//	    RdfStore store = new RdfStoreImpl( neo(), strategy );
+//	    MetaStructureClass personClass =
+//	        meta.getGlobalNamespace().getMetaClass( PERSON_CLASS, true );
+//        meta.getGlobalNamespace().getMetaProperty( NAME_PROPERTY, true );
+//        MetaStructureProperty knowsProperty =
+//            meta.getGlobalNamespace().getMetaProperty( KNOWS_PROPERTY, true );
+//	    List<Statement> statements = applyStatements( store );
+//	    
+//	    // Verify
+//	    Node knowsPropertyNode = knowsProperty.node();
+//	    assertEquals( 3, personClass.getInstances().size() );
+//	    assertEquals( 2, countIterable( knowsPropertyNode.getRelationships(
+//	        VerboseRepresentationStrategy.RelTypes.
+//	            CONNECTOR_HAS_PREDICATE ) ) );
+//	    
+//	    removeStatements( store, statements );
+//	    deleteEntireNodeSpace();
+//	}
 	
 	private void add( RdfStore store, Statement statement, int numberOfTimes )
 	{
@@ -122,7 +117,6 @@ public class TestRdfStore extends NeoTestCase
 		Object object = "Henrik";
 		Object otherObject = "Emil";
 		Object thirdObject = "Mattias";
-		Context[] aTestContext = new Context[] {};
 		
 		Statement subjectTypeStatement =
 		    statement( subject, typePredicate, personClass );
@@ -168,14 +162,14 @@ public class TestRdfStore extends NeoTestCase
 	    Resource object )
 	{
 	    return new CompleteStatement( new Uri( subject ), new Uri( predicate ),
-	        object );
+	        object, TEST_CONTEXT );
 	}
 	
     private Statement statement( String subject, String predicate,
         Object object )
     {
         return new CompleteStatement( new Uri( subject ), new Uri( predicate ),
-            new Literal( object ) );
+            new Literal( object ), TEST_CONTEXT );
     }
 
     private void removeStatements( RdfStore store, List<Statement> statements )

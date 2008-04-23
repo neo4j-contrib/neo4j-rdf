@@ -25,4 +25,10 @@ public class BlankNode implements Resource
     {
         return this.internalId;
     }
+
+    @Override
+    public String toString()
+    {
+        return "BlankNode[" + internalId + "]";
+    }
 }

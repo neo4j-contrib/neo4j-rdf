@@ -16,4 +16,10 @@ public class Wildcard implements Value
     {
         return name;
     }
+    
+    @Override
+    public String toString()
+    {
+        return "Wildcard[" + name + "]";
+    }
 }

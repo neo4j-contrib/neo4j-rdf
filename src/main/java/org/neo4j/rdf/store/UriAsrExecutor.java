@@ -8,15 +8,16 @@ import java.util.Map;
 import org.neo4j.api.core.Direction;
 import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
+import org.neo4j.api.core.PropertyContainer;
 import org.neo4j.api.core.Relationship;
 import org.neo4j.api.core.RelationshipType;
 import org.neo4j.rdf.model.Uri;
+import org.neo4j.rdf.store.representation.AbstractElement;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
 import org.neo4j.rdf.store.representation.AsrExecutor;
 import org.neo4j.util.NeoPropertyArraySet;
-import org.neo4j.util.PureNodeRelationshipSet;
 import org.neo4j.util.index.Index;
 import org.neo4j.util.matching.PatternMatch;
 import org.neo4j.util.matching.PatternMatcher;
@@ -29,6 +30,8 @@ import org.neo4j.util.matching.PatternNode;
  */
 public class UriAsrExecutor implements AsrExecutor
 {
+    public static final String CONTEXT_DELIMITER = "š";
+    public static final String LOOKUP_CONTEXT_KEYS = "contextKeys";
     static final String URI_PROPERTY_KEY = "uri";
 
     private NeoService neo;
@@ -46,7 +49,7 @@ public class UriAsrExecutor implements AsrExecutor
 
     protected void debug( String message )
     {
-        System.out.println( message );
+//        System.out.println( message );
     }
 
     protected Node lookupNode( AbstractNode node,
@@ -94,9 +97,10 @@ public class UriAsrExecutor implements AsrExecutor
             Node endNode = nodeMapping.get( abstractRelationship.getEndNode() );
             RelationshipType relType = new ARelationshipType(
                 abstractRelationship.getRelationshipTypeName() );
+            Relationship relationship = null;
             if ( startNode != null && endNode != null )
             {
-                ensureConnected( startNode, relType, endNode );
+                relationship = ensureConnected( startNode, relType, endNode );
             }
             else if ( startNode == null && endNode == null )
             {
@@ -105,9 +109,10 @@ public class UriAsrExecutor implements AsrExecutor
             }
             else
             {
-                findOtherNodePresumedBlank( abstractRelationship,
-                    representation, nodeMapping, true );
+                relationship = findOtherNodePresumedBlank( abstractRelationship,
+                    representation, nodeMapping, true ).relationship;
             }
+            applyOnRelationship( abstractRelationship, relationship );
         }
     }
 
@@ -156,7 +161,8 @@ public class UriAsrExecutor implements AsrExecutor
             else
             {
                 Node otherNode = findOtherNodePresumedBlank(
-                    abstractRelationship, representation, nodeMapping, false );
+                    abstractRelationship, representation, nodeMapping,
+                    false ).node;
                 if ( otherNode == null )
                 {
                     return;
@@ -172,13 +178,21 @@ public class UriAsrExecutor implements AsrExecutor
             }
         }
 
-        for ( Relationship relationship : relationshipMapping.values() )
+        // Do the actual deletion
+        for ( Map.Entry<AbstractRelationship, Relationship> entry :
+            relationshipMapping.entrySet() )
         {
-            debug( "\t-Relationship "
-                + relationship.getStartNode() + " ---["
-                + relationship.getType().name() + "]--> "
-                + relationship.getEndNode() );
-            relationship.delete();
+            AbstractRelationship abstractRelationship = entry.getKey();
+            Relationship relationship = entry.getValue();
+            removeFromRelationship( abstractRelationship, relationship );
+            if ( relationshipIsEmpty( abstractRelationship, relationship ) )
+            {
+                relationship.delete();
+                debug( "\t-Relationship "
+                    + relationship.getStartNode() + " ---["
+                    + relationship.getType().name() + "]--> "
+                    + relationship.getEndNode() );
+            }
         }
         for ( Map.Entry<AbstractNode, Node> entry : nodeMapping.entrySet() )
         {
@@ -191,6 +205,30 @@ public class UriAsrExecutor implements AsrExecutor
                 removeNode( node, abstractNode.getUriOrNull() );
             }
         }
+    }
+    
+    protected String getPropertyKeyForContextKey( AbstractElement element,
+        String contextKey )
+    {
+        Map<?, ?> contextToPropertyKeys = ( Map<?, ?> ) element.lookupInfo(
+            UriAsrExecutor.LOOKUP_CONTEXT_KEYS );
+        return contextToPropertyKeys == null ? null :
+            ( String ) contextToPropertyKeys.get( contextKey );
+    }
+    
+    protected boolean isContextKey( AbstractElement element,
+        String key )
+    {
+        Map<?, ?> contextToPropertyKeys = ( Map<?, ?> ) element.lookupInfo(
+            UriAsrExecutor.LOOKUP_CONTEXT_KEYS );
+        return contextToPropertyKeys != null &&
+            contextToPropertyKeys.containsKey( key );
+    }
+    
+    private boolean relationshipIsEmpty(
+        AbstractRelationship abstractRelationship, Relationship relationship )
+    {
+        return !relationship.getPropertyKeys().iterator().hasNext();
     }
 
     private boolean nodeIsEmpty( AbstractNode abstractNode, Node node )
@@ -223,67 +261,184 @@ public class UriAsrExecutor implements AsrExecutor
         return null;
     }
 
-    private void ensureConnected( Node startNode, RelationshipType relType,
-        Node endNode )
+    private Relationship ensureConnected( Node startNode,
+        RelationshipType relType, Node endNode )
     {
-        boolean added = new PureNodeRelationshipSet( startNode, relType )
-            .add( endNode );
-        if ( added )
+        Relationship relationship = null;
+        for ( Relationship rel :
+            startNode.getRelationships( relType, Direction.OUTGOING ) )
         {
+            if ( rel.getEndNode().equals( endNode ) )
+            {
+                relationship = rel;
+                break;
+            }
+        }
+        
+        if ( relationship == null )
+        {
+            relationship = startNode.createRelationshipTo( endNode, relType );
             debug( "\t+Relationship " + startNode + " ---["
                 + relType.name() + "]--> " + endNode );
         }
+        return relationship;
+    }
+    
+    private void applyOnRelationship( AbstractRelationship abstractRelationship,
+        Relationship relationship )
+    {
+        applyOnContainer( abstractRelationship, relationship );
     }
 
     private void applyOnNode( AbstractNode abstractNode, Node node )
     {
-        applyOnNode( node, abstractNode.properties(), "Property" );
+        applyOnContainer( abstractNode, node );
     }
     
-    private <T> void applyOnNode( Node node,
-        Map<String, Collection<T>> properties, String debugText )
+    private void applyOnContainer( AbstractElement abstractElement,
+        PropertyContainer container )
     {
-        for ( Map.Entry<String, Collection<T>> entry : properties.entrySet() )
+        for ( Map.Entry<String, Collection<Object>> entry :
+            abstractElement.properties().entrySet() )
         {
             Collection<Object> neoValues = new NeoPropertyArraySet<Object>(
-                neo, node, entry.getKey() );
-            for ( T value : entry.getValue() )
+                neo, container, entry.getKey() );
+            for ( Object value : entry.getValue() )
             {
                 boolean added = neoValues.add( value );
                 if ( added )
                 {
-                    debug( "\t+" + debugText + " (" + node + ") "
-                        + entry.getKey() + " " + "[" + entry.getValue() + "]" );
+                    debug( "\t+Property" + " (" + container + ") "
+                        + entry.getKey() + " " + "[" + value + "]" );
                 }
+            }
+        }
+    }
+    
+    private void removeFromRelationship(
+        AbstractRelationship abstractRelationship, Relationship relationship )
+    {
+        // We only support context properties on relationship for now.
+        for ( Map.Entry<String, Collection<Object>> entry :
+            abstractRelationship.properties().entrySet() )
+        {
+            String key = entry.getKey();
+            if ( !isContextKey( abstractRelationship, key ) )
+            {
+                throw new UnsupportedOperationException( key );
+            }
+            Collection<Object> neoValues = new NeoPropertyArraySet<Object>(
+                neo, relationship, key );
+            removeAll( relationship, key, neoValues,
+                entry.getValue(), "Context" );
+        }
+    }
+    
+    private void removeAll( PropertyContainer container, String key,
+        Collection<Object> neoValues, Collection<?> valuesToRemove,
+        String debugText )
+    {
+        for ( Object value : valuesToRemove )
+        {
+            boolean removed = neoValues.remove( value );
+            if ( removed )
+            {
+                debug( "\t-" + debugText + " (" + container + ") "
+                    + key + " " + "[" + value + "]" );
             }
         }
     }
 
     private void removeFromNode( AbstractNode abstractNode, Node node )
     {
-        removeFromNode( node, abstractNode.properties(), "Property" );
-    }
-    
-    private <T> void removeFromNode( Node node,
-        Map<String, Collection<T>> properties, String debugText )
-    {
-        for ( Map.Entry<String, Collection<T>> entry : properties.entrySet() )
+        // Take the context properties first.
+        Map<String, String> contextToReal = new HashMap<String, String>();
+        for ( Map.Entry<String, Collection<Object>> entry :
+            abstractNode.properties().entrySet() )
         {
-            Collection<Object> neoValues = new NeoPropertyArraySet<Object>(
-                neo, node, entry.getKey() );
-            for ( T value : entry.getValue() )
+            String key = entry.getKey();
+            if ( !isContextKey( abstractNode, key ) )
             {
-                boolean removed = neoValues.remove( value );
-                if ( removed )
+                continue;
+            }
+            String realKey =
+                getPropertyKeyForContextKey( abstractNode, key );
+            if ( realKey != null )
+            {
+                contextToReal.put( key, realKey );
+            }
+            Collection<Object> neoValues = new NeoPropertyArraySet<Object>(
+                neo, node, key );
+            removeAll( node, key, neoValues, entry.getValue(), "Context" );
+        }
+        
+        // Do the real keys
+        for ( Map.Entry<String, Collection<Object>> entry :
+            abstractNode.properties().entrySet() )
+        {
+            String key = entry.getKey();
+            if ( isContextKey( abstractNode, key ) )
+            {
+                continue;
+            }
+            Collection<Object> neoValues = new NeoPropertyArraySet<Object>(
+                neo, node, key );
+            String contextKey = contextToReal.get( key );
+            if ( contextKey != null )
+            {
+                // This means that we're trying to remove contexts, not the
+                // actual property, unless all the contexts has been removed.
+                for ( Object value : entry.getValue() )
                 {
-                    debug( "\t-" + debugText  + " (" + node + ") "
-                        + entry.getKey() + " " + "[" + entry.getValue() + "]" );
+                    if ( !thereAreMoreContexts( node, key, neoValues ) )
+                    {
+                        boolean removed = neoValues.remove( value );
+                        if ( removed )
+                        {
+                            debug( "\t-Property"  + " (" + node + ") "
+                                + key + " " + "[" + value + "]" );
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // This means that we're removing the property and all its
+                // contexts as well.
+                for ( Object value : entry.getValue() )
+                {
+                    if ( node.removeProperty( formContextPropertyKey(
+                        key, value ) ) != null )
+                    {
+                        debug( "\t-" + "Contexts" + " (" + node + ") "
+                            + key + " " + "[" + value + "]" );
+                    }
+                    boolean removed = neoValues.remove( value );
+                    if ( removed )
+                    {
+                        debug( "\t-Property"  + " (" + node + ") "
+                            + key + " " + "[" + value + "]" );
+                    }
                 }
             }
         }
     }
+    
+    private boolean thereAreMoreContexts( Node node, String key,
+        Collection<Object> neoValues )
+    {
+        for ( Object value : neoValues )
+        {
+            String contextKey = formContextPropertyKey( key, value );
+            if ( node.hasProperty( contextKey ) )
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 
-    private Node findOtherNodePresumedBlank(
+    private NodeAndRelationship findOtherNodePresumedBlank(
         AbstractRelationship abstractRelationship,
         AbstractStatementRepresentation representation,
         Map<AbstractNode, Node> nodeMapping, boolean createIfItDoesntExist )
@@ -299,6 +454,7 @@ public class UriAsrExecutor implements AsrExecutor
         Iterator<PatternMatch> matches = PatternMatcher.getMatcher().match(
             startingPatternNode, startingNode ).iterator();
         Node node = null;
+        Relationship relationship = null;
         if ( matches.hasNext() )
         {
             node = matches.next().getNodeFor(
@@ -314,9 +470,8 @@ public class UriAsrExecutor implements AsrExecutor
                 abstractRelationship.getRelationshipTypeName() );
             if ( abstractRelationship.getStartNode().getUriOrNull() == null )
             {
-                node
-                    .createRelationshipTo( nodeMapping
-                        .get( abstractRelationship.getEndNode() ),
+                relationship = node.createRelationshipTo(
+                    nodeMapping.get( abstractRelationship.getEndNode() ),
                         relationshipType );
                 debug( "\t+Relationship " + node + " ---["
                     + relationshipType.name() + "]--> "
@@ -324,16 +479,18 @@ public class UriAsrExecutor implements AsrExecutor
             }
             else
             {
-                nodeMapping.get( abstractRelationship.getStartNode() )
-                    .createRelationshipTo( node, relationshipType );
+                relationship = nodeMapping.get(
+                    abstractRelationship.getStartNode() ).createRelationshipTo(
+                        node, relationshipType );
                 debug( "\t+Relationship "
                     + nodeMapping.get( abstractRelationship.getStartNode() )
                     + " ---[" + relationshipType.name() + "]--> " + node );
             }
+            applyOnRelationship( abstractRelationship, relationship );
         }
         nodeMapping.put( abstractRelationship
             .getOtherNode( startingAbstractNode ), node );
-        return node;
+        return new NodeAndRelationship( node, relationship );
     }
 
     private Map<AbstractNode, PatternNode> representationToPattern(
@@ -368,12 +525,12 @@ public class UriAsrExecutor implements AsrExecutor
                 getNodeUriPropertyKey( node ),
                 node.getUriOrNull().getUriAsString() );
         }
-        for ( Map.Entry<String, Collection<Object>> entry :
-            node.properties().entrySet() )
-        {
-            patternNode.addPropertyEqualConstraint( entry.getKey(),
-                entry.getValue().toArray() );
-        }
+//        for ( Map.Entry<String, Collection<Object>> entry :
+//            node.properties().entrySet() )
+//        {
+//            patternNode.addPropertyEqualConstraint( entry.getKey(),
+//                entry.getValue().toArray() );
+//        }
         return patternNode;
     }
     
@@ -392,6 +549,12 @@ public class UriAsrExecutor implements AsrExecutor
         return URI_PROPERTY_KEY;
     }
 
+    public static String formContextPropertyKey( String predicate,
+        Object value )
+    {
+        return predicate + CONTEXT_DELIMITER + value.toString();
+    }
+    
     private static class ARelationshipType implements RelationshipType
     {
         private String name;
@@ -404,6 +567,18 @@ public class UriAsrExecutor implements AsrExecutor
         public String name()
         {
             return this.name;
+        }
+    }
+    
+    private static class NodeAndRelationship
+    {
+        private Node node;
+        private Relationship relationship;
+        
+        NodeAndRelationship( Node node, Relationship relationship )
+        {
+            this.node = node;
+            this.relationship = relationship;
         }
     }
 }

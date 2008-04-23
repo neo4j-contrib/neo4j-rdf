@@ -45,7 +45,7 @@ public class MetaEnabledAsrExecutor extends UriAsrExecutor
 	
 	private String getMetaLookupInfo( AbstractNode node )
 	{
-		return node.lookupInfo( "meta" );
+		return ( String ) node.lookupInfo( "meta" );
 	}
 	
 	private boolean isMeta( AbstractNode node )

@@ -17,8 +17,6 @@ import org.neo4j.util.NeoPropertyArraySet;
  */
 class TwoPropertyArraysMap implements Map<Object, Collection<String>>
 {
-    private static final String DELIMITER = "š";
-    
     private Node node;
     private String leftKey;
     private String rightKey;
@@ -66,7 +64,8 @@ class TwoPropertyArraysMap implements Map<Object, Collection<String>>
     private Collection<String> tokenize( String string )
     {
         Collection<String> list = new ArrayList<String>();
-        StringTokenizer tokenizer = new StringTokenizer( string, DELIMITER );
+        StringTokenizer tokenizer = new StringTokenizer(
+            UriAsrExecutor.CONTEXT_DELIMITER );
         while ( tokenizer.hasMoreTokens() )
         {
             list.add( tokenizer.nextToken() );
@@ -79,7 +78,7 @@ class TwoPropertyArraysMap implements Map<Object, Collection<String>>
         StringBuffer buffer = new StringBuffer();
         for ( String string : strings )
         {
-            buffer.append( string + DELIMITER );
+            buffer.append( string + UriAsrExecutor.CONTEXT_DELIMITER );
         }
         return buffer.toString();
     }

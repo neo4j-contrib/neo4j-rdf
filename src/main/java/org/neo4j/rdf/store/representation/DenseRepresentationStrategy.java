@@ -1,11 +1,13 @@
 package org.neo4j.rdf.store.representation;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.neo4j.api.core.NeoService;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Statement;
+import org.neo4j.rdf.store.UriAsrExecutor;
 
 /**
  * S/P/O represented as:
@@ -63,8 +65,13 @@ public class DenseRepresentationStrategy extends IndexRepresentationStrategy
             subjectNode, asUri( statement.getPredicate() ), objectNode );
         for ( Context context : statement.getContexts() )
         {
-            // TODO
+            relationship.addProperty( CONTEXT_PROPERTY_POSTFIX,
+                context.getUriAsString() );
         }
+        Map<String, String> contextKeys = new HashMap<String, String>();
+        contextKeys.put( CONTEXT_PROPERTY_POSTFIX, null );
+        relationship.addLookupInfo( UriAsrExecutor.LOOKUP_CONTEXT_KEYS,
+            contextKeys );
         representation.addRelationship( relationship );
     }
 }
