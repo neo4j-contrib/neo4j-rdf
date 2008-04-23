@@ -71,12 +71,12 @@ public class MetaEnabledAsrExecutor extends UriAsrExecutor
         if ( metaInfo.equals( "class" ) )
         {
             thing = meta.getGlobalNamespace().getMetaClass(
-                node.getUriOrNull().uriAsString(), false );
+                node.getUriOrNull().getUriAsString(), false );
         }
         else if ( metaInfo.equals( "property" ) )
         {
             thing = meta.getGlobalNamespace().getMetaProperty(
-                node.getUriOrNull().uriAsString(), false );
+                node.getUriOrNull().getUriAsString(), false );
         }
         else
         {

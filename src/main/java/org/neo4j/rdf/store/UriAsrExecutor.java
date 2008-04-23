@@ -51,7 +51,7 @@ public class UriAsrExecutor implements AsrExecutor
     protected Node lookupNode( AbstractNode node,
         boolean createIfItDoesntExist )
     {
-        String uri = node.getUriOrNull().uriAsString();
+        String uri = node.getUriOrNull().getUriAsString();
         Node result = index.getSingleNodeFor( uri );
         if ( result == null && createIfItDoesntExist )
         {
@@ -72,7 +72,7 @@ public class UriAsrExecutor implements AsrExecutor
         node.delete();
         if ( uri != null )
         {
-            this.index.remove( node, uri.uriAsString() );
+            this.index.remove( node, uri.getUriAsString() );
         }
     }
 
@@ -355,7 +355,7 @@ public class UriAsrExecutor implements AsrExecutor
         if ( node.getUriOrNull() != null )
         {
             patternNode.addPropertyEqualConstraint( getNodeUriProperty( node ),
-                node.getUriOrNull().uriAsString() );
+                node.getUriOrNull().getUriAsString() );
         }
         for ( Map.Entry<String, Object> entry : node.properties().entrySet() )
         {
@@ -372,7 +372,7 @@ public class UriAsrExecutor implements AsrExecutor
             return null;
         }
         return this.index.getSingleNodeFor(
-            abstractNode.getUriOrNull().uriAsString() );
+            abstractNode.getUriOrNull().getUriAsString() );
     }
 
     private static class ARelationshipType implements RelationshipType
