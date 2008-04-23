@@ -49,6 +49,7 @@ public class SparqlBuilder
             }
             query.append( "?" + variable );
         }
+        query.append( "\n" );
     }
     
     private static void appendWhere( String where, StringBuffer query )
@@ -62,8 +63,10 @@ public class SparqlBuilder
         StringBuffer buffer = new StringBuffer();
         buffer.append( statementElement( baseUriToPrefix,
             variables, statement.getSubject() ) );
+        buffer.append( " " );
         buffer.append( statementElement( baseUriToPrefix,
             variables, statement.getPredicate() ) );
+        buffer.append( " " );
         Value object = statement.getObject();
         buffer.append( statementElement( baseUriToPrefix, variables, object ) );
         buffer.append( " .\n" );
@@ -161,4 +164,13 @@ public class SparqlBuilder
         }
         return uri.substring( 0, index );
     }
+//    
+//    public static void main( String[] args )
+//    {
+//        Statement statement = new WildcardEnabledStatement(
+//            new Uri( "http://neo4j.org#subject" ),
+//            new Uri( "http://neo4j.org#predicate" ),
+//            new Uri( "http://neo4j.org#object" ) );
+//        System.out.println( SparqlBuilder.getQuery( statement ) );
+//    }
 }
