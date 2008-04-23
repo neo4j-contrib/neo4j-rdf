@@ -112,7 +112,11 @@ public class UriAsrExecutor implements AsrExecutor
                 relationship = findOtherNodePresumedBlank( abstractRelationship,
                     representation, nodeMapping, true ).relationship;
             }
-            applyOnRelationship( abstractRelationship, relationship );
+            
+            if ( relationship != null )
+            {
+                applyOnRelationship( abstractRelationship, relationship );
+            }
         }
     }
 

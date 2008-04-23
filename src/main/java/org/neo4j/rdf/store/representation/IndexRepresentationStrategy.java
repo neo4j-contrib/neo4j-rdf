@@ -150,30 +150,48 @@ abstract class IndexRepresentationStrategy implements
             contextKeys );
     }
     
+    private PropertyRange getPropertyRange( String predicate )
+    {
+        if ( meta == null )
+        {
+            return null;
+        }
+
+        MetaStructureProperty property =
+            meta.getGlobalNamespace().getMetaProperty( predicate, false );
+        return property == null ? null :
+            meta.lookup( property, MetaStructure.LOOKUP_PROPERTY_RANGE );
+    }
+    
+    protected boolean isObjectType( String predicate )
+    {
+        PropertyRange range = getPropertyRange( predicate );
+        if ( range == null )
+        {
+            throw new UnsupportedOperationException( "No range found for '" +
+                predicate + "'" );
+        }
+        return !range.isDatatype();
+    }
+    
     protected Object convertLiteralValueToRealValue( Statement statement,
         Object literalValue )
     {
         Object result = literalValue;
         if ( result != null && result instanceof String && meta != null )
         {
-            MetaStructureProperty property =
-                meta.getGlobalNamespace().getMetaProperty( ( ( Uri )
-                    statement.getPredicate() ).getUriAsString(), false );
-            if ( property != null )
+            PropertyRange range = getPropertyRange(
+                ( ( Uri ) statement.getPredicate() ).getUriAsString() );
+            if ( range != null && range.isDatatype() )
             {
-                PropertyRange range = meta.lookup( property,
-                    MetaStructure.LOOKUP_PROPERTY_RANGE );
-                if ( range != null && range.isDatatype() )
+                try
                 {
-                    try
-                    {
-                        result = range.rdfLiteralToJavaObject(
-                            literalValue.toString() );
-                    }
-                    catch ( ParseException e )
-                    {
-                        // Ok?
-                    }
+                    result = range.rdfLiteralToJavaObject(
+                        literalValue.toString() );
+                }
+                catch ( ParseException e )
+                {
+                    // Ok?
                 }
             }
         }
