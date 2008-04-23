@@ -49,7 +49,7 @@ public class UriBasedExecutor implements RepresentationExecutor
 
     protected void debug( String message )
     {
-//        System.out.println( message );
+        System.out.println( message );
     }
 
     protected Node lookupNode( AbstractNode node,
@@ -109,8 +109,13 @@ public class UriBasedExecutor implements RepresentationExecutor
             }
             else
             {
-                relationship = findOtherNodePresumedBlank( abstractRelationship,
-                    representation, nodeMapping, true ).relationship;
+                NodeAndRelationship result = findOtherNodePresumedBlank(
+                    abstractRelationship, representation, nodeMapping, true );
+                relationship = result.relationship;
+                if ( result.node != null )
+                {
+                    applyOnNode( result.abstractNode, result.node );
+                }
             }
             
             if ( relationship != null )
@@ -451,6 +456,8 @@ public class UriBasedExecutor implements RepresentationExecutor
         AbstractNode startingAbstractNode = abstractRelationship.getStartNode()
             .getUriOrNull() == null ? abstractRelationship.getEndNode()
             : abstractRelationship.getStartNode();
+        AbstractNode endingAbstractNode =
+            abstractRelationship.getOtherNode( startingAbstractNode );
         Node startingNode = nodeMapping.get( startingAbstractNode );
         PatternNode startingPatternNode = patternNodes
             .get( startingAbstractNode );
@@ -462,8 +469,7 @@ public class UriBasedExecutor implements RepresentationExecutor
         {
             PatternMatch match = matches.next();
             node = match.getNodeFor(
-                patternNodes.get( abstractRelationship
-                    .getOtherNode( startingAbstractNode ) ) );
+                patternNodes.get( endingAbstractNode ) );
             Node otherNode =
                 match.getNodeFor( patternNodes.get( startingAbstractNode ) );
             relationship = findRelationship( node, new ARelationshipType(
@@ -494,11 +500,10 @@ public class UriBasedExecutor implements RepresentationExecutor
                     + nodeMapping.get( abstractRelationship.getStartNode() )
                     + " ---[" + relationshipType.name() + "]--> " + node );
             }
-            applyOnRelationship( abstractRelationship, relationship );
         }
-        nodeMapping.put( abstractRelationship
-            .getOtherNode( startingAbstractNode ), node );
-        return new NodeAndRelationship( node, relationship );
+        nodeMapping.put( endingAbstractNode, node );
+        return new NodeAndRelationship( endingAbstractNode,
+            node, relationship );
     }
 
     private Map<AbstractNode, PatternNode> representationToPattern(
@@ -580,11 +585,14 @@ public class UriBasedExecutor implements RepresentationExecutor
     
     private static class NodeAndRelationship
     {
+        private AbstractNode abstractNode;
         private Node node;
         private Relationship relationship;
         
-        NodeAndRelationship( Node node, Relationship relationship )
+        NodeAndRelationship( AbstractNode abstractNode,
+            Node node, Relationship relationship )
         {
+            this.abstractNode = abstractNode;
             this.node = node;
             this.relationship = relationship;
         }
