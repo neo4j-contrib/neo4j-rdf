@@ -1,14 +1,11 @@
 package org.neo4j.rdf.store.representation;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.RelationshipType;
 import org.neo4j.neometa.structure.MetaStructure;
-import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Statement;
-import org.neo4j.rdf.store.UriAsrExecutor;
 
 /**
  * Uses a more verbose representation of statements, like this:
@@ -86,20 +83,6 @@ public class VerboseRepresentationStrategy extends IndexRepresentationStrategy
         representation.addRelationship( connectorToPredicate );
     }
     
-    private void addContextsToRelationship( Statement statement,
-        AbstractRelationship relationship )
-    {
-        for ( Context context : statement.getContexts() )
-        {
-            relationship.addProperty( CONTEXT_PROPERTY_POSTFIX,
-                context.getUriAsString() );
-        }
-        Map<String, String> contextKeys = new HashMap<String, String>();
-        contextKeys.put( CONTEXT_PROPERTY_POSTFIX, null );
-        relationship.addLookupInfo( UriAsrExecutor.LOOKUP_CONTEXT_KEYS,
-            contextKeys );
-    }
-
     /**
      * Some relationship types used in the representation.
      */

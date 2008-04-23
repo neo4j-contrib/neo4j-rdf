@@ -241,6 +241,20 @@ abstract class IndexRepresentationStrategy implements
         return value instanceof Resource;
     }
     
+    protected void addContextsToRelationship( Statement statement,
+        AbstractRelationship relationship )
+    {
+        for ( Context context : statement.getContexts() )
+        {
+            relationship.addProperty( CONTEXT_PROPERTY_POSTFIX,
+                context.getUriAsString() );
+        }
+        Map<String, String> contextKeys = new HashMap<String, String>();
+        contextKeys.put( CONTEXT_PROPERTY_POSTFIX, null );
+        relationship.addLookupInfo( UriAsrExecutor.LOOKUP_CONTEXT_KEYS,
+            contextKeys );
+    }
+
     private static enum MyRelTypes implements RelationshipType
     {
         /**
