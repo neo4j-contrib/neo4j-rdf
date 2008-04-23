@@ -17,11 +17,12 @@ import org.neo4j.rdf.model.Resource;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Value;
+import org.neo4j.rdf.model.Wildcard;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
-import org.neo4j.rdf.store.representation.RepresentationStrategy;
 import org.neo4j.rdf.store.representation.RepresentationExecutor;
+import org.neo4j.rdf.store.representation.RepresentationStrategy;
 import org.neo4j.util.NeoUtil;
 import org.neo4j.util.index.Index;
 import org.neo4j.util.index.SingleValueIndex;
@@ -31,8 +32,7 @@ import org.neo4j.util.index.SingleValueIndex;
  * {@link RepresentationStrategy} implementations using an
  * {@link UriBasedExecutor}.
  */
-abstract class IndexRepresentationStrategy implements
-    RepresentationStrategy
+abstract class IndexRepresentationStrategy implements RepresentationStrategy
 {
     /**
      * The property postfix which is concatenated with a property key to get
@@ -75,8 +75,8 @@ abstract class IndexRepresentationStrategy implements
     {
         AbstractStatementRepresentation representation =
             new AbstractStatementRepresentation();
-        Map<String, AbstractNode> nodeMapping =
-            new HashMap<String, AbstractNode>();
+        Map<Value, AbstractNode> nodeMapping =
+            new HashMap<Value, AbstractNode>();
         for ( Statement statement : statements )
         {
             if ( !addToRepresentation( representation, nodeMapping,
@@ -94,7 +94,7 @@ abstract class IndexRepresentationStrategy implements
     
     protected boolean addToRepresentation(
         AbstractStatementRepresentation representation,
-        Map<String, AbstractNode> nodeMapping, Statement statement )
+        Map<Value, AbstractNode> nodeMapping, Statement statement )
     {
         String predicate =
             ( ( Uri ) statement.getPredicate() ).getUriAsString();
@@ -113,7 +113,7 @@ abstract class IndexRepresentationStrategy implements
     
     protected void addMetaInstanceOfFragment(
         AbstractStatementRepresentation representation,
-        Map<String, AbstractNode> nodeMapping, Statement statement )
+        Map<Value, AbstractNode> nodeMapping, Statement statement )
     {
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
         AbstractNode classNode = getObjectNode( nodeMapping, statement );
@@ -126,10 +126,22 @@ abstract class IndexRepresentationStrategy implements
 
     protected void addOneNodeFragment(
         AbstractStatementRepresentation representation,
-        Map<String, AbstractNode> nodeMapping, Statement statement )
+        Map<Value, AbstractNode> nodeMapping, Statement statement )
     {
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
-        Object literalValue = ( ( Literal ) statement.getObject() ).getValue();
+        Value object = statement.getObject();
+        Object literalValue = null;
+        String predicate =
+            ( ( Uri ) statement.getPredicate() ).getUriAsString();
+        if ( object instanceof Wildcard )
+        {
+        	subjectNode.addProperty( predicate, ( Wildcard ) object );
+        	return;
+        }
+        else
+        {
+        	literalValue = ( ( Literal ) statement.getObject() ).getValue();
+        }
         
         // TODO Should this be here?
         if ( literalValue != null )
@@ -137,8 +149,6 @@ abstract class IndexRepresentationStrategy implements
             convertLiteralValueToRealValue( statement, literalValue );
         }
         
-        String predicate =
-            ( ( Uri ) statement.getPredicate() ).getUriAsString();
         subjectNode.addProperty( predicate, literalValue );
         String predicateContext = UriBasedExecutor.formContextPropertyKey(
             predicate, literalValue );
@@ -171,8 +181,9 @@ abstract class IndexRepresentationStrategy implements
         PropertyRange range = getPropertyRange( predicate );
         if ( range == null )
         {
-            throw new UnsupportedOperationException( "No range found for '" +
-                predicate + "'" );
+        	return false;
+//            throw new UnsupportedOperationException( "No range found for '" +
+//                predicate + "'" );
         }
         return !range.isDatatype();
     }
@@ -202,13 +213,13 @@ abstract class IndexRepresentationStrategy implements
     }
     
     protected AbstractNode getOrCreateNode(
-        Map<String, AbstractNode> nodeMapping, String uri )
+        Map<Value, AbstractNode> nodeMapping, Value value )
     {
-        AbstractNode node = nodeMapping.get( uri );
+        AbstractNode node = nodeMapping.get( value );
         if ( node == null )
         {
-            node = new AbstractNode( new Uri( uri ) );
-            nodeMapping.put( uri, node );
+            node = new AbstractNode( value );
+            nodeMapping.put( value, node );
         }
         return node;
     }
@@ -219,22 +230,22 @@ abstract class IndexRepresentationStrategy implements
     }
 
     protected AbstractNode getSubjectNode(
-        Map<String, AbstractNode> nodeMapping, Statement statement )
+        Map<Value, AbstractNode> nodeMapping, Statement statement )
     {
-       return getOrCreateNode( nodeMapping, asUri( statement.getSubject() ) );
+       return getOrCreateNode( nodeMapping, statement.getSubject() );
     }
 
-    protected AbstractNode getObjectNode( Map<String, AbstractNode> nodeMapping,
+    protected AbstractNode getObjectNode( Map<Value, AbstractNode> nodeMapping,
         Statement statement )
     {
-        return getOrCreateNode( nodeMapping, asUri( statement.getObject() ) );
+        return getOrCreateNode( nodeMapping, statement.getObject() );
     }
     
     protected AbstractNode getPredicateNode(
-        Map<String, AbstractNode> nodeMapping, Statement statement )
+        Map<Value, AbstractNode> nodeMapping, Statement statement )
     {
         AbstractNode node = getOrCreateNode( nodeMapping,
-            asUri( statement.getPredicate() ) );
+        		statement.getPredicate() );
         node.addLookupInfo( "meta", "property" );
         return node;
     }

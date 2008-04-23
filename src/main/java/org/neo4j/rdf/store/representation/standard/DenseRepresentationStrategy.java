@@ -5,6 +5,8 @@ import java.util.Map;
 import org.neo4j.api.core.NeoService;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.rdf.model.Statement;
+import org.neo4j.rdf.model.Uri;
+import org.neo4j.rdf.model.Value;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
@@ -30,18 +32,21 @@ public class DenseRepresentationStrategy extends IndexRepresentationStrategy
      */
     public DenseRepresentationStrategy( NeoService neo, MetaStructure meta )
     {
-        super( neo );
+        super( neo, meta );
     }
 
     @Override
     protected boolean addToRepresentation(
         AbstractStatementRepresentation representation,
-        Map<String, AbstractNode> nodeMapping, Statement statement )
+        Map<Value, AbstractNode> nodeMapping, Statement statement )
     {
 	    if ( !super.addToRepresentation(
 	        representation, nodeMapping, statement ) )
 	    {
-            if ( isObjectType( statement.getObject() ) )
+            if ( isObjectType( statement.getObject() ) ||
+            		( statement.getPredicate() instanceof Uri &&
+            		isObjectType( ( ( Uri )
+            				statement.getPredicate() ).getUriAsString() ) ) )
             {
                 // ( S ) -- predicate_uri --> ( O )
                 addTwoNodeFragment( representation, nodeMapping, statement );
@@ -57,7 +62,7 @@ public class DenseRepresentationStrategy extends IndexRepresentationStrategy
 
     private void addTwoNodeFragment(
         AbstractStatementRepresentation representation,
-        Map<String, AbstractNode> nodeMapping, Statement statement )
+        Map<Value, AbstractNode> nodeMapping, Statement statement )
     {
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
         AbstractNode objectNode = getObjectNode( nodeMapping, statement );

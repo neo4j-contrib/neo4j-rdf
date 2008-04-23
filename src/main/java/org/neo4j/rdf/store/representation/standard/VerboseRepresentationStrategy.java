@@ -6,6 +6,7 @@ import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.RelationshipType;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.rdf.model.Statement;
+import org.neo4j.rdf.model.Value;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
@@ -42,7 +43,7 @@ public class VerboseRepresentationStrategy extends IndexRepresentationStrategy
     @Override
     protected boolean addToRepresentation(
         AbstractStatementRepresentation representation,
-        Map<String, AbstractNode> nodeMapping, Statement statement )
+        Map<Value, AbstractNode> nodeMapping, Statement statement )
     {
         if ( !super.addToRepresentation( representation, nodeMapping,
             statement ) )
@@ -61,7 +62,7 @@ public class VerboseRepresentationStrategy extends IndexRepresentationStrategy
 
     private void addFourNodeFragment(
         AbstractStatementRepresentation representation,
-        Map<String, AbstractNode> nodeMapping, Statement statement )
+        Map<Value, AbstractNode> nodeMapping, Statement statement )
     {
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
         AbstractNode objectNode = getObjectNode( nodeMapping, statement );
