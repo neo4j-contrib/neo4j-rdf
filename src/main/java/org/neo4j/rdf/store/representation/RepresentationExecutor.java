@@ -3,10 +3,11 @@ package org.neo4j.rdf.store.representation;
 import org.neo4j.api.core.Node;
 
 /**
- * Given an {@link AbstractStatementRepresentation} an {@link AsrExecutor}
- * can make sure it's added to or removed from the node space.
+ * Given an {@link AbstractStatementRepresentation} a
+ * {@link RepresentationExecutor} can make sure it's added to or removed from
+ * the node space.
  */
-public interface AsrExecutor
+public interface RepresentationExecutor
 {
     /**
      * Adds a statement representation to the node space if it doesn't exist.

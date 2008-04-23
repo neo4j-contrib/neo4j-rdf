@@ -11,8 +11,8 @@ import java.util.Map;
  * {@link AbstractRelationship}.
  * 
  * The {@link #lookupInfo(String)} concept if like a means of communication
- * between an implementation of {@link RdfRepresentationStrategy} and
- * an implementation of {@link AsrExecutor}.
+ * between an implementation of {@link RepresentationStrategy} and
+ * an implementation of {@link RepresentationExecutor}.
  */
 public abstract class AbstractElement
 {

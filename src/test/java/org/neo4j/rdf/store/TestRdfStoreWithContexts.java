@@ -7,15 +7,16 @@ import org.neo4j.neometa.structure.MetaStructureImpl;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
-import org.neo4j.rdf.store.representation.RdfRepresentationStrategy;
-import org.neo4j.rdf.store.representation.VerboseRepresentationStrategy;
+import org.neo4j.rdf.store.representation.RepresentationStrategy;
+import org.neo4j.rdf.store.representation.standard.MetaEnabledUriBasedExecutor;
+import org.neo4j.rdf.store.representation.standard.VerboseRepresentationStrategy;
 
 public class TestRdfStoreWithContexts extends StoreTestCase
 {
     public void testWithContexts()
     {
         MetaStructure meta = new MetaStructureImpl( neo() );
-        RdfRepresentationStrategy strategy = new VerboseRepresentationStrategy(
+        RepresentationStrategy strategy = new VerboseRepresentationStrategy(
             neo(), meta );
         RdfStore store = new RdfStoreImpl( neo(), strategy );
         
@@ -40,7 +41,7 @@ public class TestRdfStoreWithContexts extends StoreTestCase
         Statement sNick2C2 = statement( subject, NICKNAME_PROPERTY,
             nickname2, c2 );
         Statement sPerson = statement( subject,
-            MetaEnabledAsrExecutor.RDF_TYPE_URI, new Uri( PERSON_CLASS ) );
+            MetaEnabledUriBasedExecutor.RDF_TYPE_URI, new Uri( PERSON_CLASS ) );
         Statement sKnowsC1 = statement( subject, KNOWS_PROPERTY,
             new Uri( otherSubject ), c1 );
         Statement sKnowsC2 = statement( subject, KNOWS_PROPERTY,

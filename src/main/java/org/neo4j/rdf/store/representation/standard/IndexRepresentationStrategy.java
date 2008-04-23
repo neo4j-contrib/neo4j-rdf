@@ -1,4 +1,4 @@
-package org.neo4j.rdf.store.representation;
+package org.neo4j.rdf.store.representation.standard;
 
 import java.text.ParseException;
 import java.util.HashMap;
@@ -17,19 +17,22 @@ import org.neo4j.rdf.model.Resource;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Value;
-import org.neo4j.rdf.store.MetaEnabledAsrExecutor;
-import org.neo4j.rdf.store.UriAsrExecutor;
+import org.neo4j.rdf.store.representation.AbstractNode;
+import org.neo4j.rdf.store.representation.AbstractRelationship;
+import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
+import org.neo4j.rdf.store.representation.RepresentationStrategy;
+import org.neo4j.rdf.store.representation.RepresentationExecutor;
 import org.neo4j.util.NeoUtil;
 import org.neo4j.util.index.Index;
 import org.neo4j.util.index.SingleValueIndex;
 
 /**
  * Abstract class which holds common functionality for
- * {@link RdfRepresentationStrategy} implementations using an
- * {@link UriAsrExecutor}.
+ * {@link RepresentationStrategy} implementations using an
+ * {@link UriBasedExecutor}.
  */
 abstract class IndexRepresentationStrategy implements
-    RdfRepresentationStrategy
+    RepresentationStrategy
 {
     /**
      * The property postfix which is concatenated with a property key to get
@@ -37,7 +40,7 @@ abstract class IndexRepresentationStrategy implements
      */
     public static final String CONTEXT_PROPERTY_POSTFIX = "____context";
     
-    private final AsrExecutor executor;
+    private final RepresentationExecutor executor;
     private final MetaStructure meta;
 
     /**
@@ -45,7 +48,7 @@ abstract class IndexRepresentationStrategy implements
      */
     public IndexRepresentationStrategy( NeoService neo )
     {
-        this.executor = new UriAsrExecutor( neo, newIndex( neo ) );
+        this.executor = new UriBasedExecutor( neo, newIndex( neo ) );
         this.meta = null;
     }
 
@@ -56,7 +59,7 @@ abstract class IndexRepresentationStrategy implements
     public IndexRepresentationStrategy( NeoService neo, MetaStructure meta )
     {
         this.executor =
-            new MetaEnabledAsrExecutor( neo, newIndex( neo ), meta );
+            new MetaEnabledUriBasedExecutor( neo, newIndex( neo ), meta );
         this.meta = meta;
     }
 
@@ -95,7 +98,7 @@ abstract class IndexRepresentationStrategy implements
     {
         String predicate =
             ( ( Uri ) statement.getPredicate() ).getUriAsString();
-        if ( predicate.equals( MetaEnabledAsrExecutor.RDF_TYPE_URI ) )
+        if ( predicate.equals( MetaEnabledUriBasedExecutor.RDF_TYPE_URI ) )
         {
             addMetaInstanceOfFragment( representation, nodeMapping, statement );
             return true;
@@ -103,7 +106,7 @@ abstract class IndexRepresentationStrategy implements
         return false;
     }
     
-    public AsrExecutor getAsrExecutor()
+    public RepresentationExecutor getExecutor()
     {
         return this.executor;
     }
@@ -137,7 +140,7 @@ abstract class IndexRepresentationStrategy implements
         String predicate =
             ( ( Uri ) statement.getPredicate() ).getUriAsString();
         subjectNode.addProperty( predicate, literalValue );
-        String predicateContext = UriAsrExecutor.formContextPropertyKey(
+        String predicateContext = UriBasedExecutor.formContextPropertyKey(
             predicate, literalValue );
         for ( Context context : statement.getContexts() )
         {
@@ -146,7 +149,7 @@ abstract class IndexRepresentationStrategy implements
         }
         Map<String, String> contextKeys = new HashMap<String, String>();
         contextKeys.put( predicateContext, predicate );
-        subjectNode.addLookupInfo( UriAsrExecutor.LOOKUP_CONTEXT_KEYS,
+        subjectNode.addLookupInfo( UriBasedExecutor.LOOKUP_CONTEXT_KEYS,
             contextKeys );
     }
     
@@ -251,7 +254,7 @@ abstract class IndexRepresentationStrategy implements
         }
         Map<String, String> contextKeys = new HashMap<String, String>();
         contextKeys.put( CONTEXT_PROPERTY_POSTFIX, null );
-        relationship.addLookupInfo( UriAsrExecutor.LOOKUP_CONTEXT_KEYS,
+        relationship.addLookupInfo( UriBasedExecutor.LOOKUP_CONTEXT_KEYS,
             contextKeys );
     }
 

@@ -5,8 +5,8 @@ import org.neo4j.api.core.Transaction;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
-import org.neo4j.rdf.store.representation.AsrExecutor;
-import org.neo4j.rdf.store.representation.RdfRepresentationStrategy;
+import org.neo4j.rdf.store.representation.RepresentationExecutor;
+import org.neo4j.rdf.store.representation.RepresentationStrategy;
 
 /**
  * Default implementation of an {@link RdfStore}.
@@ -14,15 +14,15 @@ import org.neo4j.rdf.store.representation.RdfRepresentationStrategy;
 public class RdfStoreImpl implements RdfStore
 {
     private final NeoService neo;
-    private final RdfRepresentationStrategy representationStrategy;
+    private final RepresentationStrategy representationStrategy;
 
     /**
      * @param neo the {@link NeoService}.
-     * @param representationStrategy the {@link RdfRepresentationStrategy}
+     * @param representationStrategy the {@link RepresentationStrategy}
      * to use when storing statements.
      */
     public RdfStoreImpl( NeoService neo,
-        RdfRepresentationStrategy representationStrategy )
+        RepresentationStrategy representationStrategy )
     {
         this.neo = neo;
         this.representationStrategy = representationStrategy;
@@ -45,9 +45,9 @@ public class RdfStoreImpl implements RdfStore
         }
     }
 
-    private AsrExecutor getExecutor()
+    private RepresentationExecutor getExecutor()
     {
-        return this.representationStrategy.getAsrExecutor();
+        return this.representationStrategy.getExecutor();
     }
 
     public Iterable<Statement> getStatements(

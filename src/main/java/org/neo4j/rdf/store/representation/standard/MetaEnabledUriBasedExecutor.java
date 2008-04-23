@@ -1,4 +1,4 @@
-package org.neo4j.rdf.store;
+package org.neo4j.rdf.store.representation.standard;
 
 import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
@@ -9,9 +9,9 @@ import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.util.index.Index;
 
 /**
- * Adds meta model suport to the {@link UriAsrExecutor}.
+ * Adds meta model suport to the {@link UriBasedExecutor}.
  */
-public class MetaEnabledAsrExecutor extends UriAsrExecutor
+public class MetaEnabledUriBasedExecutor extends UriBasedExecutor
 {
     /**
      * The RDF namespace base URI.
@@ -36,7 +36,7 @@ public class MetaEnabledAsrExecutor extends UriAsrExecutor
 	 * @param index the {@link Index} to use as an object lookup.
 	 * @param meta the {@link MetaStructure} to use as a class/property lookup.
 	 */
-	public MetaEnabledAsrExecutor( NeoService neo, Index index,
+	public MetaEnabledUriBasedExecutor( NeoService neo, Index index,
 		MetaStructure meta )
 	{
 		super( neo, index );

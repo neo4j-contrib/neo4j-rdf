@@ -1,4 +1,4 @@
-package org.neo4j.rdf.store.representation;
+package org.neo4j.rdf.store.representation.standard;
 
 import java.util.Map;
 
@@ -6,6 +6,9 @@ import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.RelationshipType;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.rdf.model.Statement;
+import org.neo4j.rdf.store.representation.AbstractNode;
+import org.neo4j.rdf.store.representation.AbstractRelationship;
+import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
 
 /**
  * Uses a more verbose representation of statements, like this:

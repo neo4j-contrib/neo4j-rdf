@@ -11,9 +11,10 @@ import org.neo4j.neometa.structure.MetaStructureImpl;
 import org.neo4j.neometa.structure.MetaStructureProperty;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
-import org.neo4j.rdf.store.representation.DenseRepresentationStrategy;
-import org.neo4j.rdf.store.representation.RdfRepresentationStrategy;
-import org.neo4j.rdf.store.representation.VerboseRepresentationStrategy;
+import org.neo4j.rdf.store.representation.RepresentationStrategy;
+import org.neo4j.rdf.store.representation.standard.DenseRepresentationStrategy;
+import org.neo4j.rdf.store.representation.standard.MetaEnabledUriBasedExecutor;
+import org.neo4j.rdf.store.representation.standard.VerboseRepresentationStrategy;
 
 /**
  * Tests an {@link RdfStore}.
@@ -52,7 +53,7 @@ public class TestRdfStore extends StoreTestCase
 	public void testVerboseMeta() throws Exception
 	{
 	    MetaStructure meta = new MetaStructureImpl( neo() );
-	    RdfRepresentationStrategy strategy = new VerboseRepresentationStrategy(
+	    RepresentationStrategy strategy = new VerboseRepresentationStrategy(
 	        neo(), meta );
 	    RdfStore store = new RdfStoreImpl( neo(), strategy );
 	    MetaStructureClass personClass =
@@ -75,7 +76,7 @@ public class TestRdfStore extends StoreTestCase
 	
 	private List<Statement> applyStatements( RdfStore store )
 	{
-	    String typePredicate = MetaEnabledAsrExecutor.RDF_TYPE_URI;
+	    String typePredicate = MetaEnabledUriBasedExecutor.RDF_TYPE_URI;
 	    Uri personClass = new Uri( PERSON_CLASS );
 		String subject = "http://henrik";
 		String otherSubject = "http://emil";

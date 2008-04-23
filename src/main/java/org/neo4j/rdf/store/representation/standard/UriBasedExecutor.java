@@ -1,4 +1,4 @@
-package org.neo4j.rdf.store;
+package org.neo4j.rdf.store.representation.standard;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -16,7 +16,7 @@ import org.neo4j.rdf.store.representation.AbstractElement;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
-import org.neo4j.rdf.store.representation.AsrExecutor;
+import org.neo4j.rdf.store.representation.RepresentationExecutor;
 import org.neo4j.util.NeoPropertyArraySet;
 import org.neo4j.util.index.Index;
 import org.neo4j.util.matching.PatternMatch;
@@ -24,13 +24,13 @@ import org.neo4j.util.matching.PatternMatcher;
 import org.neo4j.util.matching.PatternNode;
 
 /**
- * An implementation of {@link AsrExecutor} which uses an {@link Index},
- * where the indexing key is each elements {@link Uri} as a way of looking up
- * the objects.
+ * An implementation of {@link RepresentationExecutor} which uses an
+ * {@link Index}, where the indexing key is each elements {@link Uri} as a way
+ * of looking up the objects.
  */
-public class UriAsrExecutor implements AsrExecutor
+public class UriBasedExecutor implements RepresentationExecutor
 {
-    public static final String CONTEXT_DELIMITER = "š";
+    public static final String CONTEXT_DELIMITER = "Ã¶";
     public static final String LOOKUP_CONTEXT_KEYS = "contextKeys";
     static final String URI_PROPERTY_KEY = "uri";
 
@@ -41,7 +41,7 @@ public class UriAsrExecutor implements AsrExecutor
      * @param neo the {@link NeoService}.
      * @param index the {@link Index} to use as the lookup for objects.
      */
-    public UriAsrExecutor( NeoService neo, Index index )
+    public UriBasedExecutor( NeoService neo, Index index )
     {
         this.neo = neo;
         this.index = index;
@@ -215,7 +215,7 @@ public class UriAsrExecutor implements AsrExecutor
         String contextKey )
     {
         Map<?, ?> contextToPropertyKeys = ( Map<?, ?> ) element.lookupInfo(
-            UriAsrExecutor.LOOKUP_CONTEXT_KEYS );
+            UriBasedExecutor.LOOKUP_CONTEXT_KEYS );
         return contextToPropertyKeys == null ? null :
             ( String ) contextToPropertyKeys.get( contextKey );
     }
@@ -224,7 +224,7 @@ public class UriAsrExecutor implements AsrExecutor
         String key )
     {
         Map<?, ?> contextToPropertyKeys = ( Map<?, ?> ) element.lookupInfo(
-            UriAsrExecutor.LOOKUP_CONTEXT_KEYS );
+            UriBasedExecutor.LOOKUP_CONTEXT_KEYS );
         return contextToPropertyKeys != null &&
             contextToPropertyKeys.containsKey( key );
     }
