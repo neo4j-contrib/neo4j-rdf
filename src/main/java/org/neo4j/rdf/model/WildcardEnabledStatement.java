@@ -1,4 +1,4 @@
-package org.neo4j.rdf.newmodel;
+package org.neo4j.rdf.model;
 
 import java.util.Arrays;
 import java.util.Collections;

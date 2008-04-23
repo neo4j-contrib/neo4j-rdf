@@ -1,4 +1,4 @@
-package org.neo4j.rdf.newmodel;
+package org.neo4j.rdf.model;
 
 /**
  * An RDF statement (subject, predicate, object) with optional contexts.
