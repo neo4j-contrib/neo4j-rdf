@@ -2,7 +2,6 @@ package org.neo4j.rdf.store;
 
 import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Transaction;
-import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
 import org.neo4j.rdf.store.representation.AsrExecutor;
