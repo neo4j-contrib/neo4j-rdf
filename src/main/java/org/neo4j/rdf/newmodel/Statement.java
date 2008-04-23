@@ -1,30 +1,28 @@
 package org.neo4j.rdf.newmodel;
 
-public class Statement
+public interface Statement
 {
-    private final Resource subject;
-    private final Uri predicate;
-    private final Value object;
-
-    public Statement( Resource subject, Uri predicate, Value object )
-    {
-        this.subject = subject;
-        this.predicate = predicate;
-        this.object = object;
-    }
-    
-    public Resource getSubject()
-    {
-        return this.subject; 
-    }
-    
-    public Uri getPredicate()
-    {
-        return this.predicate;
-    }
-    
-    public Value getObject()
-    {
-        return this.object;
-    }
+    /**
+     * The subject of this statement, which is either a {@link Resource} or a
+     * {@link Wildcard}.
+     * @return the subject of this statement
+     */
+    Value getSubject();
+    /**
+     * The predicate of this statement, which is either a {@link Uri} or a
+     * {@link Wildcard}.
+     * @return the predicate of this statement
+     */
+    Value getPredicate();
+    /**
+     * The object of this statement, which is either a {@link Resource},
+     * a {@link Literal} or a {@link Wildcard}.
+     * @return the object of this statement
+     */
+    Value getObject();    
+    /**
+     * All the contexts for this statement, or an empty list for none.
+     * @return the contexts for this statement
+     */
+    Iterable<Context> getContexts();
 }

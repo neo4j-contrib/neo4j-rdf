@@ -4,26 +4,26 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class WildcardEnabledStatement
+public class WildcardEnabledStatement implements Statement
 {
     private final Value subject, predicate, object;
     private final List<Context> contextList;
     
     public WildcardEnabledStatement( Value subject, Value predicate,
-        Value object, Context... contextsOrNullForIgnore  )
+        Value object, Context... contextsOrNullForNone )
     {
         checkAllowed( subject, predicate, object );
         this.subject = subject;
         this.predicate = predicate;
         this.object = object;
-        if ( contextsOrNullForIgnore == null )
+        if ( contextsOrNullForNone == null )
         {
-            this.contextList = null;
+            this.contextList = Collections.emptyList();
         }
         else
         {
             contextList = Collections.unmodifiableList( Arrays.asList(
-                contextsOrNullForIgnore ) );
+                contextsOrNullForNone ) );
         }
     }
     
