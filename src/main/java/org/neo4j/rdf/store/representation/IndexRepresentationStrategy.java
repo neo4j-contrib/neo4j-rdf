@@ -180,7 +180,7 @@ abstract class IndexRepresentationStrategy implements
         AbstractNode node = nodeMapping.get( uri );
         if ( node == null )
         {
-            node = new AbstractNode( uri );
+            node = new AbstractNode( new Uri( uri ) );
             nodeMapping.put( uri, node );
         }
         return node;
