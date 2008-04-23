@@ -1,5 +1,11 @@
 package org.neo4j.rdf.newmodel;
 
+/**
+ * An RDF statement (subject, predicate, object) with optional contexts.
+ * Subject is a {@link Resource} or a {@link Wildcard}. Predicate is a
+ * {@link Uri} or a {@link Wildcard}. Object is a {@link Resource} (so-called
+ * "object property"), a {@link Literal} or a {@link Wildcard}.
+ */
 public interface Statement
 {
     /**
