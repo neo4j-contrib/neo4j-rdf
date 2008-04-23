@@ -9,7 +9,7 @@ import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Value;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
-import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
+import org.neo4j.rdf.store.representation.AbstractRepresentation;
 
 /**
  * S/P/O represented as:
@@ -37,7 +37,7 @@ public class DenseRepresentationStrategy extends IndexRepresentationStrategy
 
     @Override
     protected boolean addToRepresentation(
-        AbstractStatementRepresentation representation,
+        AbstractRepresentation representation,
         Map<Value, AbstractNode> nodeMapping, Statement statement )
     {
 	    if ( !super.addToRepresentation(
@@ -61,7 +61,7 @@ public class DenseRepresentationStrategy extends IndexRepresentationStrategy
     }
 
     private void addTwoNodeFragment(
-        AbstractStatementRepresentation representation,
+        AbstractRepresentation representation,
         Map<Value, AbstractNode> nodeMapping, Statement statement )
     {
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );

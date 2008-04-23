@@ -15,7 +15,7 @@ import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.store.representation.AbstractElement;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
-import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
+import org.neo4j.rdf.store.representation.AbstractRepresentation;
 import org.neo4j.rdf.store.representation.RepresentationExecutor;
 import org.neo4j.util.NeoPropertyArraySet;
 import org.neo4j.util.index.Index;
@@ -76,7 +76,7 @@ public class UriBasedExecutor implements RepresentationExecutor
         }
     }
 
-    public void addToNodeSpace( AbstractStatementRepresentation representation )
+    public void addToNodeSpace( AbstractRepresentation representation )
     {
         Map<AbstractNode, Node> nodeMapping = new HashMap<AbstractNode, Node>();
         for ( AbstractNode abstractNode : representation.nodes() )
@@ -126,7 +126,7 @@ public class UriBasedExecutor implements RepresentationExecutor
     }
 
     public void removeFromNodeSpace(
-        AbstractStatementRepresentation representation )
+        AbstractRepresentation representation )
     {
         Map<AbstractNode, Node> nodeMapping = new HashMap<AbstractNode, Node>();
         for ( AbstractNode abstractNode : representation.nodes() )
@@ -448,7 +448,7 @@ public class UriBasedExecutor implements RepresentationExecutor
 
     private NodeAndRelationship findOtherNodePresumedBlank(
         AbstractRelationship abstractRelationship,
-        AbstractStatementRepresentation representation,
+        AbstractRepresentation representation,
         Map<AbstractNode, Node> nodeMapping, boolean createIfItDoesntExist )
     {
         Map<AbstractNode, PatternNode> patternNodes =
@@ -507,7 +507,7 @@ public class UriBasedExecutor implements RepresentationExecutor
     }
 
     private Map<AbstractNode, PatternNode> representationToPattern(
-        AbstractStatementRepresentation representation )
+        AbstractRepresentation representation )
     {
         Map<AbstractNode, PatternNode> patternNodes =
             new HashMap<AbstractNode, PatternNode>();

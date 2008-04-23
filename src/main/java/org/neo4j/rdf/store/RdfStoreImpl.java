@@ -4,7 +4,7 @@ import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Transaction;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Statement;
-import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
+import org.neo4j.rdf.store.representation.AbstractRepresentation;
 import org.neo4j.rdf.store.representation.RepresentationExecutor;
 import org.neo4j.rdf.store.representation.RepresentationStrategy;
 
@@ -34,7 +34,7 @@ public class RdfStoreImpl implements RdfStore
         Transaction tx = neo.beginTx();
         try
         {
-            AbstractStatementRepresentation fragment = representationStrategy
+            AbstractRepresentation fragment = representationStrategy
                 .getAbstractRepresentation( statement );
             getExecutor().addToNodeSpace( fragment );
             tx.success();
@@ -125,7 +125,7 @@ public class RdfStoreImpl implements RdfStore
         Transaction tx = neo.beginTx();
         try
         {
-            AbstractStatementRepresentation fragment = representationStrategy
+            AbstractRepresentation fragment = representationStrategy
                 .getAbstractRepresentation( statement );
             getExecutor().removeFromNodeSpace( fragment );
             tx.success();

@@ -3,7 +3,7 @@ package org.neo4j.rdf.store.representation;
 import org.neo4j.api.core.Node;
 
 /**
- * Given an {@link AbstractStatementRepresentation} a
+ * Given an {@link AbstractRepresentation} a
  * {@link RepresentationExecutor} can make sure it's added to or removed from
  * the node space.
  */
@@ -14,14 +14,14 @@ public interface RepresentationExecutor
      * @param representation the representation of what is to be added
      * to the node space.
      */
-	void addToNodeSpace( AbstractStatementRepresentation representation );
+	void addToNodeSpace( AbstractRepresentation representation );
 	
     /**
      * Removes a statement representation from the node space if it exists.
      * @param representation the representation of what is to be removed
      * from the node space.
      */
-	void removeFromNodeSpace( AbstractStatementRepresentation representation );	
+	void removeFromNodeSpace( AbstractRepresentation representation );	
 	
 	/**
 	 * Looks up one {@link AbstractNode} and returns its corresponding real

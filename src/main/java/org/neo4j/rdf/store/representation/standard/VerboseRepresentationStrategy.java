@@ -9,7 +9,7 @@ import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Value;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
-import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
+import org.neo4j.rdf.store.representation.AbstractRepresentation;
 
 /**
  * Uses a more verbose representation of statements, like this:
@@ -42,7 +42,7 @@ public class VerboseRepresentationStrategy extends IndexRepresentationStrategy
     
     @Override
     protected boolean addToRepresentation(
-        AbstractStatementRepresentation representation,
+        AbstractRepresentation representation,
         Map<Value, AbstractNode> nodeMapping, Statement statement )
     {
         if ( !super.addToRepresentation( representation, nodeMapping,
@@ -61,7 +61,7 @@ public class VerboseRepresentationStrategy extends IndexRepresentationStrategy
     }
 
     private void addFourNodeFragment(
-        AbstractStatementRepresentation representation,
+        AbstractRepresentation representation,
         Map<Value, AbstractNode> nodeMapping, Statement statement )
     {
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );

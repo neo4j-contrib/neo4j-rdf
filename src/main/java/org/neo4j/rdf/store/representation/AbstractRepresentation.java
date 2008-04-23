@@ -5,15 +5,16 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * An abstract representation of a specific RDF statement in the node space.
- * It is abstract in the sense that it doesn't encapsulate "real" Neo nodes
- * but instead {@link AbstractNode abstract nodes} which are purely in-memory.
- * However, an instance of this type doesn't purely describe the structure
- * of some statements in general, it represents the structure and properties of
- * a <i>specific</i> statement, i.e. the nodes and relationships are actually
- * populated with real values.
+ * An abstract representation of an arbitrary number of RDF statements in the
+ * node space. It is created by a {@link RepresentationStrategy}. An instance
+ * of this type is abstract in the sense that it doesn't encapsulate "real"
+ * Neo nodes but instead {@link AbstractNode abstract nodes} which are purely
+ * in-memory. It's important to remember that it's not just a description of the 
+ * structure of some statements in general, but rather it represents the
+ * structure and properties of some <i>specific</i> statements, i.e. the nodes
+ * and relationships are actually populated with real values.
  */
-public class AbstractStatementRepresentation
+public class AbstractRepresentation
 {
     private final List<AbstractNode> nodes = new ArrayList<AbstractNode>();
     private final List<AbstractRelationship> relationships =

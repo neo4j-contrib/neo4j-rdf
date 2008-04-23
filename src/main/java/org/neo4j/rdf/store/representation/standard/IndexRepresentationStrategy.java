@@ -20,7 +20,7 @@ import org.neo4j.rdf.model.Value;
 import org.neo4j.rdf.model.Wildcard;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
-import org.neo4j.rdf.store.representation.AbstractStatementRepresentation;
+import org.neo4j.rdf.store.representation.AbstractRepresentation;
 import org.neo4j.rdf.store.representation.RepresentationExecutor;
 import org.neo4j.rdf.store.representation.RepresentationStrategy;
 import org.neo4j.util.NeoUtil;
@@ -70,11 +70,11 @@ abstract class IndexRepresentationStrategy implements RepresentationStrategy
         return new SingleValueIndex( "blaaaa", indexNode, neo );
     }
 
-    public AbstractStatementRepresentation getAbstractRepresentation(
+    public AbstractRepresentation getAbstractRepresentation(
         Statement... statements )
     {
-        AbstractStatementRepresentation representation =
-            new AbstractStatementRepresentation();
+        AbstractRepresentation representation =
+            new AbstractRepresentation();
         Map<Value, AbstractNode> nodeMapping =
             new HashMap<Value, AbstractNode>();
         for ( Statement statement : statements )
@@ -93,7 +93,7 @@ abstract class IndexRepresentationStrategy implements RepresentationStrategy
     }
     
     protected boolean addToRepresentation(
-        AbstractStatementRepresentation representation,
+        AbstractRepresentation representation,
         Map<Value, AbstractNode> nodeMapping, Statement statement )
     {
         String predicate =
@@ -112,7 +112,7 @@ abstract class IndexRepresentationStrategy implements RepresentationStrategy
     }
     
     protected void addMetaInstanceOfFragment(
-        AbstractStatementRepresentation representation,
+        AbstractRepresentation representation,
         Map<Value, AbstractNode> nodeMapping, Statement statement )
     {
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
@@ -125,7 +125,7 @@ abstract class IndexRepresentationStrategy implements RepresentationStrategy
     }
 
     protected void addOneNodeFragment(
-        AbstractStatementRepresentation representation,
+        AbstractRepresentation representation,
         Map<Value, AbstractNode> nodeMapping, Statement statement )
     {
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );

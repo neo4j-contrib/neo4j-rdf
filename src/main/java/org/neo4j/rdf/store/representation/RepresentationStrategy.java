@@ -14,12 +14,11 @@ public interface RepresentationStrategy
      * @param statements the {@link Statement}s to make a representation of.
      * @return the abstract representation of {@code statements}.
      */
-    AbstractStatementRepresentation getAbstractRepresentation(
-        Statement... statements );
+    AbstractRepresentation getAbstractRepresentation( Statement... statements );
     
     /**
      * @return a suitable {@link RepresentationExecutor} which is capable of
-     * handling the {@link AbstractStatementRepresentation}s created in
+     * handling the {@link AbstractRepresentation}s created in
      * {@link #getAbstractRepresentation(Statement...)}.
      */
     RepresentationExecutor getExecutor();
