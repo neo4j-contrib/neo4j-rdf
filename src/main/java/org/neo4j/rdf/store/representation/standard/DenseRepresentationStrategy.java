@@ -6,7 +6,6 @@ import org.neo4j.api.core.NeoService;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
-import org.neo4j.rdf.model.Value;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractRepresentation;
