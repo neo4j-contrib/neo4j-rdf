@@ -75,8 +75,8 @@ abstract class IndexRepresentationStrategy implements RepresentationStrategy
     {
         AbstractRepresentation representation =
             new AbstractRepresentation();
-        Map<Value, AbstractNode> nodeMapping =
-            new HashMap<Value, AbstractNode>();
+        Map<String, AbstractNode> nodeMapping =
+            new HashMap<String, AbstractNode>();
         for ( Statement statement : statements )
         {
             if ( !addToRepresentation( representation, nodeMapping,
@@ -94,7 +94,7 @@ abstract class IndexRepresentationStrategy implements RepresentationStrategy
     
     protected boolean addToRepresentation(
         AbstractRepresentation representation,
-        Map<Value, AbstractNode> nodeMapping, Statement statement )
+        Map<String, AbstractNode> nodeMapping, Statement statement )
     {
         String predicate =
             ( ( Uri ) statement.getPredicate() ).getUriAsString();
@@ -113,7 +113,7 @@ abstract class IndexRepresentationStrategy implements RepresentationStrategy
     
     protected void addMetaInstanceOfFragment(
         AbstractRepresentation representation,
-        Map<Value, AbstractNode> nodeMapping, Statement statement )
+        Map<String, AbstractNode> nodeMapping, Statement statement )
     {
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
         AbstractNode classNode = getObjectNode( nodeMapping, statement );
@@ -126,7 +126,7 @@ abstract class IndexRepresentationStrategy implements RepresentationStrategy
 
     protected void addOneNodeFragment(
         AbstractRepresentation representation,
-        Map<Value, AbstractNode> nodeMapping, Statement statement )
+        Map<String, AbstractNode> nodeMapping, Statement statement )
     {
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
         Value object = statement.getObject();
@@ -213,13 +213,13 @@ abstract class IndexRepresentationStrategy implements RepresentationStrategy
     }
     
     protected AbstractNode getOrCreateNode(
-        Map<Value, AbstractNode> nodeMapping, Value value )
+        Map<String, AbstractNode> nodeMapping, Value value )
     {
-        AbstractNode node = nodeMapping.get( value );
+        AbstractNode node = nodeMapping.get( this.asString( value ) );
         if ( node == null )
         {
             node = new AbstractNode( value );
-            nodeMapping.put( value, node );
+            nodeMapping.put( this.asString( value ), node );
         }
         return node;
     }
@@ -228,21 +228,39 @@ abstract class IndexRepresentationStrategy implements RepresentationStrategy
     {
         return ( ( Uri ) value ).getUriAsString();
     }
+    
+    protected String asString( Value value )
+    {
+    	String string = null;
+    	if ( value instanceof Wildcard )
+    	{
+    		string = ( ( Wildcard ) value ).getVariableName(); 
+    	}
+    	else if ( value instanceof Uri )
+    	{
+    		string = ( ( Uri ) value ).getUriAsString();
+    	}
+    	else if ( value instanceof Literal )
+    	{
+    		string = ( ( Literal ) value ).getValue().toString();
+    	}
+    	return string;
+    }
 
     protected AbstractNode getSubjectNode(
-        Map<Value, AbstractNode> nodeMapping, Statement statement )
+        Map<String, AbstractNode> nodeMapping, Statement statement )
     {
        return getOrCreateNode( nodeMapping, statement.getSubject() );
     }
 
-    protected AbstractNode getObjectNode( Map<Value, AbstractNode> nodeMapping,
+    protected AbstractNode getObjectNode( Map<String, AbstractNode> nodeMapping,
         Statement statement )
     {
         return getOrCreateNode( nodeMapping, statement.getObject() );
     }
     
     protected AbstractNode getPredicateNode(
-        Map<Value, AbstractNode> nodeMapping, Statement statement )
+        Map<String, AbstractNode> nodeMapping, Statement statement )
     {
         AbstractNode node = getOrCreateNode( nodeMapping,
         		statement.getPredicate() );

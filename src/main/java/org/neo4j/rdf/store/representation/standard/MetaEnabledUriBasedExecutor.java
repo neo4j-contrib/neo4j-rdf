@@ -60,7 +60,8 @@ public class MetaEnabledUriBasedExecutor extends UriBasedExecutor
 		Node result = null;
 		if ( isMeta( node ) )
 		{
-		    result = getMetaStructureThing( node ).node();
+			MetaStructureThing thing = getMetaStructureThing( node );
+		    result = thing == null ? null : thing.node();
 		}
 		else
 		{
@@ -73,7 +74,11 @@ public class MetaEnabledUriBasedExecutor extends UriBasedExecutor
 	{
 	    MetaStructureThing thing = null;
 	    String metaInfo = getMetaLookupInfo( node );
-        if ( metaInfo.equals( "class" ) )
+	    if ( node.getUriOrNull() == null )
+	    {
+	    	thing = null;
+	    }
+	    else if ( metaInfo.equals( "class" ) )
         {
             thing = meta.getGlobalNamespace().getMetaClass(
                 node.getUriOrNull().getUriAsString(), false );

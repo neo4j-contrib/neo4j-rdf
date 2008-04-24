@@ -43,7 +43,7 @@ public class VerboseRepresentationStrategy extends IndexRepresentationStrategy
     @Override
     protected boolean addToRepresentation(
         AbstractRepresentation representation,
-        Map<Value, AbstractNode> nodeMapping, Statement statement )
+        Map<String, AbstractNode> nodeMapping, Statement statement )
     {
         if ( !super.addToRepresentation( representation, nodeMapping,
             statement ) )
@@ -62,7 +62,7 @@ public class VerboseRepresentationStrategy extends IndexRepresentationStrategy
 
     private void addFourNodeFragment(
         AbstractRepresentation representation,
-        Map<Value, AbstractNode> nodeMapping, Statement statement )
+        Map<String, AbstractNode> nodeMapping, Statement statement )
     {
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
         AbstractNode objectNode = getObjectNode( nodeMapping, statement );

@@ -39,12 +39,6 @@ public class WildcardEnabledStatement implements Statement
             throw new IllegalArgumentException(
                 "We don't support predicate wildcards " );
         }
-        
-        if ( subject instanceof Wildcard && object instanceof Wildcard )
-        {
-            throw new IllegalArgumentException( "We don't support both" +
-            	"subject and object being wildcards" );
-        }
     }
 
     public Value getSubject()
