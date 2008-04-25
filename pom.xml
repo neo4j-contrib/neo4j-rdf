@@ -46,11 +46,12 @@
 			<artifactId>graph-matching</artifactId>
 			<version>0.3-SNAPSHOT</version>
 		</dependency>
+<!--
 		<dependency>
 			<groupId>org.neo4j</groupId>
 			<artifactId>sparql-engine-neo</artifactId>
 			<version>0.3-SNAPSHOT</version>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
