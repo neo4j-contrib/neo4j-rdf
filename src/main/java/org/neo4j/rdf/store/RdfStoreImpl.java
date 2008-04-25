@@ -42,7 +42,7 @@ public class RdfStoreImpl implements RdfStore
 
     public void addStatements( CompleteStatement... statements )
     {
-//        sysOutStatement( "add", statement );
+//        sysOutStatements( "add", statements );
         Transaction tx = neo.beginTx();
         try
         {
@@ -153,6 +153,14 @@ public class RdfStoreImpl implements RdfStore
             throw new UnsupportedOperationException( "Not yet implemented" );
         }
         removeStatementsSimple( statementWithOptionalNulls );
+    }
+    
+    private void sysOutStatements( String what, Statement... statements )
+    {
+        for ( Statement statement : statements )
+        {
+            sysOutStatement( what, statement );
+        }
     }
     
     private void sysOutStatement( String what, Statement statement )
