@@ -1,15 +1,16 @@
 package org.neo4j.rdf.model;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class WildcardEnabledStatement implements Statement
+public class WildcardStatement implements Statement
 {
     private final Value subject, predicate, object;
     private final List<Context> contextList;
     
-    public WildcardEnabledStatement( Value subject, Value predicate,
+    public WildcardStatement( Value subject, Value predicate,
         Value object, Context... contextsOrNullForNone )
     {
         checkAllowed( subject, predicate, object );
@@ -27,17 +28,29 @@ public class WildcardEnabledStatement implements Statement
         }
     }
     
+    public WildcardStatement( CompleteStatement completeStatement )
+    {
+        this( completeStatement.getSubject(), completeStatement.getPredicate(),
+            completeStatement.getObject(), contextIterableToArray(
+                completeStatement.getContexts() ) );
+    }
+    
+    private static Context[] contextIterableToArray(
+        Iterable<Context>  contexts )
+    {
+        ArrayList<Context> contextList = new ArrayList<Context>();
+        for ( Context context : contexts )
+        {
+            contextList.add( context );
+        }        
+        return contextList.toArray( new Context[ contextList.size() ] );
+    }
+
     private void checkAllowed( Value subject, Value predicate, Value object )
     {
         if ( subject == null || predicate == null || object == null )
         {
             throw new IllegalArgumentException( "Null params not allowed" );
-        }
-        
-        if ( predicate instanceof Wildcard )
-        {
-            throw new IllegalArgumentException(
-                "We don't support predicate wildcards " );
         }
     }
 
@@ -59,5 +72,18 @@ public class WildcardEnabledStatement implements Statement
     public Iterable<Context> getContexts()
     {
         return this.contextList;
+    }
+    
+    public String toString()
+    {
+        return "s,p,o=[" +
+            labelify( getSubject() ) + ", " +
+            labelify( getPredicate() ) + ", " +
+            labelify( getObject() ) + "]";
+    }
+
+    private String labelify( Value value )
+    {
+        return value instanceof Wildcard ? "?" : value.toString();
     }
 }

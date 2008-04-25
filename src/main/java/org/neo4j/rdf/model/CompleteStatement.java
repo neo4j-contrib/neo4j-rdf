@@ -68,4 +68,13 @@ public class CompleteStatement implements Statement
     {
         return this.contextList;
     }
+    
+    /**
+     * Convert this statement to a wildcard statement.
+     * @return this statement as a wildcard statement
+     */
+    public WildcardStatement asWildcardStatement()
+    {
+        return new WildcardStatement( this );
+    }
 }

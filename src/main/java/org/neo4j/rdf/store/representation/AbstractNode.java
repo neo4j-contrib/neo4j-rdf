@@ -10,15 +10,15 @@ import org.neo4j.rdf.model.Wildcard;
  */
 public class AbstractNode extends AbstractElement
 {
-    private final Value valueOrNull;
+    private final Value wildcardOruriOrNull;
 
     /**
-     * @param valueOrNull the URI of this node, a wildcard, or {@code null} if
+     * @param wildcardOrUriOrNull the URI of this node, a wildcard, or {@code null} if
      * it's a blank node.
      */
-    public AbstractNode( Value valueOrNull )
+    public AbstractNode( Value wildcardOrUriOrNull )
     {
-    	this.valueOrNull = valueOrNull;
+    	this.wildcardOruriOrNull = wildcardOrUriOrNull;
     }
 
     /**
@@ -27,8 +27,9 @@ public class AbstractNode extends AbstractElement
      */
     public Uri getUriOrNull()
     {
-        return this.valueOrNull == null || !( this.valueOrNull instanceof Uri )
-        ? null : ( Uri ) this.valueOrNull;
+        return this.wildcardOruriOrNull == null ||
+            !( this.wildcardOruriOrNull instanceof Uri )
+            ? null : ( Uri ) this.wildcardOruriOrNull;
     }
 
     /**
@@ -37,9 +38,9 @@ public class AbstractNode extends AbstractElement
      */
     public Wildcard getWildcardOrNull()
     {
-    	return this.valueOrNull == null ||
-    		!( this.valueOrNull instanceof Wildcard ) ?
-    			null : ( Wildcard ) this.valueOrNull;
+    	return this.wildcardOruriOrNull == null ||
+    		!( this.wildcardOruriOrNull instanceof Wildcard ) ?
+    			null : ( Wildcard ) this.wildcardOruriOrNull;
     }
     
     /**
@@ -47,6 +48,6 @@ public class AbstractNode extends AbstractElement
      */
     public boolean isWildcard()
     {
-    	return this.valueOrNull instanceof Wildcard;
+    	return this.wildcardOruriOrNull instanceof Wildcard;
     }
 }

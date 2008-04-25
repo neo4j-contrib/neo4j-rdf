@@ -25,9 +25,9 @@ public class MetaEnabledUriBasedExecutor extends UriBasedExecutor
     public static final String RDF_TYPE_URI = RDF_NAMESPACE + "type";
 
     /**
-     * The lookup info key for meta enabled nodes.
+     * The "executor info" key for meta enabled nodes.
      */
-    public static final String META_LOOKUP_KEY = "meta";
+    public static final String META_EXECUTOR_INFO_KEY = "meta";
 
     private final MetaStructure meta;
 	
@@ -43,14 +43,14 @@ public class MetaEnabledUriBasedExecutor extends UriBasedExecutor
 		this.meta = meta;
 	}
 	
-	private String getMetaLookupInfo( AbstractNode node )
+	private String getMetaExecutorInfo( AbstractNode node )
 	{
-		return ( String ) node.lookupInfo( "meta" );
+		return ( String ) node.getExecutorInfo( META_EXECUTOR_INFO_KEY );
 	}
 	
 	private boolean isMeta( AbstractNode node )
 	{
-		return getMetaLookupInfo( node ) != null;
+		return getMetaExecutorInfo( node ) != null;
 	}
 
 	@Override
@@ -73,7 +73,7 @@ public class MetaEnabledUriBasedExecutor extends UriBasedExecutor
 	private MetaStructureThing getMetaStructureThing( AbstractNode node )
 	{
 	    MetaStructureThing thing = null;
-	    String metaInfo = getMetaLookupInfo( node );
+	    String metaInfo = getMetaExecutorInfo( node );
 	    if ( node.getUriOrNull() == null )
 	    {
 	    	thing = null;

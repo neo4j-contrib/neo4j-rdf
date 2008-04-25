@@ -33,7 +33,8 @@ import org.neo4j.util.index.SingleValueIndex;
  * {@link RepresentationStrategy} implementations using an
  * {@link UriBasedExecutor}.
  */
-abstract class IndexRepresentationStrategy implements RepresentationStrategy
+abstract class StandardAbstractRepresentationStrategy
+    implements RepresentationStrategy
 {
     /**
      * The property postfix which is concatenated with a property key to get
@@ -47,7 +48,7 @@ abstract class IndexRepresentationStrategy implements RepresentationStrategy
     /**
      * @param neo the {@link NeoService}.
      */
-    public IndexRepresentationStrategy( NeoService neo )
+    public StandardAbstractRepresentationStrategy( NeoService neo )
     {
         this.executor = new UriBasedExecutor( neo, newIndex( neo ) );
         this.meta = null;
@@ -57,7 +58,8 @@ abstract class IndexRepresentationStrategy implements RepresentationStrategy
      * @param neo the {@link NeoService}.
      * @param meta the {@link MetaStructure}.
      */
-    public IndexRepresentationStrategy( NeoService neo, MetaStructure meta )
+    public StandardAbstractRepresentationStrategy( NeoService neo,
+        MetaStructure meta )
     {
         this.executor =
             new MetaEnabledUriBasedExecutor( neo, newIndex( neo ), meta );
@@ -92,10 +94,17 @@ abstract class IndexRepresentationStrategy implements RepresentationStrategy
         return representation;
     }
     
+    /**
+     * Add this single statement to representation, return <code>true</code>
+     * if we have processed it, <code>false</code> otherwise
+     * @return <code>true</code> if this method has processed
+     * <code>statement</code>, <code>false</code> otherwise
+     */
     protected boolean addToRepresentation(
         AbstractRepresentation representation,
         Map<String, AbstractNode> nodeMapping, Statement statement )
     {
+        // TODO: fix this! (wildcards)
         String predicate =
             ( ( Uri ) statement.getPredicate() ).getUriAsString();
         if ( predicate.equals( MetaEnabledUriBasedExecutor.RDF_TYPE_URI ) )
@@ -117,14 +126,15 @@ abstract class IndexRepresentationStrategy implements RepresentationStrategy
     {
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
         AbstractNode classNode = getObjectNode( nodeMapping, statement );
-        classNode.addLookupInfo( "meta", "class" );
+        classNode.addExecutorInfo(
+            MetaEnabledUriBasedExecutor.META_EXECUTOR_INFO_KEY, "class" );
         AbstractRelationship instanceOfRelationship = new AbstractRelationship(
             subjectNode, MetaStructureRelTypes.META_IS_INSTANCE_OF.name(),
             classNode );
         representation.addRelationship( instanceOfRelationship );
     }
 
-    protected void addOneNodeFragment(
+    protected void addOneNodeWithLiteralsAsProperties(
         AbstractRepresentation representation,
         Map<String, AbstractNode> nodeMapping, Statement statement )
     {
@@ -132,7 +142,39 @@ abstract class IndexRepresentationStrategy implements RepresentationStrategy
         addPropertyWithContexts( statement, subjectNode );
     }
     
-    private PropertyRange getPropertyRange( String predicate )
+    protected void addPropertyWithContexts( Statement statement,
+        AbstractNode subjectNode )
+    {
+        Value object = statement.getObject();
+        Object literalValue = null;
+        String predicate =
+            ( ( Uri ) statement.getPredicate() ).getUriAsString();
+        if ( object instanceof Wildcard )
+        {
+            subjectNode.addProperty( predicate, object );
+            return;
+        }
+        else
+        {
+            literalValue = convertLiteralValueToRealValue(
+                statement, ( ( Literal ) statement.getObject() ).getValue() );
+        }
+        
+        subjectNode.addProperty( predicate, literalValue );
+        String predicateContext = UriBasedExecutor.formContextPropertyKey(
+            predicate, literalValue );
+        for ( Context context : statement.getContexts() )
+        {
+            subjectNode.addProperty( predicateContext,
+                context.getUriAsString() );
+        }
+        Map<String, String> contextKeys = new HashMap<String, String>();
+        contextKeys.put( predicateContext, predicate );
+        subjectNode.addExecutorInfo( UriBasedExecutor.LOOKUP_CONTEXT_KEYS,
+            contextKeys );
+    }
+
+    private PropertyRange getPropertyRange( Uri predicate )
     {
         if ( meta == null )
         {
@@ -140,12 +182,13 @@ abstract class IndexRepresentationStrategy implements RepresentationStrategy
         }
 
         MetaStructureProperty property =
-            meta.getGlobalNamespace().getMetaProperty( predicate, false );
+            meta.getGlobalNamespace().getMetaProperty(
+                predicate.getUriAsString(), false );
         return property == null ? null :
             meta.lookup( property, MetaStructure.LOOKUP_PROPERTY_RANGE );
     }
     
-    protected boolean isObjectType( String predicate )
+    protected boolean pointsToObjectType( Uri predicate )
     {
         PropertyRange range = getPropertyRange( predicate );
         if ( range == null )
@@ -164,7 +207,7 @@ abstract class IndexRepresentationStrategy implements RepresentationStrategy
         if ( result != null && result instanceof String && meta != null )
         {
             PropertyRange range = getPropertyRange(
-                ( ( Uri ) statement.getPredicate() ).getUriAsString() );
+                ( Uri ) statement.getPredicate() );
             if ( range != null && range.isDatatype() )
             {
                 try
@@ -197,23 +240,23 @@ abstract class IndexRepresentationStrategy implements RepresentationStrategy
     {
         return ( ( Uri ) value ).getUriAsString();
     }
-    
+
     protected String asString( Value value )
     {
-    	String string = null;
-    	if ( value instanceof Wildcard )
-    	{
-    		string = ( ( Wildcard ) value ).getVariableName(); 
-    	}
-    	else if ( value instanceof Uri )
-    	{
-    		string = ( ( Uri ) value ).getUriAsString();
-    	}
-    	else if ( value instanceof Literal )
-    	{
-    		string = ( ( Literal ) value ).getValue().toString();
-    	}
-    	return string;
+        String string = null;
+        if ( value instanceof Wildcard )
+        {
+            string = ( ( Wildcard ) value ).getVariableName(); 
+        }
+        else if ( value instanceof Uri )
+        {
+            string = ( ( Uri ) value ).getUriAsString();
+        }
+        else if ( value instanceof Literal )
+        {
+            string = ( ( Literal ) value ).getValue().toString();
+        }
+        return string;
     }
 
     protected AbstractNode getSubjectNode(
@@ -233,50 +276,14 @@ abstract class IndexRepresentationStrategy implements RepresentationStrategy
     {
         AbstractNode node = getOrCreateNode( nodeMapping,
         		statement.getPredicate() );
-        node.addLookupInfo( "meta", "property" );
+        node.addExecutorInfo(
+            MetaEnabledUriBasedExecutor.META_EXECUTOR_INFO_KEY, "property" );
         return node;
     }
     
     protected boolean isObjectType( Value value )
     {
         return value instanceof Resource;
-    }
-    
-    protected void addPropertyWithContexts( Statement statement,
-        AbstractNode node )
-    {
-        String predicate =
-            ( ( Uri ) statement.getPredicate() ).getUriAsString();
-        Value object = statement.getObject();
-        Object literalValue = null;
-        if ( object instanceof Wildcard )
-        {
-            node.addProperty( predicate, ( Wildcard ) object );
-            return;
-        }
-        else
-        {
-            literalValue = ( ( Literal ) statement.getObject() ).getValue();
-        }
-        
-        // TODO Should this be here?
-        if ( literalValue != null )
-        {
-            convertLiteralValueToRealValue( statement, literalValue );
-        }
-        
-        node.addProperty( predicate, literalValue );
-        String predicateContext = UriBasedExecutor.formContextPropertyKey(
-            predicate, literalValue );
-        for ( Context context : statement.getContexts() )
-        {
-            node.addProperty( predicateContext,
-                context.getUriAsString() );
-        }
-        Map<String, String> contextKeys = new HashMap<String, String>();
-        contextKeys.put( predicateContext, predicate );
-        node.addLookupInfo( UriBasedExecutor.LOOKUP_CONTEXT_KEYS,
-            contextKeys );
     }
     
     protected void addSingleContextsToElement( Statement statement,
@@ -289,7 +296,7 @@ abstract class IndexRepresentationStrategy implements RepresentationStrategy
         }
         Map<String, String> contextKeys = new HashMap<String, String>();
         contextKeys.put( CONTEXT_PROPERTY_POSTFIX, null );
-        element.addLookupInfo( UriBasedExecutor.LOOKUP_CONTEXT_KEYS,
+        element.addExecutorInfo( UriBasedExecutor.LOOKUP_CONTEXT_KEYS,
             contextKeys );
     }
 

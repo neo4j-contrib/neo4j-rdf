@@ -2,7 +2,7 @@ package org.neo4j.rdf.model;
 
 /**
  * A wildcard placeholder for an RDF data type, used with
- * {@link WildcardEnabledStatement} represent variable wildcard patterns
+ * {@link WildcardStatement} represent variable wildcard patterns
  * for the system to match.
  */
 public class Wildcard implements Value

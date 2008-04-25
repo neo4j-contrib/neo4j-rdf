@@ -20,7 +20,8 @@ import org.neo4j.rdf.store.representation.AbstractRepresentation;
  *    (S) --------> ( ) --------> (O)
  *    
  */
-public class VerboseRepresentationStrategy extends IndexRepresentationStrategy
+public class VerboseRepresentationStrategy
+    extends StandardAbstractRepresentationStrategy
 {
     /**
      * @param neo the {@link NeoService}.
@@ -88,7 +89,7 @@ public class VerboseRepresentationStrategy extends IndexRepresentationStrategy
     
     private void addThreeNodeLiteralFragment(
         AbstractRepresentation representation,
-        Map<Value, AbstractNode> nodeMapping, Statement statement )
+        Map<String, AbstractNode> nodeMapping, Statement statement )
     {
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
         String predicate = asUri( statement.getPredicate() );

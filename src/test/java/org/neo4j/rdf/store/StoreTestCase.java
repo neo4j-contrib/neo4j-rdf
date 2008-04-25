@@ -22,9 +22,14 @@ public abstract class StoreTestCase extends NeoTestCase
 
     protected void add( RdfStore store, Statement statement, int numberOfTimes )
     {
+        if ( !(statement instanceof CompleteStatement ) )
+        {
+            throw new IllegalArgumentException(
+                "Can only add complete statements " );
+        }
         while ( numberOfTimes-- > 0 )
         {
-            store.addStatement( statement );
+            store.addStatements( ( CompleteStatement ) statement );
         }
     }
     
@@ -84,7 +89,7 @@ public abstract class StoreTestCase extends NeoTestCase
         ArrayList<Statement> list = new ArrayList<Statement>();
         for ( Statement statement : statements )
         {
-            store.addStatement( statement );
+            store.addStatements( ( CompleteStatement ) statement );
             list.add( statement );
         }
         return list;

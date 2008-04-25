@@ -1,6 +1,8 @@
 package org.neo4j.rdf.store;
 
+import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Statement;
+import org.neo4j.rdf.model.WildcardStatement;
 
 /**
  * A RDF/triple store.
@@ -8,27 +10,25 @@ import org.neo4j.rdf.model.Statement;
 public interface RdfStore
 {
     /**
-     * Adds a statement to the store, with optional additional contexts.
-     * @param statement the statement to add.
+     * Adds one or more statements to the store.
+     * @param statements the statement to add.
      * @param contexts the additional context information about the statement.
      */
-    void addStatement( Statement statement );
+    void addStatements( CompleteStatement... statements );
     
     /**
      * Queries the store for matching statements.
-     * @param statementWithOptionalNulls a {@link Statement} where the
-     * elements may be null (which means wildcard).
+     * @param statement a {@link Statement} with optional wildcard members
      * @param includeInferredStatements wether or not to match f.ex.
      * subclass/subproperty relations.
      * @return the matching statements.
      */
-    Iterable<Statement> getStatements( Statement statementWithOptionalNulls,
+    Iterable<Statement> getStatements( WildcardStatement statement,
         boolean includeInferredStatements );
     
     /**
      * Removes any matching statement from the store.
-     * @param statementWithOptionalNulls a {@link Statement} where the
-     * elements may be null (which means wildcard).
+     * @param statement a {@link Statement} with optional wildcard members
      */
-    void removeStatements( Statement statementWithOptionalNulls );
+    void removeStatements( Statement statement );
 }

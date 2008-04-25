@@ -3,6 +3,9 @@ package org.neo4j.rdf.store.representation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+
+import org.neo4j.rdf.model.Value;
 
 /**
  * An abstract representation of an arbitrary number of RDF statements in the
@@ -64,5 +67,11 @@ public class AbstractRepresentation
     public Iterable<AbstractRelationship> relationships()
     {
         return Collections.unmodifiableList( relationships );
+    }
+
+    // Maybe add this?
+    public Map<AbstractElement, Value> getMappingToRdfValues()
+    {
+        return Collections.emptyMap();
     }
 }

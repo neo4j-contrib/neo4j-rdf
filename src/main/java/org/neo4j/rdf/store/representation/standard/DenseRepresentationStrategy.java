@@ -6,6 +6,7 @@ import org.neo4j.api.core.NeoService;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
+import org.neo4j.rdf.model.Wildcard;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractRepresentation;
@@ -15,7 +16,8 @@ import org.neo4j.rdf.store.representation.AbstractRepresentation;
  * if object property: ( S ) -- predicate_uri_as_reltype --> ( O )
  * if data property: ( S ) with property [key=predicate_uri, value=O]
  */
-public class DenseRepresentationStrategy extends IndexRepresentationStrategy
+public class DenseRepresentationStrategy
+    extends StandardAbstractRepresentationStrategy
 {
     /**
      * @param neo the {@link NeoService}.
@@ -42,10 +44,14 @@ public class DenseRepresentationStrategy extends IndexRepresentationStrategy
 	    if ( !super.addToRepresentation(
 	        representation, nodeMapping, statement ) )
 	    {
+	        if ( statement.getPredicate() instanceof Wildcard )
+	        {
+	            throw new RuntimeException( "We don't (yet?) support " +
+	            	"wildcard predicates" );
+	        }
+	        
             if ( isObjectType( statement.getObject() ) ||
-            		( statement.getPredicate() instanceof Uri &&
-            		isObjectType( ( ( Uri )
-            				statement.getPredicate() ).getUriAsString() ) ) )
+                    pointsToObjectType( ( Uri ) statement.getPredicate() ) )
             {
                 // ( S ) -- predicate_uri --> ( O )
                 addTwoNodeFragment( representation, nodeMapping, statement );
@@ -53,7 +59,8 @@ public class DenseRepresentationStrategy extends IndexRepresentationStrategy
             else
             {
                 // ( S ) with property [key=predicate_uri, value=O]
-                addOneNodeFragment( representation, nodeMapping, statement );
+                addOneNodeWithLiteralsAsProperties( representation, nodeMapping,
+                    statement );
             }
 	    }
         return true;

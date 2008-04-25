@@ -3,9 +3,8 @@ package org.neo4j.rdf.store.representation;
 import org.neo4j.api.core.Node;
 
 /**
- * Given an {@link AbstractRepresentation} a
- * {@link RepresentationExecutor} can make sure it's added to or removed from
- * the node space.
+ * Given an {@link AbstractRepresentation} a {@link RepresentationExecutor} can
+ * make sure it's added to or removed from the node space.
  */
 public interface RepresentationExecutor
 {

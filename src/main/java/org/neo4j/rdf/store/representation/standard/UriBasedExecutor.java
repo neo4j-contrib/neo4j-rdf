@@ -36,8 +36,8 @@ public class UriBasedExecutor implements RepresentationExecutor
     public static final String LOOKUP_CONTEXT_KEYS = "contextKeys";
     static final String URI_PROPERTY_KEY = "uri";
 
-    private NeoService neo;
-    private Index index;
+    private final NeoService neo;
+    private final Index index;
 
     /**
      * @param neo the {@link NeoService}.
@@ -210,11 +210,11 @@ public class UriBasedExecutor implements RepresentationExecutor
             removeFromRelationship( abstractRelationship, relationship );
             if ( relationshipIsEmpty( abstractRelationship, relationship ) )
             {
-                relationship.delete();
                 debug( "\t-Relationship "
                     + relationship.getStartNode() + " ---["
                     + relationship.getType().name() + "]--> "
                     + relationship.getEndNode() );
+                relationship.delete();
             }
         }
         for ( Map.Entry<AbstractNode, Node> entry : nodeMapping.entrySet() )
@@ -233,7 +233,7 @@ public class UriBasedExecutor implements RepresentationExecutor
     protected String getPropertyKeyForContextKey( AbstractElement element,
         String contextKey )
     {
-        Map<?, ?> contextToPropertyKeys = ( Map<?, ?> ) element.lookupInfo(
+        Map<?, ?> contextToPropertyKeys = ( Map<?, ?> ) element.getExecutorInfo(
             UriBasedExecutor.LOOKUP_CONTEXT_KEYS );
         return contextToPropertyKeys == null ? null :
             ( String ) contextToPropertyKeys.get( contextKey );
@@ -242,7 +242,7 @@ public class UriBasedExecutor implements RepresentationExecutor
     protected boolean isContextKey( AbstractElement element,
         String key )
     {
-        Map<?, ?> contextToPropertyKeys = ( Map<?, ?> ) element.lookupInfo(
+        Map<?, ?> contextToPropertyKeys = ( Map<?, ?> ) element.getExecutorInfo(
             UriBasedExecutor.LOOKUP_CONTEXT_KEYS );
         return contextToPropertyKeys != null &&
             contextToPropertyKeys.containsKey( key );
