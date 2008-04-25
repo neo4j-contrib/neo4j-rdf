@@ -67,7 +67,7 @@ public class DenseRepresentationStrategy extends IndexRepresentationStrategy
         AbstractNode objectNode = getObjectNode( nodeMapping, statement );
         AbstractRelationship relationship = new AbstractRelationship(
             subjectNode, asUri( statement.getPredicate() ), objectNode );
-        addContextsToRelationship( statement, relationship );
+        addSingleContextsToElement( statement, relationship );
         representation.addRelationship( relationship );
     }
 }

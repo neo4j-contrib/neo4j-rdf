@@ -2,8 +2,10 @@ package org.neo4j.rdf.store.representation.standard;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.neo4j.api.core.Direction;
 import org.neo4j.api.core.NeoService;
@@ -49,7 +51,7 @@ public class UriBasedExecutor implements RepresentationExecutor
 
     protected void debug( String message )
     {
-        System.out.println( message );
+//        System.out.println( message );
     }
 
     protected Node lookupNode( AbstractNode node,
@@ -125,8 +127,7 @@ public class UriBasedExecutor implements RepresentationExecutor
         }
     }
 
-    public void removeFromNodeSpace(
-        AbstractRepresentation representation )
+    public void removeFromNodeSpace( AbstractRepresentation representation )
     {
         Map<AbstractNode, Node> nodeMapping = new HashMap<AbstractNode, Node>();
         for ( AbstractNode abstractNode : representation.nodes() )
@@ -188,6 +189,19 @@ public class UriBasedExecutor implements RepresentationExecutor
         }
 
         // Do the actual deletion
+        Set<Node> deletedNodes = new HashSet<Node>();
+        for ( Map.Entry<AbstractNode, Node> entry : nodeMapping.entrySet() )
+        {
+            AbstractNode abstractNode = entry.getKey();
+            Node node = entry.getValue();
+            removeFromNode( abstractNode, node );
+            if ( nodeIsEmpty( abstractNode, node, true ) )
+            {
+                debug( "\t-Node " + node );
+                removeNode( node, abstractNode.getUriOrNull() );
+                deletedNodes.add( node );
+            }
+        }
         for ( Map.Entry<AbstractRelationship, Relationship> entry :
             relationshipMapping.entrySet() )
         {
@@ -207,8 +221,8 @@ public class UriBasedExecutor implements RepresentationExecutor
         {
             AbstractNode abstractNode = entry.getKey();
             Node node = entry.getValue();
-            removeFromNode( abstractNode, node );
-            if ( nodeIsEmpty( abstractNode, node ) )
+            if ( !deletedNodes.contains( node ) &&
+                nodeIsEmpty( abstractNode, node, true ) )
             {
                 debug( "\t-Node " + node );
                 removeNode( node, abstractNode.getUriOrNull() );
@@ -234,15 +248,53 @@ public class UriBasedExecutor implements RepresentationExecutor
             contextToPropertyKeys.containsKey( key );
     }
     
+    private boolean oneNodeIsBlankAndItsNotEmpty(
+        AbstractRelationship abstractRelationship, Relationship relationship )
+    {
+        if ( abstractRelationship.getStartNode().getUriOrNull() != null &&
+            abstractRelationship.getEndNode().getUriOrNull() != null )
+        {
+            return false;
+        }
+        
+        boolean blankIsStartNode =
+            abstractRelationship.getStartNode().getUriOrNull() == null;
+        AbstractNode abstractNode = blankIsStartNode ?
+            abstractRelationship.getStartNode() :
+            abstractRelationship.getEndNode();
+        Node node = blankIsStartNode ?
+            relationship.getStartNode() : relationship.getEndNode();
+        if ( !nodeIsEmpty( abstractNode, node, false ) )
+        {
+            return true;
+        }
+        return false;
+    }
+    
     private boolean relationshipIsEmpty(
         AbstractRelationship abstractRelationship, Relationship relationship )
     {
-        return !relationship.getPropertyKeys().iterator().hasNext();
+        if ( oneNodeIsBlankAndItsNotEmpty(
+            abstractRelationship, relationship ) )
+        {
+            return false;
+        }
+        
+        AbstractNode abstractStartNode = abstractRelationship.getStartNode();
+        if ( abstractStartNode.getUriOrNull() == null && !nodeIsEmpty(
+            abstractStartNode, relationship.getStartNode(), false ) )
+        {
+            return false;
+        }
+        boolean hasProperties =
+            relationship.getPropertyKeys().iterator().hasNext();
+        return !hasProperties;
     }
 
-    private boolean nodeIsEmpty( AbstractNode abstractNode, Node node )
+    private boolean nodeIsEmpty( AbstractNode abstractNode, Node node,
+        boolean checkRelationships )
     {
-        if ( node.hasRelationship() )
+        if ( checkRelationships && node.hasRelationship() )
         {
             return false;
         }
@@ -333,7 +385,6 @@ public class UriBasedExecutor implements RepresentationExecutor
     private void removeFromRelationship(
         AbstractRelationship abstractRelationship, Relationship relationship )
     {
-        // We only support context properties on relationship for now.
         for ( Map.Entry<String, Collection<Object>> entry :
             abstractRelationship.properties().entrySet() )
         {
@@ -345,7 +396,7 @@ public class UriBasedExecutor implements RepresentationExecutor
             Collection<Object> neoValues = new NeoPropertyArraySet<Object>(
                 neo, relationship, key );
             removeAll( relationship, key, neoValues,
-                entry.getValue(), "Context" );
+                entry.getValue(), "Property" );
         }
     }
     
@@ -384,7 +435,7 @@ public class UriBasedExecutor implements RepresentationExecutor
             }
             Collection<Object> neoValues = new NeoPropertyArraySet<Object>(
                 neo, node, key );
-            removeAll( node, key, neoValues, entry.getValue(), "Context" );
+            removeAll( node, key, neoValues, entry.getValue(), "Property" );
         }
         
         // Do the real keys
@@ -568,11 +619,11 @@ public class UriBasedExecutor implements RepresentationExecutor
         return predicate + CONTEXT_DELIMITER + value.toString();
     }
     
-    private static class ARelationshipType implements RelationshipType
+    public static class ARelationshipType implements RelationshipType
     {
         private String name;
 
-        ARelationshipType( String name )
+        public ARelationshipType( String name )
         {
             this.name = name;
         }

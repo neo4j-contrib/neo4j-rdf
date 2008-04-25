@@ -49,17 +49,19 @@ public class VerboseRepresentationStrategy extends IndexRepresentationStrategy
         {
             if ( isObjectType( statement.getObject() ) )
             {
-                addFourNodeFragment( representation, nodeMapping, statement );
+                addFourNodeObjectFragment(
+                    representation, nodeMapping, statement );
             }
             else
             {
-                addOneNodeFragment( representation, nodeMapping, statement );
+                addThreeNodeLiteralFragment(
+                    representation, nodeMapping, statement );
             }
         }
         return true;
     }
 
-    private void addFourNodeFragment(
+    private void addFourNodeObjectFragment(
         AbstractRepresentation representation,
         Map<String, AbstractNode> nodeMapping, Statement statement )
     {
@@ -76,15 +78,34 @@ public class VerboseRepresentationStrategy extends IndexRepresentationStrategy
             connectorNode, RelTypes.CONNECTOR_HAS_PREDICATE.name(),
             predicateNode );
         
-        addContextsToRelationship( statement, subjectToConnectorRel );
-        addContextsToRelationship( statement, connectorToObjectRel );
-        addContextsToRelationship( statement, connectorToPredicate );
-
+        addSingleContextsToElement( statement, connectorNode );
+        
         representation.addNode( connectorNode );
         representation.addRelationship( subjectToConnectorRel );
         representation.addRelationship( connectorToObjectRel );
         representation.addRelationship( connectorToPredicate );
     }
+    
+    private void addThreeNodeLiteralFragment(
+        AbstractRepresentation representation,
+        Map<Value, AbstractNode> nodeMapping, Statement statement )
+    {
+        AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
+        String predicate = asUri( statement.getPredicate() );
+        AbstractNode predicateNode = getPredicateNode( nodeMapping, statement );
+        AbstractNode connectorNode = new AbstractNode( null );
+        AbstractRelationship subjectToConnectorRel = new AbstractRelationship(
+            subjectNode, predicate, connectorNode );
+        AbstractRelationship connectorToPredicate = new AbstractRelationship(
+            connectorNode, RelTypes.CONNECTOR_HAS_PREDICATE.name(),
+            predicateNode );
+        
+        addPropertyWithContexts( statement, connectorNode );
+        representation.addNode( connectorNode );
+        representation.addRelationship( subjectToConnectorRel );
+        representation.addRelationship( connectorToPredicate );
+    }
+        
     
     /**
      * Some relationship types used in the representation.

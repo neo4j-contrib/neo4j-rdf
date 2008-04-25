@@ -18,6 +18,7 @@ import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Value;
 import org.neo4j.rdf.model.Wildcard;
+import org.neo4j.rdf.store.representation.AbstractElement;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractRepresentation;
@@ -73,8 +74,7 @@ abstract class IndexRepresentationStrategy implements RepresentationStrategy
     public AbstractRepresentation getAbstractRepresentation(
         Statement... statements )
     {
-        AbstractRepresentation representation =
-            new AbstractRepresentation();
+        AbstractRepresentation representation = new AbstractRepresentation();
         Map<String, AbstractNode> nodeMapping =
             new HashMap<String, AbstractNode>();
         for ( Statement statement : statements )
@@ -129,38 +129,7 @@ abstract class IndexRepresentationStrategy implements RepresentationStrategy
         Map<String, AbstractNode> nodeMapping, Statement statement )
     {
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
-        Value object = statement.getObject();
-        Object literalValue = null;
-        String predicate =
-            ( ( Uri ) statement.getPredicate() ).getUriAsString();
-        if ( object instanceof Wildcard )
-        {
-        	subjectNode.addProperty( predicate, ( Wildcard ) object );
-        	return;
-        }
-        else
-        {
-        	literalValue = ( ( Literal ) statement.getObject() ).getValue();
-        }
-        
-        // TODO Should this be here?
-        if ( literalValue != null )
-        {
-            convertLiteralValueToRealValue( statement, literalValue );
-        }
-        
-        subjectNode.addProperty( predicate, literalValue );
-        String predicateContext = UriBasedExecutor.formContextPropertyKey(
-            predicate, literalValue );
-        for ( Context context : statement.getContexts() )
-        {
-            subjectNode.addProperty( predicateContext,
-                context.getUriAsString() );
-        }
-        Map<String, String> contextKeys = new HashMap<String, String>();
-        contextKeys.put( predicateContext, predicate );
-        subjectNode.addLookupInfo( UriBasedExecutor.LOOKUP_CONTEXT_KEYS,
-            contextKeys );
+        addPropertyWithContexts( statement, subjectNode );
     }
     
     private PropertyRange getPropertyRange( String predicate )
@@ -273,17 +242,54 @@ abstract class IndexRepresentationStrategy implements RepresentationStrategy
         return value instanceof Resource;
     }
     
-    protected void addContextsToRelationship( Statement statement,
-        AbstractRelationship relationship )
+    protected void addPropertyWithContexts( Statement statement,
+        AbstractNode node )
+    {
+        String predicate =
+            ( ( Uri ) statement.getPredicate() ).getUriAsString();
+        Value object = statement.getObject();
+        Object literalValue = null;
+        if ( object instanceof Wildcard )
+        {
+            node.addProperty( predicate, ( Wildcard ) object );
+            return;
+        }
+        else
+        {
+            literalValue = ( ( Literal ) statement.getObject() ).getValue();
+        }
+        
+        // TODO Should this be here?
+        if ( literalValue != null )
+        {
+            convertLiteralValueToRealValue( statement, literalValue );
+        }
+        
+        node.addProperty( predicate, literalValue );
+        String predicateContext = UriBasedExecutor.formContextPropertyKey(
+            predicate, literalValue );
+        for ( Context context : statement.getContexts() )
+        {
+            node.addProperty( predicateContext,
+                context.getUriAsString() );
+        }
+        Map<String, String> contextKeys = new HashMap<String, String>();
+        contextKeys.put( predicateContext, predicate );
+        node.addLookupInfo( UriBasedExecutor.LOOKUP_CONTEXT_KEYS,
+            contextKeys );
+    }
+    
+    protected void addSingleContextsToElement( Statement statement,
+        AbstractElement element )
     {
         for ( Context context : statement.getContexts() )
         {
-            relationship.addProperty( CONTEXT_PROPERTY_POSTFIX,
+            element.addProperty( CONTEXT_PROPERTY_POSTFIX,
                 context.getUriAsString() );
         }
         Map<String, String> contextKeys = new HashMap<String, String>();
         contextKeys.put( CONTEXT_PROPERTY_POSTFIX, null );
-        relationship.addLookupInfo( UriBasedExecutor.LOOKUP_CONTEXT_KEYS,
+        element.addLookupInfo( UriBasedExecutor.LOOKUP_CONTEXT_KEYS,
             contextKeys );
     }
 
