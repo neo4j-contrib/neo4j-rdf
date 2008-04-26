@@ -20,6 +20,11 @@ public abstract class StoreTestCase extends NeoTestCase
     protected static final String KNOWS_PROPERTY = "http://properties#knows";
     protected static final Context TEST_CONTEXT = new Context( "aTest" );
 
+    protected void debug( String text )
+    {
+//        System.out.println( text );
+    }
+
     protected void add( RdfStore store, Statement statement, int numberOfTimes )
     {
         if ( !(statement instanceof CompleteStatement ) )
@@ -29,7 +34,7 @@ public abstract class StoreTestCase extends NeoTestCase
         }
         while ( numberOfTimes-- > 0 )
         {
-            System.out.println( "addStatement " + statement );
+            debug( "addStatement " + statement );
             store.addStatements( ( CompleteStatement ) statement );
         }
     }
@@ -44,7 +49,7 @@ public abstract class StoreTestCase extends NeoTestCase
     {
         while ( numberOfTimes-- > 0 )
         {
-            System.out.println( "removeStatement " + statement );
+            debug( "removeStatement " + statement );
             store.removeStatements( statement );
         }
     }

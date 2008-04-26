@@ -38,12 +38,12 @@ public class RdfStoreImpl implements RdfStore
         this.neo = neo;
         this.representationStrategy = representationStrategy;
     }
-    
+
     protected NeoService neo()
     {
         return this.neo;
     }
-    
+
     protected RepresentationStrategy getRepresentationStrategy()
     {
         return this.representationStrategy;
@@ -51,7 +51,6 @@ public class RdfStoreImpl implements RdfStore
 
     public void addStatements( CompleteStatement... statements )
     {
-        sysOutStatements( "add", statements );
         Transaction tx = neo.beginTx();
         try
         {
@@ -164,29 +163,8 @@ public class RdfStoreImpl implements RdfStore
         removeStatementsSimple( statementWithOptionalNulls );
     }
 
-    private void sysOutStatements( String what, Statement... statements )
-    {
-        for ( Statement statement : statements )
-        {
-            sysOutStatement( what, statement );
-        }
-    }
-
-    private void sysOutStatement( String what, Statement statement )
-    {
-//        StringBuffer contexts = new StringBuffer();
-//        for ( Context context : statement.getContexts() )
-//        {
-//            contexts.append( context.getUriAsString() + ", " );
-//        }
-//        System.out.println( what + ":" + statement.getSubject() +
-//            ", " + statement.getPredicate() + ", " + statement.getObject() +
-//            " | " + contexts.toString() );
-    }
-
     private void removeStatementsSimple( Statement statement )
     {
-        sysOutStatement( "remove", statement );
         Transaction tx = neo.beginTx();
         try
         {
