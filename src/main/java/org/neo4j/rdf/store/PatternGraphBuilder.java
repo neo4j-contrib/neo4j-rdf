@@ -17,10 +17,6 @@ import org.neo4j.util.matching.PatternNode;
 public class PatternGraphBuilder
 {
     private final RepresentationStrategy representationStrategy;
-    private Map<AbstractNode, PatternNode> graph =
-        new HashMap<AbstractNode, PatternNode>();
-    private Map<String, VariableHolder> variableMapping =
-        new HashMap<String, VariableHolder>();
     
     public PatternGraphBuilder( RepresentationStrategy representationStrategy )
     {
@@ -38,10 +34,11 @@ public class PatternGraphBuilder
         AbstractRepresentation representation,
         Map<String, VariableHolder> variableMapping, boolean optional )
     {
-        this.variableMapping = variableMapping;
+        Map<AbstractNode, PatternNode> graph =
+            new HashMap<AbstractNode, PatternNode>();
         for ( AbstractNode node : representation.nodes() )
         {
-            this.graph.put( node, this.createPatternNode( node ) );
+            graph.put( node, this.createPatternNode( node, variableMapping ) );
         }
         
         for ( AbstractRelationship relationship :
@@ -49,28 +46,23 @@ public class PatternGraphBuilder
         {
             AbstractNode startNode = relationship.getStartNode();
             AbstractNode endNode = relationship.getEndNode();
-            final String name = relationship.getRelationshipTypeName();
-            this.graph.get( startNode ).createRelationshipTo(
-                this.graph.get( endNode ), new DynamicRelationshipType( name ),
-                optional );
+            graph.get( startNode ).createRelationshipTo(
+                graph.get( endNode ), new DynamicRelationshipType(
+                    relationship.getRelationshipTypeName() ), optional );
         }
         
-        return this.graph;
+        return graph;
     }
     
-    public Map<String, VariableHolder> getVariableMapping()
-    {
-        return this.variableMapping;
-    }
-    
-    private PatternNode createPatternNode( AbstractNode node )
+    private PatternNode createPatternNode( AbstractNode node,
+        Map<String, VariableHolder> variableMapping )
     {
         PatternNode patternNode = null;
         if ( node.isWildcard() )
         {
             Wildcard wildcard = node.getWildcardOrNull();
             patternNode = new PatternNode( wildcard.getVariableName() );
-            this.addVariable( wildcard.getVariableName(),
+            addVariable( variableMapping, wildcard.getVariableName(),
                 VariableHolder.VariableType.URI, patternNode,
                 this.representationStrategy.getExecutor().
                     getNodeUriPropertyKey( node ) );
@@ -95,7 +87,8 @@ public class PatternGraphBuilder
             {
                 if ( value instanceof Wildcard )
                 {
-                    this.addVariable( ( ( Wildcard ) value ).getVariableName(),
+                    addVariable( variableMapping,
+                        ( ( Wildcard ) value ).getVariableName(),
                         VariableHolder.VariableType.LITERAL, patternNode,
                         entry.getKey() );
                 }
@@ -109,13 +102,13 @@ public class PatternGraphBuilder
         return patternNode;
     }
     
-    private void addVariable( String variableName,
-        VariableHolder.VariableType type, PatternNode patternNode,
-        String propertyKey )
+    private void addVariable( Map<String, VariableHolder> variableMapping,
+        String variableName, VariableHolder.VariableType type,
+        PatternNode patternNode, String propertyKey )
     {
-        if ( !this.getVariableMapping().containsKey( variableName ) )
+        if ( !variableMapping.containsKey( variableName ) )
         {
-            this.getVariableMapping().put( variableName,
+            variableMapping.put( variableName,
                 new VariableHolder( variableName, type, patternNode,
                     propertyKey ) );
         }
@@ -135,6 +128,7 @@ public class PatternGraphBuilder
         }
         
     }   
+    
     public static class VariableHolder
     {
         public static enum VariableType { LITERAL, URI };
