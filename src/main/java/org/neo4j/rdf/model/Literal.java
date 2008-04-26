@@ -4,10 +4,16 @@ package org.neo4j.rdf.model;
  * A literal value, i.e. String, int, byte, etc.
  */
 public class Literal implements Value
-{
+{    
     private final Object value;
     private final Uri datatype;
     private final String language;
+    
+    // TODO: We need to detect what data type people throw in here and if
+    // it's something we support natively (i.e. Java's primitive types) then
+    // we make sure we convert it properly... or else people will just embed
+    // their longs (for example) as strings, with datatype xsd:long. Ugly,
+    // but that's how for example SAIL works. :(
     
     public Literal( Object value )
     {
