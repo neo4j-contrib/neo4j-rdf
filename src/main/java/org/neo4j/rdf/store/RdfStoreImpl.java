@@ -250,6 +250,4 @@ public class RdfStoreImpl implements RdfStore
             }
         };
     }
-
-
 }

@@ -21,8 +21,8 @@ import org.neo4j.rdf.store.representation.AbstractRepresentation;
 import org.neo4j.rdf.store.representation.RepresentationExecutor;
 import org.neo4j.util.NeoPropertyArraySet;
 import org.neo4j.util.NeoUtil;
-import org.neo4j.util.index.Index;
-import org.neo4j.util.index.SingleValueIndex;
+import org.neo4j.util.index.IndexService;
+import org.neo4j.util.index.LuceneIndexService;
 
 public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
 {
@@ -35,10 +35,10 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
 
     private NeoService neo;
     private NeoUtil neoUtil;
-    private Index index;
+    private IndexService index;
     private MetaStructure meta;
 
-    public AbstractUriBasedExecutor( NeoService neo, Index index,
+    public AbstractUriBasedExecutor( NeoService neo, IndexService index,
         MetaStructure optionalMeta )
     {
         this.neo = neo;
@@ -47,11 +47,9 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         this.meta = optionalMeta;
     }
 
-    public static Index newIndex( NeoService neo )
+    public static IndexService newIndex( NeoService neo )
     {
-        Node indexNode = new NeoUtil( neo )
-            .getOrCreateSubReferenceNode( MyRelTypes.INDEX_ROOT );
-        return new SingleValueIndex( "blaaaa", indexNode, neo );
+        return new LuceneIndexService( neo );
     }
 
     protected NeoService neo()
@@ -59,7 +57,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         return this.neo;
     }
 
-    protected Index index()
+    protected IndexService index()
     {
         return this.index;
     }
@@ -125,7 +123,8 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         }
         else
         {
-            result = index().getSingleNodeFor( getNodeUri( abstractNode ) );
+            result = index().getSingleNode( URI_PROPERTY_KEY,
+                getNodeUri( abstractNode ) );
         }
         return result;
     }
@@ -139,7 +138,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
             String uri = getNodeUri( abstractNode );
             node = neo().createNode();
             node.setProperty( URI_PROPERTY_KEY, uri );
-            index.index( node, uri );
+            index.index( node, URI_PROPERTY_KEY, uri );
             debugCreateNode( node, uri );
         }
         if ( abstractNodeToNodeMap != null )
@@ -156,7 +155,8 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         node.delete();
         if ( uriOrNull != null )
         {
-            index().remove( node, uriOrNull.getUriAsString() );
+            index().removeIndex( node, URI_PROPERTY_KEY,
+                uriOrNull.getUriAsString() );
         }
     }
 
@@ -376,6 +376,26 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         return someRemoved;
     }
 
+    protected Node createLiteralNode( String predicate, Object value )
+    {
+        Node node = neo.createNode();
+        debugCreateNode( node, predicate );
+        index().index( node, LITERAL_VALUE_KEY, value );
+        return node;
+    }
+
+    protected void deleteLiteralNode( Node node,
+        String predicate, Object value )
+    {
+        index().removeIndex( node, LITERAL_VALUE_KEY, value );
+        deleteNode( node, null );
+    }
+
+    public Iterable<Node> findLiteralNodes( Object value )
+    {
+        return index().getNodes( LITERAL_VALUE_KEY, value );
+    }
+
     private static class ARelationshipType implements RelationshipType
     {
         private String name;
@@ -389,13 +409,5 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         {
             return this.name;
         }
-    }
-
-    private static enum MyRelTypes implements RelationshipType
-    {
-        /**
-         * Neo reference node --> Uri index node.
-         */
-        INDEX_ROOT,
     }
 }

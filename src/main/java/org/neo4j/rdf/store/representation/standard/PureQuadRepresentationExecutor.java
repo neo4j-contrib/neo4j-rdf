@@ -13,7 +13,7 @@ import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractRepresentation;
-import org.neo4j.util.index.Index;
+import org.neo4j.util.index.IndexService;
 
 public class PureQuadRepresentationExecutor extends AbstractUriBasedExecutor
 {
@@ -21,7 +21,8 @@ public class PureQuadRepresentationExecutor extends AbstractUriBasedExecutor
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
     public static final String LITERAL_VALUE_KEY = "value";
 
-    public PureQuadRepresentationExecutor( NeoService neo, Index index, MetaStructure meta )
+    public PureQuadRepresentationExecutor( NeoService neo, IndexService index,
+        MetaStructure meta )
     {
         super( neo, index, meta );
     }

@@ -13,11 +13,11 @@ import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractRepresentation;
-import org.neo4j.util.index.Index;
+import org.neo4j.util.index.IndexService;
 
 public class AlwaysMiddleExecutor extends UriBasedExecutor
 {
-    public AlwaysMiddleExecutor( NeoService neo, Index index,
+    public AlwaysMiddleExecutor( NeoService neo, IndexService index,
         MetaStructure meta )
     {
         super( neo, index, meta );
@@ -73,8 +73,12 @@ public class AlwaysMiddleExecutor extends UriBasedExecutor
             debugCreateRelationship( rel );
             applyRepresentation( abstractMiddleNode, middleNode );
 
-            literalNode = neo().createNode();
-            debug( "\t+Node (literal) " + literalNode );
+            String predicate = abstractLiteralNode.properties().keySet().
+                iterator().next();
+            literalNode = createLiteralNode(
+                predicate, abstractLiteralNode.properties().get( predicate ).
+                iterator().next() );
+
             rel = middleNode.createRelationshipTo( literalNode,
                 relationshipType( middleToLiteral.getRelationshipTypeName() ) );
             debugCreateRelationship( rel );
@@ -479,7 +483,10 @@ public class AlwaysMiddleExecutor extends UriBasedExecutor
     {
         disconnectMiddle( middleNode, middleToLiteral, literalNode,
             subjectNode, subjectToMiddle );
-        deleteNode( literalNode, null );
+//        deleteNode( literalNode, null );
+        String predicate = literalNode.getPropertyKeys().iterator().next();
+        Object value = literalNode.getProperty( predicate );
+        deleteLiteralNode( literalNode, predicate, value );
     }
 
     private void disconnectMiddle( Node middleNode,

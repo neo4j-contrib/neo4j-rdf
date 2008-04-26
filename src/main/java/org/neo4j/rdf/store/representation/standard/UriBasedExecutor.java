@@ -22,6 +22,7 @@ import org.neo4j.rdf.store.representation.AbstractRepresentation;
 import org.neo4j.rdf.store.representation.RepresentationExecutor;
 import org.neo4j.util.NeoPropertyArraySet;
 import org.neo4j.util.index.Index;
+import org.neo4j.util.index.IndexService;
 import org.neo4j.util.matching.PatternMatch;
 import org.neo4j.util.matching.PatternMatcher;
 import org.neo4j.util.matching.PatternNode;
@@ -41,7 +42,8 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
      * @param neo the {@link NeoService}.
      * @param index the {@link Index} to use as the lookup for objects.
      */
-    public UriBasedExecutor( NeoService neo, Index index, MetaStructure meta )
+    public UriBasedExecutor( NeoService neo, IndexService index,
+        MetaStructure meta )
     {
         super( neo, index, meta );
     }
