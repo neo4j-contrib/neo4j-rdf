@@ -11,9 +11,11 @@ import org.neo4j.neometa.structure.MetaStructureImpl;
 import org.neo4j.neometa.structure.MetaStructureProperty;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
+import org.neo4j.rdf.store.representation.RepresentationExecutor;
 import org.neo4j.rdf.store.representation.RepresentationStrategy;
+import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
 import org.neo4j.rdf.store.representation.standard.DenseRepresentationStrategy;
-import org.neo4j.rdf.store.representation.standard.MetaEnabledUriBasedExecutor;
+import org.neo4j.rdf.store.representation.standard.UriBasedExecutor;
 import org.neo4j.rdf.store.representation.standard.VerboseRepresentationStrategy;
 
 /**
@@ -27,24 +29,28 @@ public class TestRdfStore extends StoreTestCase
      */
 	public void testDense() throws Exception
 	{
+	    RepresentationExecutor executor = new UriBasedExecutor( neo(),
+	        AbstractUriBasedExecutor.newIndex( neo() ), null );
 		RdfStore store = new RdfStoreImpl( neo(),
-			new DenseRepresentationStrategy( neo() ) );
+			new DenseRepresentationStrategy( executor, null ) );
 		applyAndRemoveStatements( store );
 		deleteEntireNodeSpace();
 	}
-	
+
     /**
      * Tests an {@link RdfStore} with a {@link VerboseRepresentationStrategy}.
      * @throws Exception if there's an error in the test.
      */
 	public void testVerbose() throws Exception
 	{
+        RepresentationExecutor executor = new UriBasedExecutor( neo(),
+            AbstractUriBasedExecutor.newIndex( neo() ), null );
 		RdfStore store = new RdfStoreImpl( neo(),
-			new VerboseRepresentationStrategy( neo() ) );
+			new VerboseRepresentationStrategy( executor, null ) );
 		applyAndRemoveStatements( store );
 		deleteEntireNodeSpace();
 	}
-	
+
     /**
      * Tests an {@link RdfStore} with a {@link VerboseRepresentationStrategy}
      * with a {@link MetaStructure}.
@@ -53,8 +59,10 @@ public class TestRdfStore extends StoreTestCase
 	public void testVerboseMeta() throws Exception
 	{
 	    MetaStructure meta = new MetaStructureImpl( neo() );
+	    RepresentationExecutor executor = new UriBasedExecutor( neo(),
+	        AbstractUriBasedExecutor.newIndex( neo() ), meta );
 	    RepresentationStrategy strategy = new VerboseRepresentationStrategy(
-	        neo(), meta );
+	        executor, meta );
 	    RdfStore store = new RdfStoreImpl( neo(), strategy );
 	    MetaStructureClass personClass =
 	        meta.getGlobalNamespace().getMetaClass( PERSON_CLASS, true );
@@ -62,21 +70,21 @@ public class TestRdfStore extends StoreTestCase
         MetaStructureProperty knowsProperty =
             meta.getGlobalNamespace().getMetaProperty( KNOWS_PROPERTY, true );
 	    List<Statement> statements = applyStatements( store );
-	    
+
 	    // Verify
 	    Node knowsPropertyNode = knowsProperty.node();
 	    assertEquals( 3, personClass.getInstances().size() );
 	    assertEquals( 2, countIterable( knowsPropertyNode.getRelationships(
 	        VerboseRepresentationStrategy.RelTypes.
 	            CONNECTOR_HAS_PREDICATE ) ) );
-	    
+
 	    removeStatements( store, statements );
 	    deleteEntireNodeSpace();
 	}
-	
+
 	private List<Statement> applyStatements( RdfStore store )
 	{
-	    String typePredicate = MetaEnabledUriBasedExecutor.RDF_TYPE_URI;
+	    String typePredicate = AbstractUriBasedExecutor.RDF_TYPE_URI;
 	    Uri personClass = new Uri( PERSON_CLASS );
 		String subject = "http://henrik";
 		String otherSubject = "http://emil";
@@ -86,35 +94,35 @@ public class TestRdfStore extends StoreTestCase
 		Object object = "Henrik";
 		Object otherObject = "Emil";
 		Object thirdObject = "Mattias";
-		
+
 		Statement subjectTypeStatement =
 		    statement( subject, typePredicate, personClass );
 		addTwice( store, subjectTypeStatement );
 		Statement subjectNameStatement =
 			statement( subject, namePredicate, object );
 		addTwice( store, subjectNameStatement );
-		
+
         Statement otherSubjectTypeStatement =
             statement( otherSubject, typePredicate, personClass );
         addTwice( store, otherSubjectTypeStatement );
 		Statement otherSubjectNameStatement =
 		    statement( otherSubject, namePredicate, otherObject );
 		addTwice( store, otherSubjectNameStatement );
-		
+
 		Statement thirdSubjectNameStatement =
 		    statement( thirdSubject, namePredicate, thirdObject );
 		addTwice( store, thirdSubjectNameStatement );
         Statement thirdSubjectTypeStatement =
             statement( thirdSubject, typePredicate, personClass );
         addTwice( store, thirdSubjectTypeStatement );
-		
+
 		Statement knowsStatement =
 		    statement( subject, knowsPredicate, new Uri( otherSubject ) );
 		addTwice( store, knowsStatement );
 		Statement otherKnowsStatement =
 		    statement( subject, knowsPredicate, new Uri( thirdSubject ) );
 		addTwice( store, otherKnowsStatement );
-		
+
 		return new ArrayList<Statement>(
 		    Arrays.asList(
 		        subjectTypeStatement,
@@ -126,7 +134,7 @@ public class TestRdfStore extends StoreTestCase
 		        knowsStatement,
 		        otherKnowsStatement ) );
 	}
-	
+
 	private void applyAndRemoveStatements( RdfStore store )
 	{
 	    removeStatements( store, applyStatements( store ) );

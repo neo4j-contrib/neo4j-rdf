@@ -1,6 +1,5 @@
 package org.neo4j.rdf.store;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -20,7 +19,7 @@ import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Wildcard;
 import org.neo4j.rdf.model.WildcardStatement;
-import org.neo4j.rdf.store.representation.standard.MetaEnabledUriBasedExecutor;
+import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
 import org.neo4j.rdf.store.representation.standard.PureQuadRepresentationStrategy;
 
 public class TestPureQuad extends StoreTestCase
@@ -51,7 +50,8 @@ public class TestPureQuad extends StoreTestCase
     {
         MetaStructure meta = newMetaStructure();
         return new PureQuadRdfStore( neo(), meta,
-            new PureQuadRepresentationStrategy( neo(), meta ) );
+            new PureQuadRepresentationStrategy( neo(),
+                AbstractUriBasedExecutor.newIndex( neo() ), meta ) );
     }
 
     public void testQuad() throws Exception
@@ -65,9 +65,9 @@ public class TestPureQuad extends StoreTestCase
         Context c2 = new Context( "http://c2" );
 
         CompleteStatement emilIsPerson = new CompleteStatement( emil,
-            new Uri( MetaEnabledUriBasedExecutor.RDF_TYPE_URI ), PERSON );
+            new Uri( AbstractUriBasedExecutor.RDF_TYPE_URI ), PERSON );
         CompleteStatement johanIsPerson = new CompleteStatement( johan,
-            new Uri( MetaEnabledUriBasedExecutor.RDF_TYPE_URI ), PERSON );
+            new Uri( AbstractUriBasedExecutor.RDF_TYPE_URI ), PERSON );
 
         CompleteStatement emilKnowsJohanC1 = new CompleteStatement( emil,
             KNOWS, johan, c1 );
@@ -86,7 +86,8 @@ public class TestPureQuad extends StoreTestCase
             emilKnowsJohanC2,
             emilNickEmilC1,
             emilNickEmpaC2,
-            emilNickEmilC2 );
+            emilNickEmilC2
+            );
 
         Iterable<Statement> nicknames = store.getStatements(
             new WildcardStatement( emil, NICKNAME,
@@ -111,49 +112,49 @@ public class TestPureQuad extends StoreTestCase
         deleteEntireNodeSpace();
     }
 
-    public void testHeavy() throws Exception
-    {
-        RdfStore store = newRdfStore();
-        List<Uri> persons = new ArrayList<Uri>();
-        for ( int i = 0; i < 100; i++ )
-        {
-            Uri person = new Uri( PERSON.getUriAsString() +
-                "_" + RANDOM.nextInt( 1000 ) );
-            store.addStatements( new CompleteStatement( person, new Uri(
-                MetaEnabledUriBasedExecutor.RDF_TYPE_URI ), PERSON ) );
-            int count = RANDOM.nextInt( 10 );
-            for ( int ii = 0; ii < count; ii++ )
-            {
-                store.addStatements( new CompleteStatement( person,
-                    NICKNAME, new Literal( newRandomName() ) ) );
-            }
-
-            if ( persons.isEmpty() )
-            {
-                continue;
-            }
-            count = RANDOM.nextInt( Math.min( persons.size(),
-                RANDOM.nextInt( 20 ) ) );
-            for ( int ii = 0; ii < count; ii++ )
-            {
-                store.addStatements( new CompleteStatement( person, NICKNAME,
-                    persons.get( RANDOM.nextInt( persons.size() ) ) ) );
-            }
-            persons.add( person );
-        }
-        deleteEntireNodeSpace();
-    }
-
-    private Object newRandomName()
-    {
-        String letters = "abcdefghijklmnopqrst";
-        int length = RANDOM.nextInt( 10 ) + 2;
-        StringBuffer buffer = new StringBuffer();
-        for ( int i = 0; i < length; i++ )
-        {
-            buffer.append( letters.charAt(
-                RANDOM.nextInt( letters.length() ) ) );
-        }
-        return buffer.toString();
-    }
+//    public void testHeavy() throws Exception
+//    {
+//        RdfStore store = newRdfStore();
+//        List<Uri> persons = new ArrayList<Uri>();
+//        for ( int i = 0; i < 100; i++ )
+//        {
+//            Uri person = new Uri( PERSON.getUriAsString() +
+//                "_" + RANDOM.nextInt( 1000 ) );
+//            store.addStatements( new CompleteStatement( person, new Uri(
+//                MetaEnabledUriBasedExecutor.RDF_TYPE_URI ), PERSON ) );
+//            int count = RANDOM.nextInt( 10 );
+//            for ( int ii = 0; ii < count; ii++ )
+//            {
+//                store.addStatements( new CompleteStatement( person,
+//                    NICKNAME, new Literal( newRandomName() ) ) );
+//            }
+//
+//            if ( persons.isEmpty() )
+//            {
+//                continue;
+//            }
+//            count = RANDOM.nextInt( Math.min( persons.size(),
+//                RANDOM.nextInt( 20 ) ) );
+//            for ( int ii = 0; ii < count; ii++ )
+//            {
+//                store.addStatements( new CompleteStatement( person, NICKNAME,
+//                    persons.get( RANDOM.nextInt( persons.size() ) ) ) );
+//            }
+//            persons.add( person );
+//        }
+//        deleteEntireNodeSpace();
+//    }
+//
+//    private Object newRandomName()
+//    {
+//        String letters = "abcdefghijklmnopqrst";
+//        int length = RANDOM.nextInt( 10 ) + 2;
+//        StringBuffer buffer = new StringBuffer();
+//        for ( int i = 0; i < length; i++ )
+//        {
+//            buffer.append( letters.charAt(
+//                RANDOM.nextInt( letters.length() ) ) );
+//        }
+//        return buffer.toString();
+//    }
 }

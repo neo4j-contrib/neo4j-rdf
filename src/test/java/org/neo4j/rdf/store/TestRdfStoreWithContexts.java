@@ -7,8 +7,10 @@ import org.neo4j.neometa.structure.MetaStructureImpl;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
+import org.neo4j.rdf.store.representation.RepresentationExecutor;
 import org.neo4j.rdf.store.representation.RepresentationStrategy;
-import org.neo4j.rdf.store.representation.standard.MetaEnabledUriBasedExecutor;
+import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
+import org.neo4j.rdf.store.representation.standard.UriBasedExecutor;
 import org.neo4j.rdf.store.representation.standard.VerboseRepresentationStrategy;
 
 public class TestRdfStoreWithContexts extends StoreTestCase
@@ -16,17 +18,19 @@ public class TestRdfStoreWithContexts extends StoreTestCase
     public void testWithContexts()
     {
         MetaStructure meta = new MetaStructureImpl( neo() );
+        RepresentationExecutor executor = new UriBasedExecutor( neo(),
+            AbstractUriBasedExecutor.newIndex( neo() ), meta );
         RepresentationStrategy strategy = new VerboseRepresentationStrategy(
-            neo(), meta );
+            executor, meta );
         RdfStore store = new RdfStoreImpl( neo(), strategy );
-        
+
         Context c1 = new Context( "http://ns1" );
         Context c2 = new Context( "http://ns2" );
         meta.getGlobalNamespace().getMetaClass( PERSON_CLASS, true );
         meta.getGlobalNamespace().getMetaProperty( NAME_PROPERTY, true );
         meta.getGlobalNamespace().getMetaProperty( NICKNAME_PROPERTY, true );
         meta.getGlobalNamespace().getMetaProperty( KNOWS_PROPERTY, true );
-        
+
         String subject = "http://mattias";
         String otherSubject = "http://emil";
         String name = "Mattias";
@@ -41,7 +45,7 @@ public class TestRdfStoreWithContexts extends StoreTestCase
         Statement sNick2C2 = statement( subject, NICKNAME_PROPERTY,
             nickname2, c2 );
         Statement sPerson = statement( subject,
-            MetaEnabledUriBasedExecutor.RDF_TYPE_URI, new Uri( PERSON_CLASS ) );
+            AbstractUriBasedExecutor.RDF_TYPE_URI, new Uri( PERSON_CLASS ) );
         Statement sKnowsC1 = statement( subject, KNOWS_PROPERTY,
             new Uri( otherSubject ), c1 );
         Statement sKnowsC2 = statement( subject, KNOWS_PROPERTY,

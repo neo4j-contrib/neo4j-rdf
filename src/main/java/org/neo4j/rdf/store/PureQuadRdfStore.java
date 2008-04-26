@@ -16,7 +16,7 @@ import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.WildcardStatement;
 import org.neo4j.rdf.store.representation.AbstractNode;
-import org.neo4j.rdf.store.representation.standard.MetaEnabledUriBasedExecutor;
+import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
 import org.neo4j.rdf.store.representation.standard.PureQuadRepresentationStrategy;
 import org.neo4j.rdf.store.representation.standard.PureQuadValidatable;
 import org.neo4j.rdf.validation.Validatable;
@@ -160,7 +160,7 @@ public class PureQuadRdfStore extends RdfStoreImpl
         for ( MetaStructureClass cls : validatableInstance.getClasses() )
         {
             statementList.add( new CompleteStatement( subject, new Uri(
-                MetaEnabledUriBasedExecutor.RDF_TYPE_URI ), new Uri(
+                AbstractUriBasedExecutor.RDF_TYPE_URI ), new Uri(
                     cls.getName() ) ) );
         }
         return statementList;

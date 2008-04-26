@@ -29,10 +29,11 @@ public abstract class StoreTestCase extends NeoTestCase
         }
         while ( numberOfTimes-- > 0 )
         {
+            System.out.println( "addStatement " + statement );
             store.addStatements( ( CompleteStatement ) statement );
         }
     }
-    
+
     protected void addTwice( RdfStore store, Statement statement )
     {
         add( store, statement, 2 );
@@ -43,10 +44,11 @@ public abstract class StoreTestCase extends NeoTestCase
     {
         while ( numberOfTimes-- > 0 )
         {
+            System.out.println( "removeStatement " + statement );
             store.removeStatements( statement );
         }
     }
-    
+
     protected void removeTwice( RdfStore store, Statement statement )
     {
         remove( store, statement, 2 );
@@ -58,14 +60,14 @@ public abstract class StoreTestCase extends NeoTestCase
         return new CompleteStatement( new Uri( subject ), new Uri( predicate ),
             object, contexts );
     }
-    
+
     protected Statement statement( String subject, String predicate,
         Object object, Context... contexts )
     {
         return new CompleteStatement( new Uri( subject ), new Uri( predicate ),
             new Literal( object ), contexts );
     }
-    
+
     protected void removeStatements( RdfStore store,
         List<Statement> statements )
     {
@@ -82,7 +84,7 @@ public abstract class StoreTestCase extends NeoTestCase
             remove( store, statement, numberOfTimesForEach );
         }
     }
-    
+
     protected List<Statement> addStatements(
         RdfStore store, Statement... statements )
     {

@@ -9,14 +9,15 @@ import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Wildcard;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRepresentation;
+import org.neo4j.util.index.Index;
 
 public class PureQuadRepresentationStrategy
     extends StandardAbstractRepresentationStrategy
 {
-    public PureQuadRepresentationStrategy( NeoService neo,
+    public PureQuadRepresentationStrategy( NeoService neo, Index index,
         MetaStructure meta )
     {
-        super( meta, new PureQuadExecutor( neo, newIndex( neo ), meta ) );
+        super( new PureQuadRepresentationExecutor( neo, index, meta ), meta );
     }
 
     @Override

@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.neo4j.api.core.NeoService;
-import org.neo4j.api.core.Node;
-import org.neo4j.api.core.RelationshipType;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.neometa.structure.MetaStructureProperty;
 import org.neo4j.neometa.structure.MetaStructureRelTypes;
@@ -24,9 +22,6 @@ import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractRepresentation;
 import org.neo4j.rdf.store.representation.RepresentationExecutor;
 import org.neo4j.rdf.store.representation.RepresentationStrategy;
-import org.neo4j.util.NeoUtil;
-import org.neo4j.util.index.Index;
-import org.neo4j.util.index.SingleValueIndex;
 
 /**
  * Abstract class which holds common functionality for
@@ -48,40 +43,11 @@ abstract class StandardAbstractRepresentationStrategy
     /**
      * @param neo the {@link NeoService}.
      */
-    public StandardAbstractRepresentationStrategy( NeoService neo )
-    {
-        this.executor = new UriBasedExecutor( neo, newIndex( neo ) );
-        this.meta = null;
-    }
-
-    /**
-     * @param neo the {@link NeoService}.
-     * @param meta the {@link MetaStructure}.
-     */
-    public StandardAbstractRepresentationStrategy( NeoService neo,
-        MetaStructure meta )
-    {
-        this.executor =
-            new MetaEnabledUriBasedExecutor( neo, newIndex( neo ), meta );
-        this.meta = meta;
-    }
-
-    /**
-     * @param neo the {@link NeoService}.
-     * @param meta the {@link MetaStructure}.
-     */
-    public StandardAbstractRepresentationStrategy( MetaStructure meta,
-        RepresentationExecutor executor )
+    public StandardAbstractRepresentationStrategy(
+        RepresentationExecutor executor, MetaStructure meta )
     {
         this.executor = executor;
         this.meta = meta;
-    }
-
-    protected static Index newIndex( NeoService neo )
-    {
-        Node indexNode = new NeoUtil( neo )
-            .getOrCreateSubReferenceNode( MyRelTypes.INDEX_ROOT );
-        return new SingleValueIndex( "blaaaa", indexNode, neo );
     }
 
     public AbstractRepresentation getAbstractRepresentation(
@@ -118,7 +84,7 @@ abstract class StandardAbstractRepresentationStrategy
         // TODO: fix this! (wildcards)
         String predicate =
             ( ( Uri ) statement.getPredicate() ).getUriAsString();
-        if ( predicate.equals( MetaEnabledUriBasedExecutor.RDF_TYPE_URI ) )
+        if ( predicate.equals( AbstractUriBasedExecutor.RDF_TYPE_URI ) )
         {
             addMetaInstanceOfFragment( representation, nodeMapping, statement );
             return true;
@@ -138,7 +104,7 @@ abstract class StandardAbstractRepresentationStrategy
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
         AbstractNode classNode = getObjectNode( nodeMapping, statement );
         classNode.addExecutorInfo(
-            MetaEnabledUriBasedExecutor.META_EXECUTOR_INFO_KEY, "class" );
+            AbstractUriBasedExecutor.META_EXECUTOR_INFO_KEY, "class" );
         AbstractRelationship instanceOfRelationship = new AbstractRelationship(
             subjectNode, MetaStructureRelTypes.META_IS_INSTANCE_OF.name(),
             classNode );
@@ -288,7 +254,7 @@ abstract class StandardAbstractRepresentationStrategy
         AbstractNode node = getOrCreateNode( nodeMapping,
         		statement.getPredicate() );
         node.addExecutorInfo(
-            MetaEnabledUriBasedExecutor.META_EXECUTOR_INFO_KEY, "property" );
+            AbstractUriBasedExecutor.META_EXECUTOR_INFO_KEY, "property" );
         return node;
     }
 
@@ -338,13 +304,5 @@ abstract class StandardAbstractRepresentationStrategy
 
         representation.addNode( literalNode );
         representation.addRelationship( relationship );
-    }
-
-    private static enum MyRelTypes implements RelationshipType
-    {
-        /**
-         * Neo reference node --> Uri index node.
-         */
-        INDEX_ROOT,
     }
 }

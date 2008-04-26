@@ -9,16 +9,17 @@ import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractRepresentation;
+import org.neo4j.rdf.store.representation.RepresentationExecutor;
 
 /**
  * Uses a more verbose representation of statements, like this:
- * 
+ *
  *                  (P)
  *                   ^
  *                   |
  *                   |
  *    (S) --------> ( ) --------> (O)
- *    
+ *
  */
 public class VerboseRepresentationStrategy
     extends StandardAbstractRepresentationStrategy
@@ -26,20 +27,12 @@ public class VerboseRepresentationStrategy
     /**
      * @param neo the {@link NeoService}.
      */
-    public VerboseRepresentationStrategy( NeoService neo )
+    public VerboseRepresentationStrategy( RepresentationExecutor executor,
+        MetaStructure meta )
     {
-        super( neo );
+        super( executor, meta );
     }
-    
-    /**
-     * @param neo {@link NeoService}.
-     * @param meta {@link MetaStructure}.
-     */
-    public VerboseRepresentationStrategy( NeoService neo, MetaStructure meta )
-    {
-        super( neo, meta );
-    }
-    
+
     @Override
     protected boolean addToRepresentation(
         AbstractRepresentation representation,
@@ -78,15 +71,15 @@ public class VerboseRepresentationStrategy
         AbstractRelationship connectorToPredicate = new AbstractRelationship(
             connectorNode, RelTypes.CONNECTOR_HAS_PREDICATE.name(),
             predicateNode );
-        
+
         addSingleContextsToElement( statement, connectorNode );
-        
+
         representation.addNode( connectorNode );
         representation.addRelationship( subjectToConnectorRel );
         representation.addRelationship( connectorToObjectRel );
         representation.addRelationship( connectorToPredicate );
     }
-    
+
     private void addThreeNodeLiteralFragment(
         AbstractRepresentation representation,
         Map<String, AbstractNode> nodeMapping, Statement statement )
@@ -100,14 +93,14 @@ public class VerboseRepresentationStrategy
         AbstractRelationship connectorToPredicate = new AbstractRelationship(
             connectorNode, RelTypes.CONNECTOR_HAS_PREDICATE.name(),
             predicateNode );
-        
+
         addPropertyWithContexts( statement, connectorNode );
         representation.addNode( connectorNode );
         representation.addRelationship( subjectToConnectorRel );
         representation.addRelationship( connectorToPredicate );
     }
-        
-    
+
+
     /**
      * Some relationship types used in the representation.
      */

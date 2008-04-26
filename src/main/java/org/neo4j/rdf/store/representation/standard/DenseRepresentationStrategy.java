@@ -9,6 +9,7 @@ import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Wildcard;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRepresentation;
+import org.neo4j.rdf.store.representation.RepresentationExecutor;
 
 /**
  * S/P/O represented as:
@@ -21,18 +22,10 @@ public class DenseRepresentationStrategy
     /**
      * @param neo the {@link NeoService}.
      */
-	public DenseRepresentationStrategy( NeoService neo )
+	public DenseRepresentationStrategy( RepresentationExecutor executor,
+	    MetaStructure meta )
     {
-        super( neo );
-    }
-
-    /**
-     * @param neo the {@link NeoService}.
-     * @param meta the {@link MetaStructure}.
-     */
-    public DenseRepresentationStrategy( NeoService neo, MetaStructure meta )
-    {
-        super( neo, meta );
+	    super( executor, meta );
     }
 
     @Override
