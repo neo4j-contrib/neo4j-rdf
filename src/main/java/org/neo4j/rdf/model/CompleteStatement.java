@@ -77,4 +77,17 @@ public class CompleteStatement implements Statement
     {
         return new WildcardStatement( this );
     }
+    
+    public String toString()
+    {
+        return "s,p,o=[" +
+            labelify( getSubject() ) + ", " +
+            labelify( getPredicate() ) + ", " +
+            labelify( getObject() ) + "]";
+    }
+
+    private String labelify( Value value )
+    {
+        return value.toString();
+    }
 }
