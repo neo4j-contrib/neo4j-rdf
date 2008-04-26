@@ -160,7 +160,19 @@ public class RdfStoreImpl implements RdfStore
         {
             throw new UnsupportedOperationException( "Not yet implemented" );
         }
-        removeStatementsSimple( statementWithOptionalNulls );
+        if ( statementWithOptionalNulls instanceof WildcardStatement )
+        {
+            for ( Statement statement :
+                getStatements( ( WildcardStatement ) statementWithOptionalNulls,
+                true ) )
+            {
+                removeStatements( statement );
+            }
+        }
+        else
+        {
+            removeStatementsSimple( statementWithOptionalNulls );
+        }
     }
 
     private void removeStatementsSimple( Statement statement )
