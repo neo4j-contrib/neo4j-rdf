@@ -248,6 +248,12 @@ abstract class StandardAbstractRepresentationStrategy
         return getOrCreateNode( nodeMapping, statement.getObject() );
     }
 
+    protected AbstractNode getContextNode(
+        Map<String, AbstractNode> nodeMapping, Context context )
+    {
+        return getOrCreateNode( nodeMapping, context );
+    }
+
     protected AbstractNode getPredicateNode(
         Map<String, AbstractNode> nodeMapping, Statement statement )
     {

@@ -210,6 +210,18 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         return relationship;
     }
 
+    protected void ensureDirectlyDisconnected( Node startNode,
+        RelationshipType relType, Node endNode )
+    {
+        Relationship relationship = findDirectRelationship( startNode, relType,
+            endNode, Direction.OUTGOING );
+        if ( relationship != null )
+        {
+            debugRemoveRelationship( relationship );
+            relationship.delete();
+        }
+    }
+
     protected Relationship ensureDirectlyConnected( Node startNode,
         RelationshipType relType, Node endNode )
     {

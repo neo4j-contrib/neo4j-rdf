@@ -65,10 +65,13 @@ public class TestRdfStore extends StoreTestCase
 	        executor, meta );
 	    RdfStore store = new RdfStoreImpl( neo(), strategy );
 	    MetaStructureClass personClass =
-	        meta.getGlobalNamespace().getMetaClass( PERSON_CLASS, true );
-        meta.getGlobalNamespace().getMetaProperty( NAME_PROPERTY, true );
+	        meta.getGlobalNamespace().getMetaClass( PERSON.getUriAsString(),
+	            true );
+        meta.getGlobalNamespace().getMetaProperty( NAME.getUriAsString(),
+            true );
         MetaStructureProperty knowsProperty =
-            meta.getGlobalNamespace().getMetaProperty( KNOWS_PROPERTY, true );
+            meta.getGlobalNamespace().getMetaProperty( KNOWS.getUriAsString(),
+                true );
 	    List<Statement> statements = applyStatements( store );
 
 	    // Verify
@@ -85,12 +88,12 @@ public class TestRdfStore extends StoreTestCase
 	private List<Statement> applyStatements( RdfStore store )
 	{
 	    String typePredicate = AbstractUriBasedExecutor.RDF_TYPE_URI;
-	    Uri personClass = new Uri( PERSON_CLASS );
+	    Uri personClass = new Uri( PERSON.getUriAsString() );
 		String subject = "http://henrik";
 		String otherSubject = "http://emil";
 		String thirdSubject = "http://mattias";
-		String namePredicate = NAME_PROPERTY;
-		String knowsPredicate = KNOWS_PROPERTY;
+		String namePredicate = NAME.getUriAsString();
+		String knowsPredicate = KNOWS.getUriAsString();
 		Object object = "Henrik";
 		Object otherObject = "Emil";
 		Object thirdObject = "Mattias";

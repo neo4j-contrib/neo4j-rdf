@@ -25,10 +25,6 @@ import org.neo4j.rdf.store.representation.standard.PureQuadRepresentationStrateg
 
 public class TestPureQuad extends StoreTestCase
 {
-    private static final Uri PERSON = new Uri( "http://person" );
-    private static final Uri NICKNAME = new Uri( "http://nickname" );
-    private static final Uri KNOWS = new Uri( "http://knows" );
-
     private static final Random RANDOM = new Random();
 
     private MetaStructure newMetaStructure()

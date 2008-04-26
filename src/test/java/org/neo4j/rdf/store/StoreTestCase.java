@@ -13,12 +13,11 @@ import org.neo4j.rdf.model.Uri;
 
 public abstract class StoreTestCase extends NeoTestCase
 {
-    protected static final String PERSON_CLASS = "http://classes#Person";
-    protected static final String NAME_PROPERTY = "http://properties#name";
-    protected static final String NICKNAME_PROPERTY =
-        "http://properties#nickname";
-    protected static final String KNOWS_PROPERTY = "http://properties#knows";
-    protected static final Context TEST_CONTEXT = new Context( "aTest" );
+    public static final Uri PERSON = new Uri( "http://person" );
+    public static final Uri NAME = new Uri( "http://name" );
+    public static final Uri NICKNAME = new Uri( "http://nickname" );
+    public static final Uri KNOWS = new Uri( "http://knows" );
+    public static final Context TEST_CONTEXT = new Context( "aTest" );
 
     protected void debug( String text )
     {
@@ -96,7 +95,7 @@ public abstract class StoreTestCase extends NeoTestCase
         ArrayList<Statement> list = new ArrayList<Statement>();
         for ( Statement statement : statements )
         {
-            store.addStatements( ( CompleteStatement ) statement );
+            add( store, ( CompleteStatement ) statement, 1 );
             list.add( statement );
         }
         return list;
