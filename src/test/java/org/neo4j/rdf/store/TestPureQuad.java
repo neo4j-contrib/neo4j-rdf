@@ -95,11 +95,17 @@ public class TestPureQuad extends StoreTestCase
             Arrays.asList( nickEmil, nickEmpa ) );
         for ( Statement statement : nicknames )
         {
-            System.out.println( statement );
             assertTrue( emilsNicknames.remove( ( ( Literal )
                 statement.getObject() ).getValue() ) );
         }
         assertTrue( emilsNicknames.isEmpty() );
+
+        for ( Statement statement : store.getStatements( new WildcardStatement(
+            emil, new Wildcard( "predicate" ), new Wildcard( "value" ) ),
+                true ) )
+        {
+            System.out.println( statement );
+        }
 
         removeStatements( store, statements, 1 );
         deleteEntireNodeSpace();
@@ -109,7 +115,7 @@ public class TestPureQuad extends StoreTestCase
     {
         RdfStore store = newRdfStore();
         List<Uri> persons = new ArrayList<Uri>();
-        for ( int i = 0; i < 1000; i++ )
+        for ( int i = 0; i < 100; i++ )
         {
             Uri person = new Uri( PERSON.getUriAsString() +
                 "_" + RANDOM.nextInt( 1000 ) );
