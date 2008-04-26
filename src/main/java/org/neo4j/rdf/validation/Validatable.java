@@ -2,13 +2,19 @@ package org.neo4j.rdf.validation;
 
 import java.util.Collection;
 
+import org.neo4j.api.core.Node;
 import org.neo4j.neometa.structure.MetaStructureClass;
+import org.neo4j.rdf.model.Uri;
 
 /**
  * All items which can be validated have to implement this interface.
  */
 public interface Validatable
 {
+    Node getUnderlyingNode();
+    
+    Uri getUri();
+    
 	/**
 	 * @return the node types for this entity.
 	 */

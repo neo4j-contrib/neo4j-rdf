@@ -39,6 +39,16 @@ public class RdfStoreImpl implements RdfStore
         this.neo = neo;
         this.representationStrategy = representationStrategy;
     }
+    
+    protected NeoService neo()
+    {
+        return this.neo;
+    }
+    
+    protected RepresentationStrategy getRepresentationStrategy()
+    {
+        return this.representationStrategy;
+    }
 
     public void addStatements( CompleteStatement... statements )
     {
@@ -213,7 +223,7 @@ public class RdfStoreImpl implements RdfStore
         {
             public Iterable<Statement> getMatchingStatements(
                 AbstractRepresentation statementRepresentation )
-            {                
+            {
                 Map<PatternElement, AbstractElement>
                     patternToRepresentationMap =
                         buildPatternGraphFromAbstractRepresentation(

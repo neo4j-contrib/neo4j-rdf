@@ -21,13 +21,13 @@ public class DenseValidatable extends AbstractValidatable
     public Collection<? extends Validatable> complexProperties( String key )
     {
         Collection<Validatable> list = new ArrayList<Validatable>();
-        for ( Relationship relationship : node().getRelationships(
+        for ( Relationship relationship : getUnderlyingNode().getRelationships(
             Direction.OUTGOING ) )
         {
             if ( isPropertyRelationship( relationship ) )
             {
                 list.add( new DenseValidatable( neoUtil().neo(),
-                    relationship.getOtherNode( node() ), meta() ) );
+                    relationship.getOtherNode( getUnderlyingNode() ), meta() ) );
             }
         }
         return list;
@@ -36,7 +36,7 @@ public class DenseValidatable extends AbstractValidatable
     @Override
     protected void addSimplePropertyKeys( Set<String> set )
     {
-        for ( String key : node().getPropertyKeys() )
+        for ( String key : getUnderlyingNode().getPropertyKeys() )
         {
             if ( isPropertyKey( key ) )
             {
@@ -48,11 +48,11 @@ public class DenseValidatable extends AbstractValidatable
 
     public Object[] getProperties( String key )
     {
-        return neoUtil().getPropertyValues( node(), key ).toArray();
+        return neoUtil().getPropertyValues( getUnderlyingNode(), key ).toArray();
     }
 
     public boolean hasProperty( String key )
     {
-        return node().hasProperty( key );
+        return getUnderlyingNode().hasProperty( key );
     }
 }

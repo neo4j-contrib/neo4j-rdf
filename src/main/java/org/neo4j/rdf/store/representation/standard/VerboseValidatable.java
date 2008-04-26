@@ -29,7 +29,7 @@ public class VerboseValidatable extends AbstractValidatable
     private boolean isSimpleOrComplexRelationship( Relationship relationship,
         boolean complex )
     {
-        Node connectorNode = relationship.getOtherNode( node() );
+        Node connectorNode = relationship.getOtherNode( getUnderlyingNode() );
         return connectorNode.hasRelationship(
             VerboseRepresentationStrategy.RelTypes.CONNECTOR_HAS_PREDICATE ) &&
             connectorNode.hasRelationship(
@@ -39,7 +39,7 @@ public class VerboseValidatable extends AbstractValidatable
     @Override
     protected void addSimplePropertyKeys( Set<String> set )
     {
-        for ( Relationship relationship : node().getRelationships(
+        for ( Relationship relationship : getUnderlyingNode().getRelationships(
             Direction.OUTGOING ) )
         {
             if ( isSimpleOrComplexRelationship( relationship, false ) )
@@ -52,7 +52,7 @@ public class VerboseValidatable extends AbstractValidatable
     public Collection<? extends Validatable> complexProperties( String key )
     {
         Collection<Validatable> list = new ArrayList<Validatable>();
-        for ( Relationship relationship : node().getRelationships(
+        for ( Relationship relationship : getUnderlyingNode().getRelationships(
             Direction.OUTGOING ) )
         {
             if ( !isSimpleOrComplexRelationship( relationship, true ) )
@@ -60,7 +60,7 @@ public class VerboseValidatable extends AbstractValidatable
                 continue;
             }
             
-            Node objectNode = relationship.getOtherNode( node() ).
+            Node objectNode = relationship.getOtherNode( getUnderlyingNode() ).
                 getSingleRelationship( relationship.getType(),
                     Direction.OUTGOING ).getEndNode();
             list.add( new VerboseValidatable( neoUtil().neo(), objectNode,
@@ -79,13 +79,13 @@ public class VerboseValidatable extends AbstractValidatable
     private Node getSimplePropertyNode( String key )
     {
         RelationshipType type = new UriBasedExecutor.ARelationshipType( key );
-        for ( Relationship relationship : node().getRelationships(
+        for ( Relationship relationship : getUnderlyingNode().getRelationships(
             type, Direction.OUTGOING ) )
         {
             // Should only have zero or one relationship.
             if ( isSimpleOrComplexRelationship( relationship, false ) )
             {
-                return relationship.getOtherNode( node() );
+                return relationship.getOtherNode( getUnderlyingNode() );
             }
         }
         return null;

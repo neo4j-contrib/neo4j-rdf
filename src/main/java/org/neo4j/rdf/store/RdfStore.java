@@ -10,7 +10,8 @@ import org.neo4j.rdf.model.WildcardStatement;
 public interface RdfStore
 {
     /**
-     * Adds one or more statements to the store.
+     * Adds one or more statements to the store. The statements are added in
+     * a single transaction.
      * @param statements the statement to add.
      * @param contexts the additional context information about the statement.
      */

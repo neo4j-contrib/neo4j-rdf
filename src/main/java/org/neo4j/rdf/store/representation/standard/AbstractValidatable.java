@@ -11,6 +11,7 @@ import org.neo4j.api.core.Relationship;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.neometa.structure.MetaStructureClass;
 import org.neo4j.neometa.structure.MetaStructureRelTypes;
+import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.validation.Validatable;
 import org.neo4j.util.NeoUtil;
 
@@ -26,11 +27,17 @@ public abstract class AbstractValidatable implements Validatable
         this.node = node;
         this.meta = meta;
     }
-    
-    protected Node node()
+
+    public Node getUnderlyingNode()
     {
         return this.node;
     }
+    
+    public Uri getUri()
+    {
+        return new Uri( ( String ) getUnderlyingNode().getProperty(
+            UriBasedExecutor.URI_PROPERTY_KEY ) );
+    }    
     
     protected MetaStructure meta()
     {
@@ -58,7 +65,7 @@ public abstract class AbstractValidatable implements Validatable
     protected void addComplexPropertyKeys( Set<String> set )
     {
         for ( Relationship relationship :
-            node().getRelationships( Direction.OUTGOING ) )
+            getUnderlyingNode().getRelationships( Direction.OUTGOING ) )
         {
             if ( isPropertyRelationship( relationship ) )
             {
