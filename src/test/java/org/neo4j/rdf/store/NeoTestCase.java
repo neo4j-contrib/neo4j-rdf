@@ -1,7 +1,9 @@
 package org.neo4j.rdf.store;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import junit.framework.TestCase;
 
@@ -70,6 +72,16 @@ public abstract class NeoTestCase extends TestCase
         {
             assertTrue( collection.contains( item ) );
         }
+    }
+    
+    protected <T> Collection<T> asCollection( Iterable<T> iterable )
+    {
+        List<T> list = new ArrayList<T>();
+        for ( T item : iterable )
+        {
+            list.add( item );
+        }
+        return list;
     }
 
     protected <T> String join( String delimiter, T... items )
