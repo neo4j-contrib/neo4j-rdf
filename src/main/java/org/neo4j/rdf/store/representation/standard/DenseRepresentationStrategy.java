@@ -8,7 +8,6 @@ import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Wildcard;
 import org.neo4j.rdf.store.representation.AbstractNode;
-import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractRepresentation;
 
 /**
@@ -49,12 +48,13 @@ public class DenseRepresentationStrategy
 	            throw new RuntimeException( "We don't (yet?) support " +
 	            	"wildcard predicates" );
 	        }
-	        
+
             if ( isObjectType( statement.getObject() ) ||
                     pointsToObjectType( ( Uri ) statement.getPredicate() ) )
             {
                 // ( S ) -- predicate_uri --> ( O )
-                addTwoNodeFragment( representation, nodeMapping, statement );
+                addTwoNodeObjectTypeFragment( representation,
+                    nodeMapping, statement );
             }
             else
             {
@@ -64,17 +64,5 @@ public class DenseRepresentationStrategy
             }
 	    }
         return true;
-    }
-
-    private void addTwoNodeFragment(
-        AbstractRepresentation representation,
-        Map<String, AbstractNode> nodeMapping, Statement statement )
-    {
-        AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
-        AbstractNode objectNode = getObjectNode( nodeMapping, statement );
-        AbstractRelationship relationship = new AbstractRelationship(
-            subjectNode, asUri( statement.getPredicate() ), objectNode );
-        addSingleContextsToElement( statement, relationship );
-        representation.addRelationship( relationship );
     }
 }

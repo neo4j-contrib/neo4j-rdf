@@ -20,7 +20,7 @@ public abstract class AbstractValidatable implements Validatable
     private NeoUtil neoUtil;
     private Node node;
     private MetaStructure meta;
-    
+
     public AbstractValidatable( NeoService neo, Node node, MetaStructure meta )
     {
         this.neoUtil = new NeoUtil( neo );
@@ -32,32 +32,37 @@ public abstract class AbstractValidatable implements Validatable
     {
         return this.node;
     }
-    
+
     public Uri getUri()
     {
         return new Uri( ( String ) getUnderlyingNode().getProperty(
             UriBasedExecutor.URI_PROPERTY_KEY ) );
-    }    
-    
+    }
+
     protected MetaStructure meta()
     {
         return this.meta;
     }
-    
+
     protected NeoUtil neoUtil()
     {
         return this.neoUtil;
     }
-    
+
     protected boolean isPropertyKey( String key )
     {
         return !key.contains( UriBasedExecutor.CONTEXT_DELIMITER );
     }
-    
-    protected boolean isPropertyRelationship( Relationship relationship )
+
+    protected boolean isPredicateRelationship( Relationship relationship )
     {
         return !relationship.getType().name().equals(
             MetaStructureRelTypes.META_IS_INSTANCE_OF.name() );
+    }
+
+    protected boolean isPropertyRelationship( Relationship relationship )
+    {
+        return isPredicateRelationship( relationship );
     }
 
     protected abstract void addSimplePropertyKeys( Set<String> set );

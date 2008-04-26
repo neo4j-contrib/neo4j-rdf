@@ -14,7 +14,8 @@ import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.WildcardStatement;
 import org.neo4j.rdf.store.representation.AbstractNode;
-import org.neo4j.rdf.store.representation.standard.DenseValidatable;
+import org.neo4j.rdf.store.representation.standard.PureQuadRepresentationStrategy;
+import org.neo4j.rdf.store.representation.standard.PureQuadValidatable;
 import org.neo4j.rdf.validation.Validatable;
 
 public class PureQuadRdfStore extends RdfStoreImpl
@@ -22,21 +23,22 @@ public class PureQuadRdfStore extends RdfStoreImpl
     private final MetaStructure meta;
 
     public PureQuadRdfStore( NeoService neo, MetaStructure meta,
-        WillBeQuadRepresentationStrategy representationStrategy )
+        PureQuadRepresentationStrategy representationStrategy )
     {
          super( neo, representationStrategy );
          this.meta = meta;
     }
-    
+
     protected MetaStructure meta()
     {
         return this.meta;
     }
-    
+
     @Override
-    protected WillBeQuadRepresentationStrategy getRepresentationStrategy()
+    protected PureQuadRepresentationStrategy getRepresentationStrategy()
     {
-        return ( WillBeQuadRepresentationStrategy ) super.getRepresentationStrategy();
+        return ( PureQuadRepresentationStrategy )
+            super.getRepresentationStrategy();
     }
 
     @Override
@@ -51,8 +53,8 @@ public class PureQuadRdfStore extends RdfStoreImpl
                 throw new UnsupportedOperationException( "We currently only " +
                     "support getStatements() with reasoning enabled" );
             }
-            
-            Iterable<Statement> result = null;            
+
+            Iterable<Statement> result = null;
             if ( wildcardPattern( statement, false, false, true ) )
             {
                 result = handleSubjectPredicateWildcard( statement );
@@ -60,10 +62,10 @@ public class PureQuadRdfStore extends RdfStoreImpl
             else
             {
                 result = super.getStatements( statement,
-                    includeInferredStatements ); 
+                    includeInferredStatements );
             }
-            
-            tx.success();           
+
+            tx.success();
             return result;
         }
         finally
@@ -71,20 +73,20 @@ public class PureQuadRdfStore extends RdfStoreImpl
             tx.finish();
         }
     }
-    
+
     private Iterable<Statement> handleSubjectPredicateWildcard(
         WildcardStatement statement )
     {
         Uri subject = ( Uri ) statement.getSubject();
         Uri predicate = ( Uri ) statement.getPredicate();
-        
-        AbstractNode abstractSubjectNode = new AbstractNode( subject );            
+
+        AbstractNode abstractSubjectNode = new AbstractNode( subject );
         Node subjectNode = getRepresentationStrategy().getExecutor().
             lookupNode( abstractSubjectNode );
-        Validatable validatableInstance = new DenseValidatable( neo(),
-            subjectNode, meta() ); 
+        Validatable validatableInstance = new PureQuadValidatable( neo(),
+            subjectNode, meta() );
         List<Statement> statementList = new LinkedList<Statement>();
-        
+
         if ( getRepresentationStrategy().pointsToObjectType( predicate ) )
         {
             Collection<? extends Validatable> objectProperties =
@@ -111,7 +113,7 @@ public class PureQuadRdfStore extends RdfStoreImpl
 
     private boolean weCanHandleStatement( WildcardStatement statement )
     {
-        return 
+        return
             wildcardPattern( statement, false, false, true ) ||
             wildcardPattern( statement, false, true, true ) ||
             wildcardPattern( statement, true, true, false ) ||

@@ -35,6 +35,8 @@ public class UriBasedExecutor implements RepresentationExecutor
     public static final String CONTEXT_DELIMITER = "ö";
     public static final String LOOKUP_CONTEXT_KEYS = "contextKeys";
     static final String URI_PROPERTY_KEY = "uri";
+    public static final String LITERAL_VALUE_KEY = "value";
+    public static final String LOOKUP_IS_LITERAL = "literal";
 
     private final NeoService neo;
     private final Index index;
@@ -47,6 +49,11 @@ public class UriBasedExecutor implements RepresentationExecutor
     {
         this.neo = neo;
         this.index = index;
+    }
+
+    protected NeoService neo()
+    {
+        return this.neo;
     }
 
     protected void debug( String message )
@@ -68,8 +75,8 @@ public class UriBasedExecutor implements RepresentationExecutor
         }
         return result;
     }
-    
-    private void removeNode( Node node, Uri uri )
+
+    protected void removeNode( Node node, Uri uri )
     {
         node.delete();
         if ( uri != null )
@@ -119,7 +126,7 @@ public class UriBasedExecutor implements RepresentationExecutor
                     applyOnNode( result.abstractNode, result.node );
                 }
             }
-            
+
             if ( relationship != null )
             {
                 applyOnRelationship( abstractRelationship, relationship );
@@ -127,7 +134,8 @@ public class UriBasedExecutor implements RepresentationExecutor
         }
     }
 
-    public void removeFromNodeSpace( AbstractRepresentation representation )
+    protected Map<AbstractNode, Node> getNodeMapping(
+        AbstractRepresentation representation )
     {
         Map<AbstractNode, Node> nodeMapping = new HashMap<AbstractNode, Node>();
         for ( AbstractNode abstractNode : representation.nodes() )
@@ -137,10 +145,21 @@ public class UriBasedExecutor implements RepresentationExecutor
                 Node node = lookupNode( abstractNode, false );
                 if ( node == null )
                 {
-                    return;
+                    return null;
                 }
                 nodeMapping.put( abstractNode, node );
             }
+        }
+        return nodeMapping;
+    }
+
+    public void removeFromNodeSpace( AbstractRepresentation representation )
+    {
+        Map<AbstractNode, Node> nodeMapping = getNodeMapping( representation );
+        if ( nodeMapping == null )
+        {
+            // No match.
+            return;
         }
 
         Map<AbstractRelationship, Relationship> relationshipMapping =
@@ -187,7 +206,12 @@ public class UriBasedExecutor implements RepresentationExecutor
                 relationshipMapping.put( abstractRelationship, relationship );
             }
         }
+        doActualDeletion( nodeMapping, relationshipMapping );
+    }
 
+    protected void doActualDeletion( Map<AbstractNode, Node> nodeMapping,
+        Map<AbstractRelationship, Relationship> relationshipMapping )
+    {
         // Do the actual deletion
         Set<Node> deletedNodes = new HashSet<Node>();
         for ( Map.Entry<AbstractNode, Node> entry : nodeMapping.entrySet() )
@@ -229,7 +253,7 @@ public class UriBasedExecutor implements RepresentationExecutor
             }
         }
     }
-    
+
     protected String getPropertyKeyForContextKey( AbstractElement element,
         String contextKey )
     {
@@ -238,7 +262,7 @@ public class UriBasedExecutor implements RepresentationExecutor
         return contextToPropertyKeys == null ? null :
             ( String ) contextToPropertyKeys.get( contextKey );
     }
-    
+
     protected boolean isContextKey( AbstractElement element,
         String key )
     {
@@ -247,7 +271,7 @@ public class UriBasedExecutor implements RepresentationExecutor
         return contextToPropertyKeys != null &&
             contextToPropertyKeys.containsKey( key );
     }
-    
+
     private boolean oneNodeIsBlankAndItsNotEmpty(
         AbstractRelationship abstractRelationship, Relationship relationship )
     {
@@ -256,7 +280,7 @@ public class UriBasedExecutor implements RepresentationExecutor
         {
             return false;
         }
-        
+
         boolean blankIsStartNode =
             abstractRelationship.getStartNode().getUriOrNull() == null;
         AbstractNode abstractNode = blankIsStartNode ?
@@ -270,8 +294,8 @@ public class UriBasedExecutor implements RepresentationExecutor
         }
         return false;
     }
-    
-    private boolean relationshipIsEmpty(
+
+    protected boolean relationshipIsEmpty(
         AbstractRelationship abstractRelationship, Relationship relationship )
     {
         if ( oneNodeIsBlankAndItsNotEmpty(
@@ -279,7 +303,7 @@ public class UriBasedExecutor implements RepresentationExecutor
         {
             return false;
         }
-        
+
         AbstractNode abstractStartNode = abstractRelationship.getStartNode();
         if ( abstractStartNode.getUriOrNull() == null && !nodeIsEmpty(
             abstractStartNode, relationship.getStartNode(), false ) )
@@ -291,7 +315,7 @@ public class UriBasedExecutor implements RepresentationExecutor
         return !hasProperties;
     }
 
-    private boolean nodeIsEmpty( AbstractNode abstractNode, Node node,
+    protected boolean nodeIsEmpty( AbstractNode abstractNode, Node node,
         boolean checkRelationships )
     {
         if ( checkRelationships && node.hasRelationship() )
@@ -321,7 +345,7 @@ public class UriBasedExecutor implements RepresentationExecutor
         }
         return null;
     }
-    
+
     private Relationship findRelationship( Node startNode,
         RelationshipType relType, Node endNode )
     {
@@ -350,18 +374,18 @@ public class UriBasedExecutor implements RepresentationExecutor
         }
         return relationship;
     }
-    
+
     private void applyOnRelationship( AbstractRelationship abstractRelationship,
         Relationship relationship )
     {
         applyOnContainer( abstractRelationship, relationship );
     }
 
-    private void applyOnNode( AbstractNode abstractNode, Node node )
+    protected void applyOnNode( AbstractNode abstractNode, Node node )
     {
         applyOnContainer( abstractNode, node );
     }
-    
+
     private void applyOnContainer( AbstractElement abstractElement,
         PropertyContainer container )
     {
@@ -381,8 +405,8 @@ public class UriBasedExecutor implements RepresentationExecutor
             }
         }
     }
-    
-    private void removeFromRelationship(
+
+    protected void removeFromRelationship(
         AbstractRelationship abstractRelationship, Relationship relationship )
     {
         for ( Map.Entry<String, Collection<Object>> entry :
@@ -399,23 +423,26 @@ public class UriBasedExecutor implements RepresentationExecutor
                 entry.getValue(), "Property" );
         }
     }
-    
-    private void removeAll( PropertyContainer container, String key,
+
+    protected boolean removeAll( PropertyContainer container, String key,
         Collection<Object> neoValues, Collection<?> valuesToRemove,
         String debugText )
     {
+        boolean someRemoved = false;
         for ( Object value : valuesToRemove )
         {
             boolean removed = neoValues.remove( value );
             if ( removed )
             {
+                someRemoved = true;
                 debug( "\t-" + debugText + " (" + container + ") "
                     + key + " " + "[" + value + "]" );
             }
         }
+        return someRemoved;
     }
 
-    private void removeFromNode( AbstractNode abstractNode, Node node )
+    protected void removeFromNode( AbstractNode abstractNode, Node node )
     {
         // Take the context properties first.
         Map<String, String> realToContext = new HashMap<String, String>();
@@ -437,7 +464,7 @@ public class UriBasedExecutor implements RepresentationExecutor
                 neo, node, key );
             removeAll( node, key, neoValues, entry.getValue(), "Property" );
         }
-        
+
         // Do the real keys
         for ( Map.Entry<String, Collection<Object>> entry :
             abstractNode.properties().entrySet() )
@@ -489,7 +516,7 @@ public class UriBasedExecutor implements RepresentationExecutor
             }
         }
     }
-    
+
     private boolean thereAreMoreContexts( Node node, String key,
         Collection<Object> neoValues, Object value )
     {
@@ -528,33 +555,47 @@ public class UriBasedExecutor implements RepresentationExecutor
         }
         else if ( createIfItDoesntExist )
         {
-            node = neo.createNode();
-            debug( "\tNo match, creating node (" + node.getId()
-                + ") and connecting" );
-            RelationshipType relationshipType = new ARelationshipType(
-                abstractRelationship.getRelationshipTypeName() );
-            if ( abstractRelationship.getStartNode().getUriOrNull() == null )
-            {
-                relationship = node.createRelationshipTo(
-                    nodeMapping.get( abstractRelationship.getEndNode() ),
-                        relationshipType );
-                debug( "\t+Relationship " + node + " ---["
-                    + relationshipType.name() + "]--> "
-                    + nodeMapping.get( abstractRelationship.getEndNode() ) );
-            }
-            else
-            {
-                relationship = nodeMapping.get(
-                    abstractRelationship.getStartNode() ).createRelationshipTo(
-                        node, relationshipType );
-                debug( "\t+Relationship "
-                    + nodeMapping.get( abstractRelationship.getStartNode() )
-                    + " ---[" + relationshipType.name() + "]--> " + node );
-            }
+            NodeAndRelationship createdNodeAndRelationship =
+                createBlankNodeIfDoesntExist( startingAbstractNode,
+                    endingAbstractNode, abstractRelationship, nodeMapping );
+            node = createdNodeAndRelationship.node;
+            relationship = createdNodeAndRelationship.relationship;
         }
         nodeMapping.put( endingAbstractNode, node );
         return new NodeAndRelationship( endingAbstractNode,
             node, relationship );
+    }
+
+    protected NodeAndRelationship createBlankNodeIfDoesntExist(
+        AbstractNode startNode, AbstractNode endNode,
+        AbstractRelationship abstractRelationship,
+        Map<AbstractNode, Node> nodeMapping )
+    {
+        Node node = neo.createNode();
+        Relationship relationship = null;
+        debug( "\tNo match, creating node (" + node.getId()
+            + ") and connecting" );
+        RelationshipType relationshipType = new ARelationshipType(
+            abstractRelationship.getRelationshipTypeName() );
+        if ( abstractRelationship.getStartNode().getUriOrNull() == null )
+        {
+            relationship = node.createRelationshipTo(
+                nodeMapping.get( abstractRelationship.getEndNode() ),
+                    relationshipType );
+            debug( "\t+Relationship " + node + " ---["
+                + relationshipType.name() + "]--> "
+                + nodeMapping.get( abstractRelationship.getEndNode() ) );
+        }
+        else
+        {
+            relationship = nodeMapping.get(
+                abstractRelationship.getStartNode() ).createRelationshipTo(
+                    node, relationshipType );
+            debug( "\t+Relationship "
+                + nodeMapping.get( abstractRelationship.getStartNode() )
+                + " ---[" + relationshipType.name() + "]--> " + node );
+        }
+        return new NodeAndRelationship( null, node, relationship );
     }
 
     private Map<AbstractNode, PatternNode> representationToPattern(
@@ -589,15 +630,26 @@ public class UriBasedExecutor implements RepresentationExecutor
                 getNodeUriPropertyKey( node ),
                 node.getUriOrNull().getUriAsString() );
         }
-//        for ( Map.Entry<String, Collection<Object>> entry :
-//            node.properties().entrySet() )
-//        {
-//            patternNode.addPropertyEqualConstraint( entry.getKey(),
-//                entry.getValue().toArray() );
-//        }
+
+        if ( isLiteralNode( node ) )
+        {
+            for ( Map.Entry<String, Collection<Object>> entry :
+                node.properties().entrySet() )
+            {
+                patternNode.addPropertyEqualConstraint( entry.getKey(),
+                    entry.getValue().toArray() );
+            }
+        }
         return patternNode;
     }
-    
+
+    protected boolean isLiteralNode( AbstractNode node )
+    {
+        Boolean isLiteralNode = ( Boolean )
+        node.getExecutorInfo( LOOKUP_IS_LITERAL );
+        return isLiteralNode != null && isLiteralNode;
+    }
+
     public Node lookupNode( AbstractNode abstractNode )
     {
         if ( abstractNode.getUriOrNull() == null )
@@ -607,7 +659,7 @@ public class UriBasedExecutor implements RepresentationExecutor
         return this.index.getSingleNodeFor(
             abstractNode.getUriOrNull().getUriAsString() );
     }
-    
+
     public String getNodeUriPropertyKey( AbstractNode abstractNode )
     {
         return URI_PROPERTY_KEY;
@@ -618,7 +670,7 @@ public class UriBasedExecutor implements RepresentationExecutor
     {
         return predicate + CONTEXT_DELIMITER + value.toString();
     }
-    
+
     public static class ARelationshipType implements RelationshipType
     {
         private String name;
@@ -633,13 +685,13 @@ public class UriBasedExecutor implements RepresentationExecutor
             return this.name;
         }
     }
-    
-    private static class NodeAndRelationship
+
+    protected static class NodeAndRelationship
     {
         private AbstractNode abstractNode;
         private Node node;
         private Relationship relationship;
-        
+
         NodeAndRelationship( AbstractNode abstractNode,
             Node node, Relationship relationship )
         {

@@ -27,12 +27,13 @@ public class DenseValidatable extends AbstractValidatable
             if ( isPropertyRelationship( relationship ) )
             {
                 list.add( new DenseValidatable( neoUtil().neo(),
-                    relationship.getOtherNode( getUnderlyingNode() ), meta() ) );
+                    relationship.getOtherNode( getUnderlyingNode() ),
+                        meta() ) );
             }
         }
         return list;
     }
-    
+
     @Override
     protected void addSimplePropertyKeys( Set<String> set )
     {
@@ -44,7 +45,7 @@ public class DenseValidatable extends AbstractValidatable
             }
         }
     }
-    
+
 
     public Object[] getProperties( String key )
     {

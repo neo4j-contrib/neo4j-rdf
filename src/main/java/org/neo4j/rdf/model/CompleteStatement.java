@@ -20,14 +20,14 @@ public class CompleteStatement implements Statement
         this( subject, predicate, ( Value ) objectResource,
             contextsOrNullForNone );
     }
-    
+
     public CompleteStatement( Resource subject, Uri predicate, Literal
         objectLiteral, Context... contextsOrNullForNone )
     {
         this( subject, predicate, ( Value ) objectLiteral,
             contextsOrNullForNone );
     }
-    
+
     private CompleteStatement( Resource subject, Uri predicate, Value object,
         Context... contextsOrNullForNone )
     {
@@ -42,14 +42,14 @@ public class CompleteStatement implements Statement
         {
             this.contextList = Collections.unmodifiableList( Arrays.asList(
                 contextsOrNullForNone ) );
-        }        
-    }    
-    
+        }
+    }
+
     public Resource getSubject()
     {
-        return this.subject; 
+        return this.subject;
     }
-    
+
     public Uri getPredicate()
     {
         return this.predicate;
@@ -68,7 +68,7 @@ public class CompleteStatement implements Statement
     {
         return this.contextList;
     }
-    
+
     /**
      * Convert this statement to a wildcard statement.
      * @return this statement as a wildcard statement
@@ -77,7 +77,8 @@ public class CompleteStatement implements Statement
     {
         return new WildcardStatement( this );
     }
-    
+
+    @Override
     public String toString()
     {
         return "s,p,o=[" +

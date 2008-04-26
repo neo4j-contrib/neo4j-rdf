@@ -9,7 +9,7 @@ public class WildcardStatement implements Statement
 {
     private final Value subject, predicate, object;
     private final List<Context> contextList;
-    
+
     public WildcardStatement( Value subject, Value predicate,
         Value object, Context... contextsOrNullForNone )
     {
@@ -27,14 +27,14 @@ public class WildcardStatement implements Statement
                 contextsOrNullForNone ) );
         }
     }
-    
+
     public WildcardStatement( CompleteStatement completeStatement )
     {
         this( completeStatement.getSubject(), completeStatement.getPredicate(),
             completeStatement.getObject(), contextIterableToArray(
                 completeStatement.getContexts() ) );
     }
-    
+
     private static Context[] contextIterableToArray(
         Iterable<Context>  contexts )
     {
@@ -42,7 +42,7 @@ public class WildcardStatement implements Statement
         for ( Context context : contexts )
         {
             contextList.add( context );
-        }        
+        }
         return contextList.toArray( new Context[ contextList.size() ] );
     }
 
@@ -58,22 +58,23 @@ public class WildcardStatement implements Statement
     {
         return this.subject;
     }
-    
+
     public Value getPredicate()
     {
         return this.predicate;
     }
-    
+
     public Value getObject()
     {
         return this.object;
     }
-    
+
     public Iterable<Context> getContexts()
     {
         return this.contextList;
     }
-    
+
+    @Override
     public String toString()
     {
         return "s,p,o=[" +

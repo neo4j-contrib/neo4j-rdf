@@ -40,8 +40,8 @@ abstract class StandardAbstractRepresentationStrategy
      * The property postfix which is concatenated with a property key to get
      * the context property key on a node (literal values).
      */
-    public static final String CONTEXT_PROPERTY_POSTFIX = "____context";
-    
+    public static final String CONTEXT_PROPERTY_POSTFIX = "context";
+
     private final RepresentationExecutor executor;
     private final MetaStructure meta;
 
@@ -66,7 +66,18 @@ abstract class StandardAbstractRepresentationStrategy
         this.meta = meta;
     }
 
-    private static Index newIndex( NeoService neo )
+    /**
+     * @param neo the {@link NeoService}.
+     * @param meta the {@link MetaStructure}.
+     */
+    public StandardAbstractRepresentationStrategy( MetaStructure meta,
+        RepresentationExecutor executor )
+    {
+        this.executor = executor;
+        this.meta = meta;
+    }
+
+    protected static Index newIndex( NeoService neo )
     {
         Node indexNode = new NeoUtil( neo )
             .getOrCreateSubReferenceNode( MyRelTypes.INDEX_ROOT );
@@ -93,7 +104,7 @@ abstract class StandardAbstractRepresentationStrategy
         }
         return representation;
     }
-    
+
     /**
      * Add this single statement to representation, return <code>true</code>
      * if we have processed it, <code>false</code> otherwise
@@ -114,12 +125,12 @@ abstract class StandardAbstractRepresentationStrategy
         }
         return false;
     }
-    
+
     public RepresentationExecutor getExecutor()
     {
         return this.executor;
     }
-    
+
     protected void addMetaInstanceOfFragment(
         AbstractRepresentation representation,
         Map<String, AbstractNode> nodeMapping, Statement statement )
@@ -141,7 +152,7 @@ abstract class StandardAbstractRepresentationStrategy
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
         addPropertyWithContexts( statement, subjectNode );
     }
-    
+
     protected void addPropertyWithContexts( Statement statement,
         AbstractNode subjectNode )
     {
@@ -159,7 +170,7 @@ abstract class StandardAbstractRepresentationStrategy
             literalValue = convertLiteralValueToRealValue(
                 statement, ( ( Literal ) statement.getObject() ).getValue() );
         }
-        
+
         subjectNode.addProperty( predicate, literalValue );
         String predicateContext = UriBasedExecutor.formContextPropertyKey(
             predicate, literalValue );
@@ -187,8 +198,8 @@ abstract class StandardAbstractRepresentationStrategy
         return property == null ? null :
             meta.lookup( property, MetaStructure.LOOKUP_PROPERTY_RANGE );
     }
-    
-    protected boolean pointsToObjectType( Uri predicate )
+
+    public boolean pointsToObjectType( Uri predicate )
     {
         PropertyRange range = getPropertyRange( predicate );
         if ( range == null )
@@ -199,7 +210,7 @@ abstract class StandardAbstractRepresentationStrategy
         }
         return !range.isDatatype();
     }
-    
+
     protected Object convertLiteralValueToRealValue( Statement statement,
         Object literalValue )
     {
@@ -223,7 +234,7 @@ abstract class StandardAbstractRepresentationStrategy
         }
         return result;
     }
-    
+
     protected AbstractNode getOrCreateNode(
         Map<String, AbstractNode> nodeMapping, Value value )
     {
@@ -235,7 +246,7 @@ abstract class StandardAbstractRepresentationStrategy
         }
         return node;
     }
-    
+
     protected String asUri( Value value )
     {
         return ( ( Uri ) value ).getUriAsString();
@@ -246,7 +257,7 @@ abstract class StandardAbstractRepresentationStrategy
         String string = null;
         if ( value instanceof Wildcard )
         {
-            string = ( ( Wildcard ) value ).getVariableName(); 
+            string = ( ( Wildcard ) value ).getVariableName();
         }
         else if ( value instanceof Uri )
         {
@@ -270,7 +281,7 @@ abstract class StandardAbstractRepresentationStrategy
     {
         return getOrCreateNode( nodeMapping, statement.getObject() );
     }
-    
+
     protected AbstractNode getPredicateNode(
         Map<String, AbstractNode> nodeMapping, Statement statement )
     {
@@ -280,12 +291,12 @@ abstract class StandardAbstractRepresentationStrategy
             MetaEnabledUriBasedExecutor.META_EXECUTOR_INFO_KEY, "property" );
         return node;
     }
-    
+
     protected boolean isObjectType( Value value )
     {
         return value instanceof Resource;
     }
-    
+
     protected void addSingleContextsToElement( Statement statement,
         AbstractElement element )
     {
@@ -298,6 +309,35 @@ abstract class StandardAbstractRepresentationStrategy
         contextKeys.put( CONTEXT_PROPERTY_POSTFIX, null );
         element.addExecutorInfo( UriBasedExecutor.LOOKUP_CONTEXT_KEYS,
             contextKeys );
+    }
+
+    protected void addTwoNodeObjectTypeFragment(
+        AbstractRepresentation representation,
+        Map<String, AbstractNode> nodeMapping, Statement statement )
+    {
+        AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
+        AbstractNode objectNode = getObjectNode( nodeMapping, statement );
+        AbstractRelationship relationship = new AbstractRelationship(
+            subjectNode, asUri( statement.getPredicate() ), objectNode );
+        addSingleContextsToElement( statement, relationship );
+        representation.addRelationship( relationship );
+    }
+
+    protected void addTwoNodeDataTypeFragment(
+        AbstractRepresentation representation,
+        Map<String, AbstractNode> nodeMapping, Statement statement )
+    {
+        AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
+        AbstractNode literalNode = new AbstractNode( null );
+        literalNode.addProperty( UriBasedExecutor.LITERAL_VALUE_KEY,
+            ( ( Literal ) statement.getObject() ).getValue() );
+        literalNode.addExecutorInfo( UriBasedExecutor.LOOKUP_IS_LITERAL, true );
+        AbstractRelationship relationship = new AbstractRelationship(
+            subjectNode, asUri( statement.getPredicate() ), literalNode );
+        addSingleContextsToElement( statement, relationship );
+
+        representation.addNode( literalNode );
+        representation.addRelationship( relationship );
     }
 
     private static enum MyRelTypes implements RelationshipType

@@ -6,7 +6,6 @@ import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
 import org.neo4j.api.core.Transaction;
 import org.neo4j.rdf.model.CompleteStatement;
-import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Value;
 import org.neo4j.rdf.model.Wildcard;
@@ -52,7 +51,7 @@ public class RdfStoreImpl implements RdfStore
 
     public void addStatements( CompleteStatement... statements )
     {
-//        sysOutStatements( "add", statements );
+        sysOutStatements( "add", statements );
         Transaction tx = neo.beginTx();
         try
         {
@@ -74,7 +73,7 @@ public class RdfStoreImpl implements RdfStore
     {
         return this.representationStrategy.getExecutor();
     }
-    
+
 
     public Iterable<Statement> getStatements( WildcardStatement statement,
         boolean includeInferredStatements )
@@ -85,10 +84,10 @@ public class RdfStoreImpl implements RdfStore
             return graphMatchingFacade().getMatchingStatements(
                 representationStrategy.getAbstractRepresentation( statement ) );
         }
-        throw new UnsupportedOperationException( "We can't handle get() for " +            
+        throw new UnsupportedOperationException( "We can't handle get() for " +
             "this statement: " + statement );
-    }       
-        
+    }
+
     private boolean weCanHandleStatement( WildcardStatement statement )
     {
         return false;
@@ -107,7 +106,7 @@ public class RdfStoreImpl implements RdfStore
     {
         return potentialWildcard instanceof Wildcard;
     }
-    
+
     public Iterable<Statement> oldGetStatements( WildcardStatement statement,
         boolean includeInferredStatements )
     {
@@ -115,15 +114,15 @@ public class RdfStoreImpl implements RdfStore
 //      S, P, null            : Yes
 //      null, null, O         : No
 //      null, P, O            : Yes (for objecttype)
-      
+
 //      if ( theseAreNull( statementWithOptionalNulls, false, true, true ) )
 //      {
-//          
+//
 //      }
 //      else if ( theseAreNull( statementWithOptionalNulls,
 //          false, false, true ) )
 //      {
-//      
+//
 //      }
 //      else if ( theseAreNull( statementWithOptionalNulls,
 //          true, true, false ) )
@@ -132,10 +131,10 @@ public class RdfStoreImpl implements RdfStore
 //      else if ( theseAreNull( statementWithOptionalNulls,
 //          true, false, false ) )
 //      {
-//          
+//
 //      }
 //      String query = SparqlBuilder.getQuery( statementWithOptionalNulls );
-      
+
         throw new UnsupportedOperationException();
     }
 
@@ -164,7 +163,7 @@ public class RdfStoreImpl implements RdfStore
         }
         removeStatementsSimple( statementWithOptionalNulls );
     }
-    
+
     private void sysOutStatements( String what, Statement... statements )
     {
         for ( Statement statement : statements )
@@ -172,22 +171,22 @@ public class RdfStoreImpl implements RdfStore
             sysOutStatement( what, statement );
         }
     }
-    
+
     private void sysOutStatement( String what, Statement statement )
     {
-        StringBuffer contexts = new StringBuffer();
-        for ( Context context : statement.getContexts() )
-        {
-            contexts.append( context.getUriAsString() + ", " );
-        }
-        System.out.println( what + ":" + statement.getSubject() +
-            ", " + statement.getPredicate() + ", " + statement.getObject() +
-            " | " + contexts.toString() );
+//        StringBuffer contexts = new StringBuffer();
+//        for ( Context context : statement.getContexts() )
+//        {
+//            contexts.append( context.getUriAsString() + ", " );
+//        }
+//        System.out.println( what + ":" + statement.getSubject() +
+//            ", " + statement.getPredicate() + ", " + statement.getObject() +
+//            " | " + contexts.toString() );
     }
 
     private void removeStatementsSimple( Statement statement )
     {
-//        sysOutStatement( "remove", statement );
+        sysOutStatement( "remove", statement );
         Transaction tx = neo.beginTx();
         try
         {
@@ -228,11 +227,11 @@ public class RdfStoreImpl implements RdfStore
                     patternToRepresentationMap =
                         buildPatternGraphFromAbstractRepresentation(
                             statementRepresentation );
-                
+
                 Iterable<PatternMatch> matches = runMatchingEngine(
                     figureOutPatternStartNode( patternToRepresentationMap ),
                     figureOutNeoStartNode( statementRepresentation ) );
-                
+
                 for ( PatternMatch match : matches )
                 {
                     // get abstract element for every pattern element
@@ -274,5 +273,5 @@ public class RdfStoreImpl implements RdfStore
         };
     }
 
-    
+
 }
