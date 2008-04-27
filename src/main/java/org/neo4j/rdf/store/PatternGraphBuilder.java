@@ -2,6 +2,7 @@ package org.neo4j.rdf.store;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -25,14 +26,14 @@ public class PatternGraphBuilder
     
     public Map<AbstractNode, PatternNode> buildPatternGraph(
         AbstractRepresentation representation,
-        Map<String, VariableHolder> variableMapping )
+        List<VariableHolder> variableMapping )
     {
         return buildPatternGraph( representation, variableMapping, false );
     }
     
     public Map<AbstractNode, PatternNode> buildPatternGraph(
         AbstractRepresentation representation,
-        Map<String, VariableHolder> variableMapping, boolean optional )
+        List<VariableHolder> variableMapping, boolean optional )
     {
         Map<AbstractNode, PatternNode> graph =
             new HashMap<AbstractNode, PatternNode>();
@@ -55,7 +56,7 @@ public class PatternGraphBuilder
     }
     
     private PatternNode createPatternNode( AbstractNode node,
-        Map<String, VariableHolder> variableMapping )
+        List<VariableHolder> variableMapping )
     {
         PatternNode patternNode = null;
         if ( node.isWildcard() )
@@ -102,16 +103,19 @@ public class PatternGraphBuilder
         return patternNode;
     }
     
-    private void addVariable( Map<String, VariableHolder> variableMapping,
+    private void addVariable( List<VariableHolder> variableMapping,
         String variableName, VariableHolder.VariableType type,
         PatternNode patternNode, String propertyKey )
     {
-        if ( !variableMapping.containsKey( variableName ) )
+        for ( VariableHolder variable : variableMapping )
         {
-            variableMapping.put( variableName,
-                new VariableHolder( variableName, type, patternNode,
-                    propertyKey ) );
+            if ( variableName.equals( variable.getName() ) )
+            {
+                return;
+            }
         }
+        variableMapping.add( new VariableHolder( variableName, type,
+            patternNode, propertyKey ) );
     }
     
     private static class DynamicRelationshipType implements RelationshipType
@@ -135,15 +139,15 @@ public class PatternGraphBuilder
         
         private final VariableType variableType;
         private final String variableName;
-        private final PatternNode node;
+        private final PatternNode patternNode;
         private final String propertyKey;
         
-        VariableHolder( String variableName, VariableType variableType,
-            PatternNode node, String propertyKey )
+        public VariableHolder( String variableName, VariableType variableType,
+            PatternNode patternNode, String propertyKey )
         {
             this.variableType = variableType;
             this.variableName = variableName;
-            this.node = node;
+            this.patternNode = patternNode;
             this.propertyKey = propertyKey;
         }
         
@@ -162,9 +166,9 @@ public class PatternGraphBuilder
             return this.propertyKey;
         }
         
-        PatternNode getNode()
+        PatternNode getPatternNode()
         {
-            return this.node;
+            return this.patternNode;
         }
     }
 }
