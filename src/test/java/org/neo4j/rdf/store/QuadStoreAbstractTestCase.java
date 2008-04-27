@@ -1,5 +1,9 @@
 package org.neo4j.rdf.store;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Literal;
@@ -66,18 +70,44 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
     protected void assertResult( WildcardStatement wildcard,
         CompleteStatement... expectedResult )
     {
-        // TODO mattias
+        Collection<CompleteStatement> expectedResultCollection =
+            new ArrayList<CompleteStatement>( Arrays.asList( expectedResult ) );
+        Iterable<CompleteStatement> result =
+            store().getStatements( wildcard, false );
+        for ( CompleteStatement resultStatement : result )
+        {
+            CompleteStatement foundEquivalentStatement = null;
+            for ( CompleteStatement expectedResultStatement :
+                expectedResultCollection )
+            {
+                if ( statementsAreEquivalent( resultStatement,
+                    expectedResultStatement ) )
+                {
+                    foundEquivalentStatement = expectedResultStatement;
+                    break;
+                }
+            }
+            assertTrue( foundEquivalentStatement != null );
+            expectedResultCollection.remove( foundEquivalentStatement );
+        }
+        assertTrue( expectedResultCollection.isEmpty() );
     }
-        
+
     protected void assertEquivalentStatement( Statement first,
         Statement second )
     {
-        assertEquals( first.getSubject(), second.getSubject() );
-        assertEquals( first.getPredicate(), second.getPredicate() );
-        assertEquals( first.getObject(), second.getObject() );
-        assertEquals( first.getContext(), second.getContext() );
+        assertTrue( statementsAreEquivalent( first, second ) );
     }
-    
+
+    protected boolean statementsAreEquivalent( Statement first,
+        Statement second )
+    {
+        return first.getSubject().equals( second.getSubject() ) &&
+            first.getPredicate().equals( second.getPredicate() ) &&
+            first.getObject().equals( second.getObject() ) &&
+            first.getContext().equals( second.getContext() );
+    }
+
     protected void addStatements( CompleteStatement... statements )
     {
         store().addStatements( statements );
@@ -86,7 +116,8 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
     static CompleteStatement completeStatement( TestUri subject,
         TestUri predicate, TestUri object, TestUri context )
     {
-        return completeStatement( subject.uriAsString(), predicate.uriAsString(), object.uriAsString(),
+        return completeStatement( subject.uriAsString(),
+            predicate.uriAsString(), object.uriAsString(),
             context.uriAsString() );
     }
 
@@ -95,7 +126,7 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
     {
         return completeStatement( subject.uriAsString(),
             predicate.uriAsString(), object.uriAsString(),
-            context.getUriAsString() );        
+            context.getUriAsString() );
     }
 
     static CompleteStatement completeStatement( String subjectUri,
@@ -136,7 +167,7 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
     static WildcardStatement wildcardStatement( Value subject, Value predicate,
         Value object, Value context )
     {
-        return new WildcardStatement( subject, predicate, object, context );            
+        return new WildcardStatement( subject, predicate, object, context );
     }
 
     public enum TestUri
@@ -147,7 +178,7 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
         EMIL_PUBLIC_GRAPH( "context/emil-public" ),
         EMIL_PRIVATE_GRAPH( "context/emil-private" ),
         MATTIAS_PUBLIC_GRAPH( "context/mattias-public" ),
-        MATTIAS_PRIVATE_GRAPH( "context/mattias-private" ),        
+        MATTIAS_PRIVATE_GRAPH( "context/mattias-private" ),
         ;
 
         private final String uri;
