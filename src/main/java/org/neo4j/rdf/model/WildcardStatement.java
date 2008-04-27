@@ -1,8 +1,8 @@
 package org.neo4j.rdf.model;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 public class WildcardStatement implements Statement
@@ -11,39 +11,42 @@ public class WildcardStatement implements Statement
     private final List<Context> contextList;
 
     public WildcardStatement( Value subject, Value predicate,
-        Value object, Context... contextsOrNullForNone )
+        Value object, Context mandatoryContext, Context... optionalContexts )
     {
         checkAllowed( subject, predicate, object );
         this.subject = subject;
         this.predicate = predicate;
         this.object = object;
-        if ( contextsOrNullForNone == null )
+        this.contextList = new LinkedList<Context>();
+        this.contextList.add( mandatoryContext );
+        for ( Context context : optionalContexts )
         {
-            this.contextList = Collections.emptyList();
-        }
-        else
-        {
-            contextList = Collections.unmodifiableList( Arrays.asList(
-                contextsOrNullForNone ) );
+            this.contextList.add( context );
         }
     }
 
     public WildcardStatement( CompleteStatement completeStatement )
     {
         this( completeStatement.getSubject(), completeStatement.getPredicate(),
-            completeStatement.getObject(), contextIterableToArray(
-                completeStatement.getContexts() ) );
+            completeStatement.getObject(), firstContext( completeStatement ),
+            restOfContexts( completeStatement ) );
     }
-
-    private static Context[] contextIterableToArray(
-        Iterable<Context>  contexts )
+    
+    private static Context firstContext( CompleteStatement statement )
+    {
+        return statement.getContexts().iterator().next();
+    }
+    
+    private static Context[] restOfContexts( CompleteStatement statement )
     {
         ArrayList<Context> contextList = new ArrayList<Context>();
-        for ( Context context : contexts )
+        Iterator<Context> it = statement.getContexts().iterator();
+        it.next();
+        while ( it.hasNext() )
         {
-            contextList.add( context );
+            contextList.add( it.next() );
         }
-        return contextList.toArray( new Context[ contextList.size() ] );
+        return contextList.toArray( new Context[ contextList.size() ] );        
     }
 
     private void checkAllowed( Value subject, Value predicate, Value object )
@@ -86,5 +89,10 @@ public class WildcardStatement implements Statement
     private String labelify( Value value )
     {
         return value instanceof Wildcard ? "?" : value.toString();
+    }
+
+    public WildcardStatement asWildcardStatement()
+    {
+        return this;
     }
 }

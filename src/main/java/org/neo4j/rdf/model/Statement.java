@@ -31,4 +31,10 @@ public interface Statement
      * @return the contexts for this statement
      */
     Iterable<Context> getContexts();
+    
+    /**
+     * Returns this statement as a wildcard statement.
+     * @return this statement as a wildcard statement
+     */
+    WildcardStatement asWildcardStatement();
 }

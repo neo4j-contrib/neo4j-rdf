@@ -1,7 +1,6 @@
 package org.neo4j.rdf.model;
 
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -15,33 +14,30 @@ public class CompleteStatement implements Statement
     private final List<Context> contextList;
 
     public CompleteStatement( Resource subject, Uri predicate, Resource
-        objectResource, Context... contextsOrNullForNone )
+        objectResource, Context mandatoryContext, Context... optionalContexts )
     {
-        this( subject, predicate, ( Value ) objectResource,
-            contextsOrNullForNone );
+        this( subject, predicate, ( Value ) objectResource, mandatoryContext,
+            optionalContexts );
     }
 
     public CompleteStatement( Resource subject, Uri predicate, Literal
-        objectLiteral, Context... contextsOrNullForNone )
+        objectLiteral, Context mandatoryContext, Context... optionalContexts )
     {
-        this( subject, predicate, ( Value ) objectLiteral,
-            contextsOrNullForNone );
+        this( subject, predicate, ( Value ) objectLiteral, mandatoryContext,
+            optionalContexts );
     }
 
     private CompleteStatement( Resource subject, Uri predicate, Value object,
-        Context... contextsOrNullForNone )
+        Context mandatoryContext, Context... optionalContexts )
     {
         this.subject = subject;
         this.predicate = predicate;
         this.object = object;
-        if ( contextsOrNullForNone == null )
+        this.contextList = new LinkedList<Context>();
+        this.contextList.add( mandatoryContext );
+        for ( Context context : optionalContexts )
         {
-            this.contextList = Collections.emptyList();
-        }
-        else
-        {
-            this.contextList = Collections.unmodifiableList( Arrays.asList(
-                contextsOrNullForNone ) );
+            this.contextList.add( context );
         }
     }
 
