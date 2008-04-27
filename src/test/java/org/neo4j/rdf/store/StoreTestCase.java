@@ -10,9 +10,9 @@ import org.neo4j.rdf.model.Literal;
 import org.neo4j.rdf.model.Resource;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
+import org.neo4j.rdf.model.WildcardStatement;
 import org.neo4j.util.index.IndexService;
 import org.neo4j.util.index.NeoIndexService;
-import org.neo4j.rdf.model.WildcardStatement;
 
 public abstract class StoreTestCase extends NeoTestCase
 {
