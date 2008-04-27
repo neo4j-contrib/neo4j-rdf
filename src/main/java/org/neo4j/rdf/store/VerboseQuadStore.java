@@ -35,6 +35,11 @@ public class VerboseQuadStore extends RdfStoreImpl
 {
     private final MetaStructure meta;
 
+    public VerboseQuadStore( NeoService neo, IndexService indexer )
+    {
+        this( neo, indexer, null );
+    }
+    
     public VerboseQuadStore( NeoService neo, IndexService indexer,
         MetaStructure meta )
     {
