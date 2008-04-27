@@ -9,17 +9,17 @@ import org.neo4j.rdf.model.Statement;
 public interface RepresentationStrategy
 {
     /**
-     * Makes a representation of how {@code statements} would look like in
+     * Makes a representation of how {@code statement} would look like in
      * the node space.
-     * @param statements the {@link Statement}s to make a representation of.
-     * @return the abstract representation of {@code statements}.
+     * @param statement the {@link Statement} to make a representation of.
+     * @return the abstract representation of {@code statement}.
      */
-    AbstractRepresentation getAbstractRepresentation( Statement... statements );
+    AbstractRepresentation getAbstractRepresentation( Statement statement );
     
     /**
      * @return a suitable {@link RepresentationExecutor} which is capable of
      * handling the {@link AbstractRepresentation}s created in
-     * {@link #getAbstractRepresentation(Statement...)}.
+     * {@link #getAbstractRepresentation(Statement)}.
      */
     RepresentationExecutor getExecutor();
 }
