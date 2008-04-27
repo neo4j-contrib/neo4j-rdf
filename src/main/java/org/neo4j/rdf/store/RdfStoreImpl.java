@@ -176,7 +176,7 @@ public class RdfStoreImpl implements RdfStore
         {
             for ( Statement statement :
                 getStatements( ( WildcardStatement ) statementWithOptionalNulls,
-                true ) )
+                false ) )
             {
                 removeStatements( statement );
             }
