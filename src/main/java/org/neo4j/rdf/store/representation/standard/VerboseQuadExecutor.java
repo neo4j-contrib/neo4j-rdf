@@ -68,11 +68,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         {
             middleNode = createNode( abstractMiddleNode );
             createRelationship( subjectNode, middleNode, subjectToMiddle );
-            String predicate = abstractLiteralNode.properties().keySet().
-                iterator().next();
-            literalNode = createLiteralNode(
-                predicate, abstractLiteralNode.properties().get( predicate ).
-                iterator().next() );
+            literalNode = createLiteralNode( abstractLiteralNode );
             createRelationship( middleNode, literalNode, middleToLiteral );
         }
         ensureContextsAreAdded( representation, middleNode, nodeMapping );

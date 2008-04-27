@@ -1,7 +1,5 @@
 package org.neo4j.rdf.store.representation.standard;
 
-import java.util.Map;
-
 import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.RelationshipType;
 import org.neo4j.neometa.structure.MetaStructure;
@@ -34,35 +32,35 @@ public class VerboseRepresentationStrategy
     }
 
     @Override
-    protected boolean addToRepresentation(
-        AbstractRepresentation representation,
-        Map<String, AbstractNode> nodeMapping, Statement statement )
+    public AbstractRepresentation getAbstractRepresentation(
+        Statement statement )
     {
-        if ( !super.addToRepresentation( representation, nodeMapping,
-            statement ) )
+        AbstractRepresentation representation =
+            super.getAbstractRepresentation( statement );
+        if ( representation != null )
         {
-            if ( isObjectType( statement.getObject() ) )
-            {
-                addFourNodeObjectFragment(
-                    representation, nodeMapping, statement );
-            }
-            else
-            {
-                addThreeNodeLiteralFragment(
-                    representation, nodeMapping, statement );
-            }
+            return representation;
         }
-        return true;
+
+        if ( isObjectType( statement.getObject() ) )
+        {
+            representation = getFourNodeObjectFragment( statement );
+        }
+        else
+        {
+            representation = getThreeNodeLiteralFragment( statement );
+        }
+        return representation;
     }
 
-    private void addFourNodeObjectFragment(
-        AbstractRepresentation representation,
-        Map<String, AbstractNode> nodeMapping, Statement statement )
+    private AbstractRepresentation getFourNodeObjectFragment(
+        Statement statement )
     {
-        AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
-        AbstractNode objectNode = getObjectNode( nodeMapping, statement );
+        AbstractRepresentation representation = newRepresentation();
+        AbstractNode subjectNode = getSubjectNode( statement );
+        AbstractNode objectNode = getObjectNode( statement );
         String predicate = asUri( statement.getPredicate() );
-        AbstractNode predicateNode = getPredicateNode( nodeMapping, statement );
+        AbstractNode predicateNode = getPredicateNode( statement );
         AbstractNode connectorNode = new AbstractNode( null );
         AbstractRelationship subjectToConnectorRel = new AbstractRelationship(
             subjectNode, predicate, connectorNode );
@@ -78,15 +76,16 @@ public class VerboseRepresentationStrategy
         representation.addRelationship( subjectToConnectorRel );
         representation.addRelationship( connectorToObjectRel );
         representation.addRelationship( connectorToPredicate );
+        return representation;
     }
 
-    private void addThreeNodeLiteralFragment(
-        AbstractRepresentation representation,
-        Map<String, AbstractNode> nodeMapping, Statement statement )
+    private AbstractRepresentation getThreeNodeLiteralFragment(
+        Statement statement )
     {
-        AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
+        AbstractRepresentation representation = newRepresentation();
+        AbstractNode subjectNode = getSubjectNode( statement );
         String predicate = asUri( statement.getPredicate() );
-        AbstractNode predicateNode = getPredicateNode( nodeMapping, statement );
+        AbstractNode predicateNode = getPredicateNode( statement );
         AbstractNode connectorNode = new AbstractNode( null );
         AbstractRelationship subjectToConnectorRel = new AbstractRelationship(
             subjectNode, predicate, connectorNode );
@@ -98,8 +97,8 @@ public class VerboseRepresentationStrategy
         representation.addNode( connectorNode );
         representation.addRelationship( subjectToConnectorRel );
         representation.addRelationship( connectorToPredicate );
+        return representation;
     }
-
 
     /**
      * Some relationship types used in the representation.

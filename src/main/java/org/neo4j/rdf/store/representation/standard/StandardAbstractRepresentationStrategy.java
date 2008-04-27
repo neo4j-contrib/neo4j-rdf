@@ -51,45 +51,16 @@ abstract class StandardAbstractRepresentationStrategy
     }
 
     public AbstractRepresentation getAbstractRepresentation(
-        Statement... statements )
+        Statement statement )
     {
-        AbstractRepresentation representation = new AbstractRepresentation();
-        Map<String, AbstractNode> nodeMapping =
-            new HashMap<String, AbstractNode>();
-        for ( Statement statement : statements )
-        {
-            if ( !addToRepresentation( representation, nodeMapping,
-                statement ) )
-            {
-                throw new RuntimeException( "Implementation error" );
-            }
-        }
-        for ( AbstractNode node : nodeMapping.values() )
-        {
-            representation.addNode( node );
-        }
-        return representation;
-    }
-
-    /**
-     * Add this single statement to representation, return <code>true</code>
-     * if we have processed it, <code>false</code> otherwise
-     * @return <code>true</code> if this method has processed
-     * <code>statement</code>, <code>false</code> otherwise
-     */
-    protected boolean addToRepresentation(
-        AbstractRepresentation representation,
-        Map<String, AbstractNode> nodeMapping, Statement statement )
-    {
-        // TODO: fix this! (wildcards)
         String predicate =
             ( ( Uri ) statement.getPredicate() ).getUriAsString();
+        AbstractRepresentation representation = null;
         if ( predicate.equals( AbstractUriBasedExecutor.RDF_TYPE_URI ) )
         {
-            addMetaInstanceOfFragment( representation, nodeMapping, statement );
-            return true;
+            representation = getMetaInstanceOfRepresentation( statement );
         }
-        return false;
+        return representation;
     }
 
     public RepresentationExecutor getExecutor()
@@ -97,13 +68,18 @@ abstract class StandardAbstractRepresentationStrategy
         return this.executor;
     }
 
-    protected void addMetaInstanceOfFragment(
-        AbstractRepresentation representation,
-        Map<String, AbstractNode> nodeMapping, Statement statement )
+    protected AbstractRepresentation newRepresentation()
     {
-        AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
+        return new AbstractRepresentation();
+    }
+
+    protected AbstractRepresentation getMetaInstanceOfRepresentation(
+        Statement statement )
+    {
+        AbstractRepresentation representation = newRepresentation();
+        AbstractNode subjectNode = getSubjectNode( statement );
         representation.addNode( subjectNode );
-        AbstractNode classNode = getObjectNode( nodeMapping, statement );
+        AbstractNode classNode = getObjectNode( statement );
         representation.addNode( classNode );
         classNode.addExecutorInfo(
             AbstractUriBasedExecutor.META_EXECUTOR_INFO_KEY, "class" );
@@ -111,15 +87,17 @@ abstract class StandardAbstractRepresentationStrategy
             subjectNode, MetaStructureRelTypes.META_IS_INSTANCE_OF.name(),
             classNode );
         representation.addRelationship( instanceOfRelationship );
+        return representation;
     }
 
-    protected void addOneNodeWithLiteralsAsProperties(
-        AbstractRepresentation representation,
-        Map<String, AbstractNode> nodeMapping, Statement statement )
+    protected AbstractRepresentation getOneNodeWithLiteralsAsProperties(
+        Statement statement )
     {
-        AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
+        AbstractRepresentation representation = newRepresentation();
+        AbstractNode subjectNode = getSubjectNode( statement );
         representation.addNode( subjectNode );
         addPropertyWithContexts( statement, subjectNode );
+        return representation;
     }
 
     protected void addPropertyWithContexts( Statement statement,
@@ -204,16 +182,8 @@ abstract class StandardAbstractRepresentationStrategy
         return result;
     }
 
-    protected AbstractNode getOrCreateNode(
-        Map<String, AbstractNode> nodeMapping, Value value )
+    protected AbstractNode getNode( Value value )
     {
-//        AbstractNode node = nodeMapping.get( this.asString( value ) );
-//        if ( node == null )
-//        {
-//            node = new AbstractNode( value );
-//            nodeMapping.put( this.asString( value ), node );
-//        }
-//        return node;
         return new AbstractNode( value );
     }
 
@@ -240,29 +210,24 @@ abstract class StandardAbstractRepresentationStrategy
         return string;
     }
 
-    protected AbstractNode getSubjectNode(
-        Map<String, AbstractNode> nodeMapping, Statement statement )
+    protected AbstractNode getSubjectNode( Statement statement )
     {
-       return getOrCreateNode( nodeMapping, statement.getSubject() );
+       return getNode( statement.getSubject() );
     }
 
-    protected AbstractNode getObjectNode( Map<String, AbstractNode> nodeMapping,
-        Statement statement )
+    protected AbstractNode getObjectNode( Statement statement )
     {
-        return getOrCreateNode( nodeMapping, statement.getObject() );
+        return getNode( statement.getObject() );
     }
 
-    protected AbstractNode getContextNode(
-        Map<String, AbstractNode> nodeMapping, Context context )
+    protected AbstractNode getContextNode( Context context )
     {
-        return getOrCreateNode( nodeMapping, context );
+        return getNode( context );
     }
 
-    protected AbstractNode getPredicateNode(
-        Map<String, AbstractNode> nodeMapping, Statement statement )
+    protected AbstractNode getPredicateNode( Statement statement )
     {
-        AbstractNode node = getOrCreateNode( nodeMapping,
-        		statement.getPredicate() );
+        AbstractNode node = getNode( statement.getPredicate() );
         node.addExecutorInfo(
             AbstractUriBasedExecutor.META_EXECUTOR_INFO_KEY, "property" );
         return node;
@@ -287,25 +252,26 @@ abstract class StandardAbstractRepresentationStrategy
             contextKeys );
     }
 
-    protected void addTwoNodeObjectTypeFragment(
-        AbstractRepresentation representation,
-        Map<String, AbstractNode> nodeMapping, Statement statement )
+    protected AbstractRepresentation getTwoNodeObjectTypeFragment(
+        Statement statement )
     {
-        AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
+        AbstractRepresentation representation = newRepresentation();
+        AbstractNode subjectNode = getSubjectNode( statement );
         representation.addNode( subjectNode );
-        AbstractNode objectNode = getObjectNode( nodeMapping, statement );
+        AbstractNode objectNode = getObjectNode( statement );
         representation.addNode( objectNode );
         AbstractRelationship relationship = new AbstractRelationship(
             subjectNode, asUri( statement.getPredicate() ), objectNode );
         addSingleContextsToElement( statement, relationship );
         representation.addRelationship( relationship );
+        return representation;
     }
 
-    protected void addTwoNodeDataTypeFragment(
-        AbstractRepresentation representation,
-        Map<String, AbstractNode> nodeMapping, Statement statement )
+    protected AbstractRepresentation getTwoNodeDataTypeFragment(
+        Statement statement )
     {
-        AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
+        AbstractRepresentation representation = newRepresentation();
+        AbstractNode subjectNode = getSubjectNode( statement );
         representation.addNode( subjectNode );
         AbstractNode literalNode = new AbstractNode( null );
         literalNode.addProperty( UriBasedExecutor.LITERAL_VALUE_KEY,
@@ -317,5 +283,6 @@ abstract class StandardAbstractRepresentationStrategy
 
         representation.addNode( literalNode );
         representation.addRelationship( relationship );
+        return representation;
     }
 }

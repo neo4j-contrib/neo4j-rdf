@@ -1,7 +1,5 @@
 package org.neo4j.rdf.store.representation.standard;
 
-import java.util.Map;
-
 import org.neo4j.api.core.RelationshipType;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.rdf.model.Context;
@@ -31,32 +29,32 @@ public class VerboseQuadStrategy
     }
 
     @Override
-    protected boolean addToRepresentation(
-        AbstractRepresentation representation,
-        Map<String, AbstractNode> nodeMapping, Statement statement )
+    public AbstractRepresentation getAbstractRepresentation(
+        Statement statement )
     {
-        if ( !super.addToRepresentation(
-            representation, nodeMapping, statement ) )
+        AbstractRepresentation representation =
+            super.getAbstractRepresentation( statement );
+        if ( representation != null )
         {
-            if ( isObjectType( statement.getObject() ) )
-            {
-                addObjectTypeRepresentation( representation, nodeMapping,
-                    statement );
-            }
-            else
-            {
-                addLiteralRepresentation( representation, nodeMapping,
-                    statement );
-            }
+            return representation;
         }
-        return true;
+
+        if ( isObjectType( statement.getObject() ) )
+        {
+            representation = getObjectTypeRepresentation( statement );
+        }
+        else
+        {
+            representation = getLiteralRepresentation( statement );
+        }
+        return representation;
     }
 
-    protected void addLiteralRepresentation(
-        AbstractRepresentation representation,
-        Map<String, AbstractNode> nodeMapping, Statement statement )
+    protected AbstractRepresentation getLiteralRepresentation(
+        Statement statement )
     {
-        AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
+        AbstractRepresentation representation = newRepresentation();
+        AbstractNode subjectNode = getSubjectNode( statement );
         representation.addNode( subjectNode );
         subjectNode.addExecutorInfo( EXECUTOR_INFO_NODE_TYPE, TYPE_SUBJECT );
         AbstractNode middleNode = new AbstractNode( null );
@@ -70,8 +68,8 @@ public class VerboseQuadStrategy
 
         connectThreeNodes( representation, subjectNode, middleNode,
             literalNode, statement );
-        addNodeToContexts( representation, middleNode, nodeMapping,
-            statement );
+        addNodeToContexts( representation, middleNode, statement );
+        return representation;
     }
 
     protected void connectThreeNodes(
@@ -89,11 +87,11 @@ public class VerboseQuadStrategy
 
     protected void addNodeToContexts(
         AbstractRepresentation representation, AbstractNode middleNode,
-        Map<String, AbstractNode> nodeMapping, Statement statement )
+        Statement statement )
     {
         if ( !statement.getContext().isWildcard() )
         {
-            AbstractNode contextNode = getContextNode( nodeMapping,
+            AbstractNode contextNode = getContextNode(
                 ( Context ) statement.getContext() );
             AbstractRelationship middleToContext = new AbstractRelationship(
                 middleNode, RelTypes.IN_CONTEXT.name(), contextNode );
@@ -104,23 +102,24 @@ public class VerboseQuadStrategy
         }
     }
 
-    protected void addObjectTypeRepresentation(
-        AbstractRepresentation representation,
-        Map<String, AbstractNode> nodeMapping, Statement statement )
+    protected AbstractRepresentation getObjectTypeRepresentation(
+        Statement statement )
     {
-        AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
+        AbstractRepresentation representation = newRepresentation();
+        AbstractNode subjectNode = getSubjectNode( statement );
         representation.addNode( subjectNode );
         subjectNode.addExecutorInfo( EXECUTOR_INFO_NODE_TYPE, TYPE_SUBJECT );
         AbstractNode middleNode = new AbstractNode( null );
         middleNode.addExecutorInfo( EXECUTOR_INFO_NODE_TYPE, TYPE_MIDDLE );
         representation.addNode( middleNode );
-        AbstractNode objectNode = getObjectNode( nodeMapping, statement );
+        AbstractNode objectNode = getObjectNode( statement );
         objectNode.addExecutorInfo( EXECUTOR_INFO_NODE_TYPE, TYPE_OBJECT );
         representation.addNode( objectNode );
 
         connectThreeNodes( representation, subjectNode, middleNode, objectNode,
             statement );
-        addNodeToContexts( representation, middleNode, nodeMapping, statement );
+        addNodeToContexts( representation, middleNode, statement );
+        return representation;
     }
 
     public static enum RelTypes implements RelationshipType

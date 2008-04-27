@@ -13,6 +13,7 @@ import org.neo4j.api.core.RelationshipType;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.neometa.structure.MetaStructureObject;
 import org.neo4j.neometa.structure.MetaStructureThing;
+import org.neo4j.rdf.model.Literal;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.store.representation.AbstractElement;
 import org.neo4j.rdf.store.representation.AbstractNode;
@@ -378,10 +379,18 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         return someRemoved;
     }
 
-    protected Node createLiteralNode( String predicate, Object value )
+    protected Object getRealLiteralValue( Literal literal )
+    {
+        return literal.getValue();
+    }
+
+    protected Node createLiteralNode( AbstractNode abstractNode )
     {
         Node node = neo.createNode();
-        node.setProperty( predicate, value );
+        applyRepresentation( abstractNode, node );
+        String predicate = abstractNode.properties().keySet().iterator().next();
+        Object value =
+            abstractNode.properties().get( predicate ).iterator().next();
         debugCreateNode( node, "(literal)" );
         index().index( node, LITERAL_VALUE_KEY, value );
         return node;
