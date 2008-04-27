@@ -6,6 +6,10 @@ package org.neo4j.rdf.store;
  */
 public class TestRdfStore extends StoreTestCase
 {
+    public void testNothing()
+    {
+    }
+
 //    /**
 //     * Tests an {@link RdfStore} with a {@link DenseRepresentationStrategy}.
 //     * @throws Exception if there's an error in the test.

@@ -1,8 +1,11 @@
 package org.neo4j.rdf.store;
 
-
 public class TestPureQuad extends StoreTestCase
 {
+    public void testNothing()
+    {
+    }
+
 //    private static final Random RANDOM = new Random();
 //
 //    private MetaStructure newMetaStructure()
@@ -28,7 +31,7 @@ public class TestPureQuad extends StoreTestCase
 //            new PureQuadRepresentationStrategy( neo(),
 //                AbstractUriBasedExecutor.newIndex( neo() ), meta ) );
 //    }
-//    
+//
 //    private MetaStructure newMetaStructure()
 //    {
 //        MetaStructure meta = new MetaStructureImpl( neo() );

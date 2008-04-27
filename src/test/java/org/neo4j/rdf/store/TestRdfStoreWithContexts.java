@@ -3,6 +3,10 @@ package org.neo4j.rdf.store;
 
 public class TestRdfStoreWithContexts extends StoreTestCase
 {
+    public void testNothing()
+    {
+    }
+
 //    public void testWithContexts()
 //    {
 //        MetaStructure meta = new MetaStructureImpl( neo() );
