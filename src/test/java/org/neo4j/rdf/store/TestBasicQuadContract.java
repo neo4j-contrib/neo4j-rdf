@@ -215,25 +215,18 @@ public class TestBasicQuadContract extends QuadStoreAbstractTestCase
     public void testAddSPONull()
     {
         clearAllStatements();
-        try
-        {
-            store().addStatements(
-                completeStatement(
-                    TestUri.EMIL,
-                    TestUri.FOAF_KNOWS,
-                    TestUri.MATTIAS,
-                    Context.NULL ) );
-            assertResult(
-                wildcardStatement(
-                    TestUri.EMIL,
-                    TestUri.FOAF_KNOWS,
-                    TestUri.MATTIAS,
-                    WILDCARD_CONTEXT ),
-                EMIL_KNOWS_MATTIAS_NULL );                  
-        }
-        catch ( UnsupportedOperationException e )
-        {
-            // It's ok
-        }
+        store().addStatements(
+            completeStatement(
+                TestUri.EMIL,
+                TestUri.FOAF_KNOWS,
+                TestUri.MATTIAS,
+                Context.NULL ) );
+        assertResult(
+            wildcardStatement(
+                TestUri.EMIL,
+                TestUri.FOAF_KNOWS,
+                TestUri.MATTIAS,
+                WILDCARD_CONTEXT ),
+            EMIL_KNOWS_MATTIAS_NULL );                  
     }
 }
