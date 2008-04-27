@@ -288,7 +288,8 @@ public class AlwaysMiddleStore extends RdfStoreImpl
                 AbstractUriBasedExecutor.URI_PROPERTY_KEY, null );
             Value object = uri == null ? new Literal( objectNode.getProperty(
                 predicate ) ) : new Uri( uri );
-            Context[] contexts = context == null ? new Context[ 0 ] :
+            Context[] contexts = context == null ||
+                context.getUriAsString().endsWith( "null" ) ? new Context[ 0 ] :
                 new Context[] { context };
             if ( object instanceof Resource )
             {

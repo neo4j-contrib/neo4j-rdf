@@ -69,6 +69,7 @@ public class RdfStoreImpl implements RdfStore
         {
             System.out.println( "FAILING STATEMENT:" + lastStatement );
             e.printStackTrace();
+            throw e;
         }
         finally
         {
