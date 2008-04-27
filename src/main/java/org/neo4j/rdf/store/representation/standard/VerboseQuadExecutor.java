@@ -17,6 +17,9 @@ import org.neo4j.util.index.IndexService;
 
 public class VerboseQuadExecutor extends UriBasedExecutor
 {
+    public static final String LITERAL_DATATYPE_KEY = "datatype";
+    public static final String LITERAL_LANGUAGE_KEY = "language";
+
     public VerboseQuadExecutor( NeoService neo, IndexService index,
         MetaStructure meta )
     {
@@ -154,7 +157,8 @@ public class VerboseQuadExecutor extends UriBasedExecutor
                 if ( ( objectNodeToLookFor != null &&
                     anObjectNode.equals( objectNodeToLookFor ) ) ||
                     ( objectNodeToLookFor == null && containsProperties(
-                        anObjectNode, abstractObjectNode.properties() ) ) )
+                        anObjectNode, abstractObjectNode.properties(),
+                        LITERAL_DATATYPE_KEY, LITERAL_LANGUAGE_KEY ) ) )
                 {
                     middleNode = aMiddleNode;
                     objectNode = anObjectNode;
@@ -410,13 +414,26 @@ public class VerboseQuadExecutor extends UriBasedExecutor
             middleNode ).iterator().hasNext();
     }
 
+    private String guessPredicateKey( Iterable<String> keys )
+    {
+        for ( String key : keys )
+        {
+            if ( !key.equals( LITERAL_DATATYPE_KEY ) &&
+                !key.equals( LITERAL_LANGUAGE_KEY ) )
+            {
+                return key;
+            }
+        }
+        return null;
+    }
+
     private void deleteMiddleAndLiteral( Node middleNode,
         AbstractRelationship middleToLiteral, Node literalNode,
         Node subjectNode, AbstractRelationship subjectToMiddle )
     {
         disconnectMiddle( middleNode, middleToLiteral, literalNode,
             subjectNode, subjectToMiddle );
-        String predicate = literalNode.getPropertyKeys().iterator().next();
+        String predicate = guessPredicateKey( literalNode.getPropertyKeys() );
         Object value = literalNode.getProperty( predicate );
         deleteLiteralNode( literalNode, predicate, value );
     }

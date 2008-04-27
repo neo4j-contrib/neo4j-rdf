@@ -116,13 +116,11 @@ public class VerboseQuadStore extends RdfStoreImpl
             throw new RuntimeException( "We can't handle ?S ?P ?O ?G" );
         }
 
-        System.out.println( "handle WWW" );
         Context context = ( Context ) statement.getContext();
         Node contextNode = getRepresentationStrategy().getExecutor().
             lookupNode( new AbstractNode( context ) );
         if ( contextNode == null )
         {
-            System.out.println( "no context node " + context );
             return new ArrayList<CompleteStatement>();
         }
 
@@ -131,12 +129,9 @@ public class VerboseQuadStore extends RdfStoreImpl
         for ( Relationship contextRelationship : contextNode.getRelationships(
             VerboseQuadStrategy.RelTypes.IN_CONTEXT, Direction.INCOMING ) )
         {
-            System.out.println( "context rel " + contextRelationship );
             Node middleNode = contextRelationship.getStartNode();
             Relationship subjectRelationship = findSubjectRelationship(
                 middleNode );
-            System.out.println( "middle " + middleNode );
-            System.out.println( "subject rel " + subjectRelationship );
             if ( subjectRelationship == null )
             {
                 throw new RuntimeException( "Error, no subject for " +
@@ -154,15 +149,11 @@ public class VerboseQuadStore extends RdfStoreImpl
             {
                 statementList.add( new CompleteStatement(
                     subject, predicate, ( Literal ) object, context ) );
-                System.out.println( "added one" + statementList.get(
-                    statementList.size() - 1 ) );
             }
             else
             {
                 statementList.add( new CompleteStatement(
                     subject, predicate, ( Uri ) object, context ) );
-                System.out.println( "added one" + statementList.get(
-                    statementList.size() - 1 ) );
             }
         }
         return statementList;
@@ -277,12 +268,6 @@ public class VerboseQuadStore extends RdfStoreImpl
 
                 addIfInContext( statement, statementList, middleNode,
                     thePredicate.getUriAsString() );
-//                Node subjectNode = middleNode.getSingleRelationship(
-//                    rel.getType(), Direction.INCOMING ).getStartNode();
-//                Validatable validatable = newValidatable( subjectNode );
-//                Uri subject = validatable.getUri();
-//                statements.add( new CompleteStatement( subject, thePredicate,
-//                    new Literal( value ) ) );
             }
         }
     }
@@ -397,8 +382,20 @@ public class VerboseQuadStore extends RdfStoreImpl
     {
         String uri = ( String ) objectNode.getProperty(
             AbstractUriBasedExecutor.URI_PROPERTY_KEY, null );
-        return uri == null ? new Literal( objectNode.getProperty(
-            predicate ) ) : new Uri( uri );
+        if ( uri != null )
+        {
+            return new Uri( uri );
+        }
+        else
+        {
+            Object value = objectNode.getProperty( predicate );
+            String datatype = ( String ) objectNode.getProperty(
+                VerboseQuadExecutor.LITERAL_DATATYPE_KEY, null );
+            String language = ( String ) objectNode.getProperty(
+                VerboseQuadExecutor.LITERAL_LANGUAGE_KEY, null );
+            return new Literal( value, datatype == null ? null :
+                new Uri( datatype ), language );
+        }
     }
 
     private Iterable<CompleteStatement> handleWildcardWildcardObject(

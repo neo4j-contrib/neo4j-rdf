@@ -24,7 +24,7 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
         "predicate" );
     public static final Wildcard WILDCARD_OBJECT = new Wildcard( "object" );
     public static final Wildcard WILDCARD_CONTEXT = new Wildcard( "context" );
-    
+
 
     private RdfStore store = null;
 
@@ -164,14 +164,21 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
     }
 
     static CompleteStatement completeStatement( TestUri subject,
-        TestUri predicate, Object objectLiteral, TestUri context )
+        TestUri predicate, Literal objectLiteral, TestUri context )
     {
-        assertFalse( objectLiteral instanceof TestUri );
         return new CompleteStatement(
             new Uri( subject.uriAsString() ),
             new Uri( predicate.uriAsString() ),
-            new Literal( objectLiteral ),
+            objectLiteral,
             new Context( context.uriAsString() ) );
+    }
+
+    static CompleteStatement completeStatement( TestUri subject,
+        TestUri predicate, Object objectLiteral, TestUri context )
+    {
+        assertFalse( objectLiteral instanceof TestUri );
+        return completeStatement( subject, predicate,
+            new Literal( objectLiteral ), context );
     }
 
     static WildcardStatement wildcardStatement( TestUri subject, TestUri

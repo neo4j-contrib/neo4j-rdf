@@ -2,6 +2,8 @@ package org.neo4j.rdf.store;
 
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
+import org.neo4j.rdf.model.Literal;
+import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Wildcard;
 
 public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
@@ -24,8 +26,16 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
             completeStatement(
                 TestUri.MATTIAS,
                 TestUri.FOAF_NICK,
-                "Mattias",
+                new Literal( "Mattias",
+            new Uri( "http://www.w3.org/2001/XMLSchema#string" ), "sv" ),
                 TestUri.MATTIAS_PUBLIC_GRAPH );
+        CompleteStatement mattiasNamePrivate =
+            completeStatement(
+                TestUri.MATTIAS,
+                TestUri.FOAF_NICK,
+                new Literal( "Mattias",
+            new Uri( "http://www.w3.org/2001/XMLSchema#string" ), "en" ),
+                TestUri.MATTIAS_PRIVATE_GRAPH );
         CompleteStatement mattiasKnowsEmilPrivate =
             completeStatement(
                 TestUri.MATTIAS,
@@ -36,7 +46,8 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
         addStatements(
             mattiasKnowsEmilPublic,
             mattiasKnowsEmilPrivate,
-            mattiasNamePublic );
+            mattiasNamePublic,
+            mattiasNamePrivate );
 
         assertResult(
             wildcardStatement(

@@ -29,6 +29,7 @@ public class VerboseQuadStrategy
     extends StandardAbstractRepresentationStrategy
 {
     public static final String EXECUTOR_INFO_NODE_TYPE = "nodetype";
+    public static final String EXECUTOR_INFO_PREDICATE = "predicate";
     public static final String TYPE_SUBJECT = "subject";
     public static final String TYPE_MIDDLE = "middle";
     public static final String TYPE_LITERAL = "literal";
@@ -83,8 +84,20 @@ public class VerboseQuadStrategy
         representation.addNode( middleNode );
         AbstractNode literalNode = new AbstractNode( null );
         literalNode.addExecutorInfo( EXECUTOR_INFO_NODE_TYPE, TYPE_LITERAL );
-        literalNode.addProperty( asUri( statement.getPredicate() ),
-            ( ( Literal ) statement.getObject() ).getValue() );
+        Literal literal = ( Literal ) statement.getObject();
+        String predicate = asUri( statement.getPredicate() );
+        literalNode.addProperty( predicate, literal.getValue() );
+        literalNode.addExecutorInfo( EXECUTOR_INFO_PREDICATE, predicate );
+        if ( literal.getDatatype() != null )
+        {
+            literalNode.addProperty( VerboseQuadExecutor.LITERAL_DATATYPE_KEY,
+                literal.getDatatype().getUriAsString() );
+        }
+        if ( literal.getLanguage() != null )
+        {
+            literalNode.addProperty( VerboseQuadExecutor.LITERAL_LANGUAGE_KEY,
+                literal.getLanguage() );
+        }
         representation.addNode( literalNode );
 
         connectThreeNodes( representation, subjectNode, middleNode,

@@ -2,7 +2,9 @@ package org.neo4j.rdf.store.representation.standard;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.neo4j.api.core.Direction;
 import org.neo4j.api.core.NeoService;
@@ -254,12 +256,23 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     }
 
     protected boolean containsProperties( PropertyContainer container,
-        Map<String, Collection<Object>> containingProperties )
+        Map<String, Collection<Object>> containingProperties,
+        String... excludeThese )
     {
+        Set<String> excludeSet = new HashSet<String>();
+        for ( String e : excludeThese )
+        {
+            excludeSet.add( e );
+        }
+
         for ( Map.Entry<String, Collection<Object>> entry :
             containingProperties.entrySet() )
         {
             String key = entry.getKey();
+            if ( excludeSet.contains( key ) )
+            {
+                continue;
+            }
             Collection<Object> values = entry.getValue();
             Collection<Object> neoValues =
                 neoUtil().getPropertyValues( container, key );
@@ -388,7 +401,8 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     {
         Node node = neo.createNode();
         applyRepresentation( abstractNode, node );
-        String predicate = abstractNode.properties().keySet().iterator().next();
+        String predicate = ( String ) abstractNode.getExecutorInfo(
+            VerboseQuadStrategy.EXECUTOR_INFO_PREDICATE );
         Object value =
             abstractNode.properties().get( predicate ).iterator().next();
         debugCreateNode( node, "(literal)" );
