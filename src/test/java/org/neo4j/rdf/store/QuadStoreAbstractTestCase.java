@@ -11,6 +11,7 @@ import org.neo4j.rdf.model.Literal;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Value;
+import org.neo4j.rdf.model.Wildcard;
 import org.neo4j.rdf.model.WildcardStatement;
 import org.neo4j.util.index.IndexService;
 import org.neo4j.util.index.NeoIndexService;
@@ -18,6 +19,13 @@ import org.neo4j.util.index.NeoIndexService;
 public abstract class QuadStoreAbstractTestCase extends NeoTestCase
 {
     public static final String BASE_URI = "http://uri.neo4j.org/";
+    public static final Wildcard WILDCARD_SUBJECT = new Wildcard( "subject" );
+    public static final Wildcard WILDCARD_PREDICATE= new Wildcard(
+        "predicate" );
+    public static final Wildcard WILDCARD_OBJECT = new Wildcard( "object" );
+    public static final Wildcard WILDCARD_CONTEXT = new Wildcard( "context" );
+    
+
     private RdfStore store = null;
 
     @Override
@@ -102,8 +110,8 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
                     break;
                 }
             }
-            assertTrue( "No expected result for " + resultStatement,
-                foundEquivalentStatement != null );
+            assertTrue( "Result found in store, but in expected list: " +
+                resultStatement, foundEquivalentStatement != null );
             expectedResultCollection.remove( foundEquivalentStatement );
         }
         assertTrue( expectedResultCollection.isEmpty() );
@@ -191,6 +199,7 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
         EMIL( "person/emil" ),
         MATTIAS( "person/mattias" ),
         FOAF_KNOWS( "foaf:knows" ),
+        FOAF_NICK( "foaf:nick" ),
         EMIL_PUBLIC_GRAPH( "context/emil-public" ),
         EMIL_PRIVATE_GRAPH( "context/emil-private" ),
         MATTIAS_PUBLIC_GRAPH( "context/mattias-public" ),

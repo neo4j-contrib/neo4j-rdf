@@ -112,7 +112,23 @@ public class Literal implements Value
     {
         return false;
     }
+    
+    @Override
+    public int hashCode()
+    {
+        return getValue().hashCode(); 
+    }
 
+    @Override
+    public boolean equals( Object o )
+    {
+        if ( o instanceof Literal )
+        {
+            return getValue().equals( ( ( Literal ) o ).getValue() );
+        }
+        return false;
+    }
+    
    @Override
     public String toString()
     {

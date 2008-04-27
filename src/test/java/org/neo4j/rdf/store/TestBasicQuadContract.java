@@ -2,16 +2,9 @@ package org.neo4j.rdf.store;
 
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
-import org.neo4j.rdf.model.Wildcard;
 
 public class TestBasicQuadContract extends QuadStoreAbstractTestCase
 {
-    private static final Wildcard WILDCARD_SUBJECT = new Wildcard( "subject" );
-    private static final Wildcard WILDCARD_PREDICATE= new Wildcard(
-        "predicate" );
-    private static final Wildcard WILDCARD_OBJECT = new Wildcard( "object" );
-    private static final Wildcard WILDCARD_CONTEXT = new Wildcard( "context" );
-    
     private static final CompleteStatement EMIL_KNOWS_MATTIAS_PUBLIC =
         completeStatement(
             TestUri.EMIL,
