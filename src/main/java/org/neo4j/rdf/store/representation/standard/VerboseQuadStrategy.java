@@ -10,6 +10,21 @@ import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractRepresentation;
 import org.neo4j.rdf.store.representation.RepresentationExecutor;
 
+/**
+ *
+ * Each statement:
+ * Subject to a middle node, to an object node (or literal node)
+ * The middle node has relationships to which contexts that statement is in.
+ *
+ *    (S) ---[P]--> ( ) ---[P]--> (O)
+ *                 /  \
+ *                /    \
+ *              [C]     [C]
+ *              /        \
+ *             v          v
+ *           (C1)         (C2)
+ *
+ */
 public class VerboseQuadStrategy
     extends StandardAbstractRepresentationStrategy
 {
