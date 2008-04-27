@@ -51,17 +51,13 @@ public class RdfStoreImpl implements RdfStore
 
     public void addStatements( CompleteStatement... statements )
     {
-        for ( Statement s : statements )
-        {
-            System.out.println( s.toString() );
-        }
-
         Transaction tx = neo.beginTx();
         Statement lastStatement = null;
         try
         {
             for ( Statement statement : statements )
             {
+                System.out.println( statement.toString() );
                 lastStatement = statement;
                 AbstractRepresentation fragment = representationStrategy
                     .getAbstractRepresentation( statement );

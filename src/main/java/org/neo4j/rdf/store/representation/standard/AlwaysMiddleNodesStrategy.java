@@ -1,5 +1,7 @@
 package org.neo4j.rdf.store.representation.standard;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.neo4j.api.core.RelationshipType;
@@ -92,7 +94,7 @@ public class AlwaysMiddleNodesStrategy
         Map<String, AbstractNode> nodeMapping, Statement statement )
     {
         // Connect to contexts (if any)
-        for ( Context context : statement.getContexts() )
+        for ( Context context : contextsAsList( statement ) )
         {
             AbstractNode contextNode = getContextNode( nodeMapping, context );
             AbstractRelationship middleToContext = new AbstractRelationship(
@@ -102,6 +104,20 @@ public class AlwaysMiddleNodesStrategy
                 TYPE_CONTEXT );
             representation.addNode( contextNode );
         }
+    }
+
+    private List<Context> contextsAsList( Statement statement )
+    {
+        ArrayList<Context> contexts = new ArrayList<Context>();
+        for ( Context c : statement.getContexts() )
+        {
+            contexts.add( c );
+        }
+        if ( contexts.isEmpty() )
+        {
+            contexts.add( null );
+        }
+        return contexts;
     }
 
     protected void addObjectTypeRepresentation(
