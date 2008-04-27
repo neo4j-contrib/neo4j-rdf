@@ -56,6 +56,16 @@ public abstract class NeoTestCase extends TestCase
 
     protected void deleteEntireNodeSpace()
     {
+//        tx.success();
+//        tx.finish();
+//        try
+//        {
+//            Thread.sleep( 500 );
+//        }
+//        catch ( InterruptedException e )
+//        {
+//        }
+//        tx = neo.beginTx();
         for ( Relationship rel : neo().getReferenceNode().getRelationships() )
         {
             Node node = rel.getOtherNode( neo().getReferenceNode() );
@@ -73,7 +83,7 @@ public abstract class NeoTestCase extends TestCase
             assertTrue( collection.contains( item ) );
         }
     }
-    
+
     protected <T> Collection<T> asCollection( Iterable<T> iterable )
     {
         List<T> list = new ArrayList<T>();
@@ -97,7 +107,7 @@ public abstract class NeoTestCase extends TestCase
         }
         return buffer.toString();
     }
-    
+
     protected <T> int countIterable( Iterable<T> iterable )
     {
         int counter = 0;

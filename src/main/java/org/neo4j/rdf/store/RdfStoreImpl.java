@@ -51,16 +51,28 @@ public class RdfStoreImpl implements RdfStore
 
     public void addStatements( CompleteStatement... statements )
     {
+        for ( Statement s : statements )
+        {
+            System.out.println( s.toString() );
+        }
+
         Transaction tx = neo.beginTx();
+        Statement lastStatement = null;
         try
         {
             for ( Statement statement : statements )
             {
+                lastStatement = statement;
                 AbstractRepresentation fragment = representationStrategy
                     .getAbstractRepresentation( statement );
                 getExecutor().addToNodeSpace( fragment );
             }
             tx.success();
+        }
+        catch ( RuntimeException e )
+        {
+            System.out.println( "FAILING STATEMENT:" + lastStatement );
+            e.printStackTrace();
         }
         finally
         {
@@ -177,6 +189,7 @@ public class RdfStoreImpl implements RdfStore
 
     private void removeStatementsSimple( Statement statement )
     {
+        System.out.println( "removeStmt:" + statement );
         Transaction tx = neo.beginTx();
         try
         {

@@ -102,7 +102,9 @@ abstract class StandardAbstractRepresentationStrategy
         Map<String, AbstractNode> nodeMapping, Statement statement )
     {
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
+        representation.addNode( subjectNode );
         AbstractNode classNode = getObjectNode( nodeMapping, statement );
+        representation.addNode( classNode );
         classNode.addExecutorInfo(
             AbstractUriBasedExecutor.META_EXECUTOR_INFO_KEY, "class" );
         AbstractRelationship instanceOfRelationship = new AbstractRelationship(
@@ -116,6 +118,7 @@ abstract class StandardAbstractRepresentationStrategy
         Map<String, AbstractNode> nodeMapping, Statement statement )
     {
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
+        representation.addNode( subjectNode );
         addPropertyWithContexts( statement, subjectNode );
     }
 
@@ -204,13 +207,14 @@ abstract class StandardAbstractRepresentationStrategy
     protected AbstractNode getOrCreateNode(
         Map<String, AbstractNode> nodeMapping, Value value )
     {
-        AbstractNode node = nodeMapping.get( this.asString( value ) );
-        if ( node == null )
-        {
-            node = new AbstractNode( value );
-            nodeMapping.put( this.asString( value ), node );
-        }
-        return node;
+//        AbstractNode node = nodeMapping.get( this.asString( value ) );
+//        if ( node == null )
+//        {
+//            node = new AbstractNode( value );
+//            nodeMapping.put( this.asString( value ), node );
+//        }
+//        return node;
+        return new AbstractNode( value );
     }
 
     protected String asUri( Value value )
@@ -288,7 +292,9 @@ abstract class StandardAbstractRepresentationStrategy
         Map<String, AbstractNode> nodeMapping, Statement statement )
     {
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
+        representation.addNode( subjectNode );
         AbstractNode objectNode = getObjectNode( nodeMapping, statement );
+        representation.addNode( objectNode );
         AbstractRelationship relationship = new AbstractRelationship(
             subjectNode, asUri( statement.getPredicate() ), objectNode );
         addSingleContextsToElement( statement, relationship );
@@ -300,6 +306,7 @@ abstract class StandardAbstractRepresentationStrategy
         Map<String, AbstractNode> nodeMapping, Statement statement )
     {
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
+        representation.addNode( subjectNode );
         AbstractNode literalNode = new AbstractNode( null );
         literalNode.addProperty( UriBasedExecutor.LITERAL_VALUE_KEY,
             ( ( Literal ) statement.getObject() ).getValue() );

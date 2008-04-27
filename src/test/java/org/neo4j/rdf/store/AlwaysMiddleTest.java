@@ -1,17 +1,12 @@
 package org.neo4j.rdf.store;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Literal;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
-import org.neo4j.rdf.model.Wildcard;
-import org.neo4j.rdf.model.WildcardStatement;
 import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
 
 public class AlwaysMiddleTest extends StoreTestCase
@@ -51,60 +46,60 @@ public class AlwaysMiddleTest extends StoreTestCase
             emilNickEmpaC2,
             emilNickEmilC2
             );
-
-        debug( "S P ?O" );
-        Iterable<Statement> nicknames = store.getStatements(
-            new WildcardStatement( emil, NICKNAME,
-                new Wildcard( "nickname" ) ), true );
-        Set<String> emilsNicknames = new HashSet<String>(
-            Arrays.asList( nickEmil, nickEmpa ) );
-        for ( Statement statement : nicknames )
-        {
-            debug( statement.toString() );
-            assertTrue( emilsNicknames.remove( ( ( Literal )
-                statement.getObject() ).getValue() ) );
-        }
-        assertTrue( emilsNicknames.isEmpty() );
-
-        debug( "S ?P ?O" );
-        for ( Statement statement : store.getStatements( new WildcardStatement(
-            emil, new Wildcard( "predicate" ), new Wildcard( "value" ) ),
-                true ) )
-        {
-            debug( statement.toString() );
-        }
-
-        debug( "?S ?P L" );
-        for ( Statement statement : store.getStatements( new WildcardStatement(
-            new Wildcard( "subject" ), new Wildcard( "predicate" ),
-            new Literal( nickEmil ) ), true ) )
-        {
-            debug( statement.toString() );
-        }
-
-        debug( "?S ?P O" );
-        for ( Statement statement : store.getStatements( new WildcardStatement(
-            new Wildcard( "subject" ), new Wildcard( "predicate" ),
-            johan ), true ) )
-        {
-            debug( statement.toString() );
-        }
-
-        debug( "?S P L" );
-        for ( Statement statement : store.getStatements( new WildcardStatement(
-            new Wildcard( "subject" ), NICKNAME,
-            new Literal( nickEmil ) ), true ) )
-        {
-            debug( statement.toString() );
-        }
-
-        debug( "?S P O" );
-        for ( Statement statement : store.getStatements( new WildcardStatement(
-            new Wildcard( "subject" ), KNOWS, johan, new Context( "kdfjkdfj" ) ),
-            true ) )
-        {
-            debug( statement.toString() );
-        }
+//
+//        debug( "S P ?O" );
+//        Iterable<Statement> nicknames = store.getStatements(
+//            new WildcardStatement( emil, NICKNAME,
+//                new Wildcard( "nickname" ) ), true );
+//        Set<String> emilsNicknames = new HashSet<String>(
+//            Arrays.asList( nickEmil, nickEmpa ) );
+//        for ( Statement statement : nicknames )
+//        {
+//            debug( statement.toString() );
+//            assertTrue( emilsNicknames.remove( ( ( Literal )
+//                statement.getObject() ).getValue() ) );
+//        }
+//        assertTrue( emilsNicknames.isEmpty() );
+//
+//        debug( "S ?P ?O" );
+//        for ( Statement statement : store.getStatements( new WildcardStatement(
+//            emil, new Wildcard( "predicate" ), new Wildcard( "value" ) ),
+//                true ) )
+//        {
+//            debug( statement.toString() );
+//        }
+//
+//        debug( "?S ?P L" );
+//        for ( Statement statement : store.getStatements( new WildcardStatement(
+//            new Wildcard( "subject" ), new Wildcard( "predicate" ),
+//            new Literal( nickEmil ) ), true ) )
+//        {
+//            debug( statement.toString() );
+//        }
+//
+//        debug( "?S ?P O" );
+//        for ( Statement statement : store.getStatements( new WildcardStatement(
+//            new Wildcard( "subject" ), new Wildcard( "predicate" ),
+//            johan ), true ) )
+//        {
+//            debug( statement.toString() );
+//        }
+//
+//        debug( "?S P L" );
+//        for ( Statement statement : store.getStatements( new WildcardStatement(
+//            new Wildcard( "subject" ), NICKNAME,
+//            new Literal( nickEmil ) ), true ) )
+//        {
+//            debug( statement.toString() );
+//        }
+//
+//        debug( "?S P O" );
+//        for ( Statement statement : store.getStatements( new WildcardStatement(
+//            new Wildcard( "subject" ), KNOWS, johan, new Context( "kdfjkdfj" ) ),
+//            true ) )
+//        {
+//            debug( statement.toString() );
+//        }
 
         removeStatements( store, statements, 1 );
         deleteEntireNodeSpace();

@@ -59,9 +59,9 @@ public class AlwaysMiddleStore extends RdfStoreImpl
         Transaction tx = neo().beginTx();
         try
         {
-            if ( !includeInferredStatements )
+            if ( includeInferredStatements )
             {
-                throw new UnsupportedOperationException( "We currently only " +
+                throw new UnsupportedOperationException( "We currently not " +
                     "support getStatements() with reasoning enabled" );
             }
 

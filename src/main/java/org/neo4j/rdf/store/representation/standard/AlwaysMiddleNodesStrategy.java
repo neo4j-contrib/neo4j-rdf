@@ -58,6 +58,7 @@ public class AlwaysMiddleNodesStrategy
         Map<String, AbstractNode> nodeMapping, Statement statement )
     {
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
+        representation.addNode( subjectNode );
         subjectNode.addExecutorInfo( EXECUTOR_INFO_NODE_TYPE, TYPE_SUBJECT );
         AbstractNode middleNode = new AbstractNode( null );
         middleNode.addExecutorInfo( EXECUTOR_INFO_NODE_TYPE, TYPE_MIDDLE );
@@ -109,12 +110,14 @@ public class AlwaysMiddleNodesStrategy
         Map<String, AbstractNode> nodeMapping, Statement statement )
     {
         AbstractNode subjectNode = getSubjectNode( nodeMapping, statement );
+        representation.addNode( subjectNode );
         subjectNode.addExecutorInfo( EXECUTOR_INFO_NODE_TYPE, TYPE_SUBJECT );
         AbstractNode middleNode = new AbstractNode( null );
         middleNode.addExecutorInfo( EXECUTOR_INFO_NODE_TYPE, TYPE_MIDDLE );
         representation.addNode( middleNode );
         AbstractNode objectNode = getObjectNode( nodeMapping, statement );
         objectNode.addExecutorInfo( EXECUTOR_INFO_NODE_TYPE, TYPE_OBJECT );
+        representation.addNode( objectNode );
 
         connectThreeNodes( representation, subjectNode, middleNode, objectNode,
             statement );
