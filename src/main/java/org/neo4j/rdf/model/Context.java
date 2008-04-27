@@ -7,6 +7,8 @@ package org.neo4j.rdf.model;
  */
 public class Context extends Uri
 {
+    public static final Context NULL = new Context(
+        "http://uri.neo4j.org/the-default-graph" );
     public Context( String contextUri )
     {
         super( contextUri );

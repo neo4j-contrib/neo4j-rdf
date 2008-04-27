@@ -1,43 +1,48 @@
 package org.neo4j.rdf.model;
 
-import java.util.LinkedList;
-import java.util.List;
-
 /**
- * A complete statement, i.e. a statement without any wildcards.
+ * A complete statement, i.e. a statement which has a non-null subject,
+ * predicate, object and a context. It is guaranteed that all values are
+ * non-null or wildcards.
  */
 public class CompleteStatement implements Statement
 {
     private final Resource subject;
     private final Uri predicate;
     private final Value object;
-    private final List<Context> contextList;
+    private final Context context;
 
     public CompleteStatement( Resource subject, Uri predicate, Resource
-        objectResource, Context mandatoryContext, Context... optionalContexts )
+        objectResource, Context context )
     {
-        this( subject, predicate, ( Value ) objectResource, mandatoryContext,
-            optionalContexts );
+        this( subject, predicate, ( Value ) objectResource, context );
     }
 
     public CompleteStatement( Resource subject, Uri predicate, Literal
-        objectLiteral, Context mandatoryContext, Context... optionalContexts )
+        objectLiteral, Context context )
     {
-        this( subject, predicate, ( Value ) objectLiteral, mandatoryContext,
-            optionalContexts );
+        this( subject, predicate, ( Value ) objectLiteral, context );
     }
 
     private CompleteStatement( Resource subject, Uri predicate, Value object,
-        Context mandatoryContext, Context... optionalContexts )
+        Context context )
     {
+        // s, p, o can't be null, context can be null
+        assertNotNull( subject, predicate, object, context );
         this.subject = subject;
         this.predicate = predicate;
         this.object = object;
-        this.contextList = new LinkedList<Context>();
-        this.contextList.add( mandatoryContext );
-        for ( Context context : optionalContexts )
+        this.context = context;
+    }
+    
+    private void assertNotNull( Object... args )
+    {
+        for ( Object arg : args )
         {
-            this.contextList.add( context );
+            if ( arg == null )
+            {
+                throw new IllegalArgumentException( "Null argument not valid" );
+            }
         }
     }
 
@@ -60,13 +65,20 @@ public class CompleteStatement implements Statement
         return this.object;
     }
 
-    public Iterable<Context> getContexts()
+    /**
+     * The context of this statement, guaranteed to not be <code>null</code>.
+     * It will either return {@link Context#NULL} for the special "default
+     * graph" or another {@link Context} instance for a specific named graph.
+     * It will never return a {@link Wildcard}.
+     * @return the context for this statement
+     */    
+    public Context getContext()
     {
-        return this.contextList;
+        return this.context;
     }
 
     /**
-     * Convert this statement to a wildcard statement.
+     * Converts this statement to a wildcard statement.
      * @return this statement as a wildcard statement
      */
     public WildcardStatement asWildcardStatement()
@@ -77,21 +89,11 @@ public class CompleteStatement implements Statement
     @Override
     public String toString()
     {
-        StringBuffer contexts = new StringBuffer();
-        for ( Context context : getContexts() )
-        {
-            if ( contexts.length() > 0 )
-            {
-                contexts.append( "," );
-            }
-            contexts.append( context == null ? "null" :
-                context.getUriAsString() );
-        }
         return "s,p,o=[" +
             labelify( getSubject() ) + ", " +
             labelify( getPredicate() ) + ", " +
             labelify( getObject() ) + "] (" +
-            contexts.toString() + ")";
+            labelify( getContext() ) + ")";
     }
 
     private String labelify( Value value )

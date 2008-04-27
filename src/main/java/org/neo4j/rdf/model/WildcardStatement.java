@@ -1,46 +1,33 @@
 package org.neo4j.rdf.model;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 public class WildcardStatement implements Statement
 {
-    private final Value subject, predicate, object;
-    private final List<Context> contextList;
+    private final Value subject, predicate, object, context;
     
     public WildcardStatement( Value subject, Value predicate,
-        Value object, Context... optionalContexts )
+        Value object, Value context )
     {
-        checkAllowed( subject, predicate, object );
+        assertNotNull( subject, predicate, object, context );
         this.subject = subject;
         this.predicate = predicate;
         this.object = object;
-        this.contextList = Arrays.asList( optionalContexts );
+        this.context = context;
     }
 
     public WildcardStatement( CompleteStatement completeStatement )
     {
         this( completeStatement.getSubject(), completeStatement.getPredicate(),
-            completeStatement.getObject(),
-                iterableToArray( completeStatement ) );
+            completeStatement.getObject(), completeStatement.getContext() );
     }
     
-    private static Context[] iterableToArray( CompleteStatement statement )
+    private void assertNotNull( Object... args )
     {
-        ArrayList<Context> contextList = new ArrayList<Context>();
-        for ( Context context : statement.getContexts() )
+        for ( Object arg : args )
         {
-            contextList.add( context );
-        }
-        return contextList.toArray( new Context[ contextList.size() ] );        
-    }
-
-    private void checkAllowed( Value subject, Value predicate, Value object )
-    {
-        if ( subject == null || predicate == null || object == null )
-        {
-            throw new IllegalArgumentException( "Null params not allowed" );
+            if ( arg == null )
+            {
+                throw new IllegalArgumentException( "Null argument not valid" );
+            }
         }
     }
 
@@ -59,9 +46,9 @@ public class WildcardStatement implements Statement
         return this.object;
     }
     
-    public Iterable<Context> getContexts()
+    public Value getContext()
     {
-        return this.contextList;
+        return this.context;
     }
 
     @Override
@@ -70,7 +57,8 @@ public class WildcardStatement implements Statement
         return "s,p,o=[" +
             labelify( getSubject() ) + ", " +
             labelify( getPredicate() ) + ", " +
-            labelify( getObject() ) + "]";
+            labelify( getObject() ) + "] (" +
+            labelify( getContext() ) + ")";
     }
 
     private String labelify( Value value )

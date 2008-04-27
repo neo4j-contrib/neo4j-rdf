@@ -1,10 +1,15 @@
 package org.neo4j.rdf.model;
 
 /**
- * An RDF statement (subject, predicate, object) with optional contexts.
- * Subject is a {@link Resource} or a {@link Wildcard}. Predicate is a
- * {@link Uri} or a {@link Wildcard}. Object is a {@link Resource} (so-called
- * "object property"), a {@link Literal} or a {@link Wildcard}.
+ * An RDF quad statement (subject, predicate, object, context). Subject is a
+ * {@link Resource} or a {@link Wildcard}. Predicate is a {@link Uri} or a
+ * {@link Wildcard}. Object is a {@link Resource} (so-called "object property"),
+ * a {@link Literal} (so-called "data property") or a {@link Wildcard}. Context
+ * is a {@link Context} (including the special context {@link Context#NULL}
+ * for the "default graph") or a {@link Wildcard}.
+ * <p>
+ * Please note that no method in this interface is allowed to return
+ * <code>null</code>. 
  */
 public interface Statement
 {
@@ -27,10 +32,18 @@ public interface Statement
      */
     Value getObject();    
     /**
-     * All the contexts for this statement, or an empty list for none.
-     * @return the contexts for this statement
-     */
-    Iterable<Context> getContexts();
+     * The single context (aka named graph) for this quad statement. Valid
+     * values are:
+     * <ol>
+     * <li>a {@link Context} for a specific named graph
+     * <li>{@link Context#NULL} for the special "null context" (aka the "default
+     * graph")
+     * <li>a {@link Wildcard} for any context
+     * </ol>
+     * Please not that this method must NOT return <code>null</code>.
+     * @return the context for this statement
+     */    
+    Value getContext();
     
     /**
      * Returns this statement as a wildcard statement.
