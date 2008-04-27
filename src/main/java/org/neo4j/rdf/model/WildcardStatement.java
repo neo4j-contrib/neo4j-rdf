@@ -1,50 +1,37 @@
 package org.neo4j.rdf.model;
 
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.Arrays;
 import java.util.List;
 
 public class WildcardStatement implements Statement
 {
     private final Value subject, predicate, object;
     private final List<Context> contextList;
-
+    
     public WildcardStatement( Value subject, Value predicate,
-        Value object, Context mandatoryContext, Context... optionalContexts )
+        Value object, Context... optionalContexts )
     {
         checkAllowed( subject, predicate, object );
         this.subject = subject;
         this.predicate = predicate;
         this.object = object;
-        this.contextList = new LinkedList<Context>();
-        this.contextList.add( mandatoryContext );
-        for ( Context context : optionalContexts )
-        {
-            this.contextList.add( context );
-        }
+        this.contextList = Arrays.asList( optionalContexts );
     }
 
     public WildcardStatement( CompleteStatement completeStatement )
     {
         this( completeStatement.getSubject(), completeStatement.getPredicate(),
-            completeStatement.getObject(), firstContext( completeStatement ),
-            restOfContexts( completeStatement ) );
+            completeStatement.getObject(),
+                iterableToArray( completeStatement ) );
     }
     
-    private static Context firstContext( CompleteStatement statement )
-    {
-        return statement.getContexts().iterator().next();
-    }
-    
-    private static Context[] restOfContexts( CompleteStatement statement )
+    private static Context[] iterableToArray( CompleteStatement statement )
     {
         ArrayList<Context> contextList = new ArrayList<Context>();
-        Iterator<Context> it = statement.getContexts().iterator();
-        it.next();
-        while ( it.hasNext() )
+        for ( Context context : statement.getContexts() )
         {
-            contextList.add( it.next() );
+            contextList.add( context );
         }
         return contextList.toArray( new Context[ contextList.size() ] );        
     }
@@ -71,7 +58,7 @@ public class WildcardStatement implements Statement
     {
         return this.object;
     }
-
+    
     public Iterable<Context> getContexts()
     {
         return this.contextList;
