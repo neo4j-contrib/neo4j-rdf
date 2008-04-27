@@ -20,6 +20,12 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
                 TestUri.FOAF_KNOWS,
                 TestUri.EMIL,
                 TestUri.MATTIAS_PUBLIC_GRAPH );
+        CompleteStatement mattiasNamePublic =
+            completeStatement(
+                TestUri.MATTIAS,
+                TestUri.FOAF_NICK,
+                "Mattias",
+                TestUri.MATTIAS_PUBLIC_GRAPH );
         CompleteStatement mattiasKnowsEmilPrivate =
             completeStatement(
                 TestUri.MATTIAS,
@@ -29,44 +35,17 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
 
         addStatements(
             mattiasKnowsEmilPublic,
-            mattiasKnowsEmilPrivate );
+            mattiasKnowsEmilPrivate,
+            mattiasNamePublic );
 
         assertResult(
             wildcardStatement(
-                TestUri.MATTIAS.toUri(),
-                TestUri.FOAF_KNOWS.toUri(),
-                new Wildcard( "who" ),
-                new Wildcard( "g" ) ),
+                new Wildcard( "s" ),
+                new Wildcard( "p" ),
+                new Wildcard( "o" ),
+                new Context( TestUri.MATTIAS_PUBLIC_GRAPH.toUri().getUriAsString() ) ),
 
             mattiasKnowsEmilPublic,
-            mattiasKnowsEmilPrivate );
-
-        assertResult(
-            wildcardStatement(
-                TestUri.MATTIAS.toUri(),
-                TestUri.FOAF_KNOWS.toUri(),
-                TestUri.EMIL.toUri(),
-                new Wildcard( "g" ) ),
-
-            mattiasKnowsEmilPublic,
-            mattiasKnowsEmilPrivate );
-
-        assertResult(
-            wildcardStatement(
-                TestUri.MATTIAS.toUri(),
-                TestUri.FOAF_KNOWS.toUri(),
-                new Wildcard( "who" ),
-         new Context( TestUri.MATTIAS_PUBLIC_GRAPH.toUri().getUriAsString() ) ),
-
-            mattiasKnowsEmilPublic );
-
-        assertResult(
-            wildcardStatement(
-                TestUri.MATTIAS.toUri(),
-                TestUri.FOAF_KNOWS.toUri(),
-                TestUri.EMIL.toUri(),
-        new Context( TestUri.MATTIAS_PRIVATE_GRAPH.toUri().getUriAsString() ) ),
-
-            mattiasKnowsEmilPrivate );
+            mattiasNamePublic );
     }
 }

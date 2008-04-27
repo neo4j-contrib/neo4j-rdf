@@ -24,10 +24,10 @@ import org.neo4j.rdf.model.Wildcard;
 import org.neo4j.rdf.model.WildcardStatement;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
+import org.neo4j.rdf.store.representation.standard.RelationshipTypeImpl;
 import org.neo4j.rdf.store.representation.standard.VerboseQuadExecutor;
 import org.neo4j.rdf.store.representation.standard.VerboseQuadStrategy;
 import org.neo4j.rdf.store.representation.standard.VerboseQuadValidatable;
-import org.neo4j.rdf.store.representation.standard.RelationshipTypeImpl;
 import org.neo4j.rdf.validation.Validatable;
 import org.neo4j.util.index.IndexService;
 
@@ -89,6 +89,10 @@ public class VerboseQuadStore extends RdfStoreImpl
             {
                 result = handleSubjectPredicateObject( statement );
             }
+            else if ( wildcardPattern( statement, true, true, true ) )
+            {
+                result = handleWildcardWildcardWildcard( statement );
+            }
             else
             {
                 result = super.getStatements( statement,
@@ -102,6 +106,80 @@ public class VerboseQuadStore extends RdfStoreImpl
         {
             tx.finish();
         }
+    }
+
+    private Iterable<CompleteStatement> handleWildcardWildcardWildcard(
+        Statement statement )
+    {
+        if ( statement.getContext().isWildcard() )
+        {
+            throw new RuntimeException( "We can't handle ?S ?P ?O ?G" );
+        }
+
+        System.out.println( "handle WWW" );
+        Context context = ( Context ) statement.getContext();
+        Node contextNode = getRepresentationStrategy().getExecutor().
+            lookupNode( new AbstractNode( context ) );
+        if ( contextNode == null )
+        {
+            System.out.println( "no context node " + context );
+            return new ArrayList<CompleteStatement>();
+        }
+
+        List<CompleteStatement> statementList =
+            new LinkedList<CompleteStatement>();
+        for ( Relationship contextRelationship : contextNode.getRelationships(
+            VerboseQuadStrategy.RelTypes.IN_CONTEXT, Direction.INCOMING ) )
+        {
+            System.out.println( "context rel " + contextRelationship );
+            Node middleNode = contextRelationship.getStartNode();
+            Relationship subjectRelationship = findSubjectRelationship(
+                middleNode );
+            System.out.println( "middle " + middleNode );
+            System.out.println( "subject rel " + subjectRelationship );
+            if ( subjectRelationship == null )
+            {
+                throw new RuntimeException( "Error, no subject for " +
+                    middleNode );
+            }
+            Node subjectNode = subjectRelationship.getOtherNode( middleNode );
+            Node objectNode = middleNode.getSingleRelationship(
+                subjectRelationship.getType(),
+                Direction.OUTGOING ).getEndNode();
+            Uri subject = newValidatable( subjectNode ).getUri();
+            Uri predicate = new Uri( subjectRelationship.getType().name() );
+            Value object = getValueForObjectNode( predicate.getUriAsString(),
+                objectNode );
+            if ( object instanceof Literal )
+            {
+                statementList.add( new CompleteStatement(
+                    subject, predicate, ( Literal ) object, context ) );
+                System.out.println( "added one" + statementList.get(
+                    statementList.size() - 1 ) );
+            }
+            else
+            {
+                statementList.add( new CompleteStatement(
+                    subject, predicate, ( Uri ) object, context ) );
+                System.out.println( "added one" + statementList.get(
+                    statementList.size() - 1 ) );
+            }
+        }
+        return statementList;
+    }
+
+    private Relationship findSubjectRelationship( Node middleNode )
+    {
+        for ( Relationship relationship : middleNode.getRelationships(
+            Direction.INCOMING ) )
+        {
+            if ( !relationship.getType().name().equals( VerboseQuadStrategy.
+                RelTypes.IN_CONTEXT.name() ) )
+            {
+                return relationship;
+            }
+        }
+        return null;
     }
 
     private Iterable<CompleteStatement> handleSubjectPredicateObject(
@@ -301,10 +379,7 @@ public class VerboseQuadStore extends RdfStoreImpl
         {
             Node objectNode = middleNode.getSingleRelationship(
                 relType( predicate ), Direction.OUTGOING ).getEndNode();
-            String uri = ( String ) objectNode.getProperty(
-                AbstractUriBasedExecutor.URI_PROPERTY_KEY, null );
-            Value object = uri == null ? new Literal( objectNode.getProperty(
-                predicate ) ) : new Uri( uri );
+            Value object = getValueForObjectNode( predicate, objectNode );
             if ( object instanceof Resource )
             {
                 statementList.add( new CompleteStatement( subject,
@@ -316,6 +391,14 @@ public class VerboseQuadStore extends RdfStoreImpl
                     new Uri( predicate ), ( Literal ) object, context ) );
             }
         }
+    }
+
+    private Value getValueForObjectNode( String predicate, Node objectNode )
+    {
+        String uri = ( String ) objectNode.getProperty(
+            AbstractUriBasedExecutor.URI_PROPERTY_KEY, null );
+        return uri == null ? new Literal( objectNode.getProperty(
+            predicate ) ) : new Uri( uri );
     }
 
     private Iterable<CompleteStatement> handleWildcardWildcardObject(

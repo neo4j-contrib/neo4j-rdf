@@ -44,6 +44,12 @@ public class VerboseQuadStrategy
     }
 
     @Override
+    public VerboseQuadExecutor getExecutor()
+    {
+        return ( VerboseQuadExecutor ) super.getExecutor();
+    }
+
+    @Override
     public AbstractRepresentation getAbstractRepresentation(
         Statement statement )
     {
