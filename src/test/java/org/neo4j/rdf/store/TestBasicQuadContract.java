@@ -43,7 +43,7 @@ public class TestBasicQuadContract extends QuadStoreAbstractTestCase
     protected void setUp() throws Exception
     {
         super.setUp();
-        initializeStore();
+        addInitialStatements();
     }
     
     @Override
@@ -53,7 +53,7 @@ public class TestBasicQuadContract extends QuadStoreAbstractTestCase
         super.tearDown();
     }
     
-    private void initializeStore()
+    private void addInitialStatements()
     {
         addStatements(
             EMIL_KNOWS_MATTIAS_PUBLIC,
@@ -61,6 +61,23 @@ public class TestBasicQuadContract extends QuadStoreAbstractTestCase
             EMIL_KNOWS_MATTIAS_NULL ); 
     }
 
+    private void clearAllStatements()
+    {
+        store().removeStatements(
+            wildcardStatement(
+                TestUri.EMIL,
+                TestUri.FOAF_KNOWS,
+                TestUri.MATTIAS,
+                WILDCARD_CONTEXT ) );
+        assertResultCount(
+            wildcardStatement(
+                TestUri.EMIL,
+                TestUri.FOAF_KNOWS,
+                TestUri.MATTIAS,
+                WILDCARD_CONTEXT ), 0 );        
+    }
+
+    
     // Test getStatements()
     
     public void testGetSPO()
@@ -193,4 +210,30 @@ public class TestBasicQuadContract extends QuadStoreAbstractTestCase
             EMIL_KNOWS_MATTIAS_NULL );
     }
     
+    // Test addStatements()
+    
+    public void testAddSPONull()
+    {
+        clearAllStatements();
+        try
+        {
+            store().addStatements(
+                completeStatement(
+                    TestUri.EMIL,
+                    TestUri.FOAF_KNOWS,
+                    TestUri.MATTIAS,
+                    Context.NULL ) );
+            assertResult(
+                wildcardStatement(
+                    TestUri.EMIL,
+                    TestUri.FOAF_KNOWS,
+                    TestUri.MATTIAS,
+                    WILDCARD_CONTEXT ),
+                EMIL_KNOWS_MATTIAS_NULL );                  
+        }
+        catch ( UnsupportedOperationException e )
+        {
+            // It's ok
+        }
+    }
 }
