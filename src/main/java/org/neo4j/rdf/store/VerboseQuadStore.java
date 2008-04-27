@@ -77,6 +77,10 @@ public class VerboseQuadStore extends RdfStoreImpl
             {
                 result = handleSubjectWildcardWildcard( statement );
             }
+            else if ( wildcardPattern( statement, false, true, false ) )
+            {
+                result = handleSubjectWilcardObject( statement );
+            }
             else if ( wildcardPattern( statement, true, true, false ) )
             {
                 result = handleWildcardWildcardObject( statement );
@@ -173,6 +177,68 @@ public class VerboseQuadStore extends RdfStoreImpl
         return null;
     }
 
+    private Iterable<CompleteStatement> handleSubjectWilcardObject(
+        Statement statement )
+    {
+        ArrayList<CompleteStatement> statementList =
+            new ArrayList<CompleteStatement>();
+        Uri subject = ( Uri ) statement.getSubject();
+        AbstractNode abstractSubjectNode = new AbstractNode( subject );
+        Node subjectNode = getRepresentationStrategy().getExecutor().
+            lookupNode( abstractSubjectNode );
+        if ( subjectNode == null )
+        {
+            return statementList;
+        }
+
+        VerboseQuadValidatable validatable = newValidatable( subjectNode );
+        if ( statement.getObject() instanceof Uri )
+        {
+            Uri object = ( Uri ) statement.getObject();
+            AbstractNode abstractObjectNode = new AbstractNode( object );
+            Node objectNode = getRepresentationStrategy().getExecutor().
+                lookupNode( abstractObjectNode );
+            if ( objectNode == null )
+            {
+                return statementList;
+            }
+
+            for ( String key : validatable.getComplexPropertyKeys() )
+            {
+                for ( Validatable otherObject : validatable.complexProperties(
+                    key ) )
+                {
+                    Node middleNode = otherObject.getUnderlyingNode().
+                        getSingleRelationship( new RelationshipTypeImpl( key ),
+                        Direction.INCOMING ).getStartNode();
+                    if ( otherObject.getUnderlyingNode().equals( objectNode ) )
+                    {
+                        addIfInContext( statement, statementList,
+                            middleNode, key );
+                    }
+                }
+            }
+        }
+        else
+        {
+            Literal literal = ( Literal ) statement.getObject();
+            Object value = literal.getValue();
+            for ( String key : validatable.getSimplePropertyKeys() )
+            {
+                for ( Node middleNode : validatable.getPropertiesAsMiddleNodes(
+                    key ) )
+                {
+                    if ( literalMatches( middleNode, key, value ) )
+                    {
+                        addIfInContext( statement, statementList, middleNode,
+                            key );
+                    }
+                }
+            }
+        }
+        return statementList;
+    }
+
     private Iterable<CompleteStatement> handleSubjectPredicateObject(
         Statement statement )
     {
@@ -227,11 +293,8 @@ public class VerboseQuadStore extends RdfStoreImpl
             for ( Node middleNode : validatable.getPropertiesAsMiddleNodes(
                 predicate.getUriAsString() ) )
             {
-                Node literalNode = middleNode.getSingleRelationship(
-                    predicateType, Direction.OUTGOING ).getEndNode();
-                Object literalValue = literalNode.getProperty(
-                    predicate.getUriAsString() );
-                if ( literalValue.equals( value ) )
+                if ( literalMatches( middleNode, predicate.getUriAsString(),
+                    value ) )
                 {
                     addIfInContext( statement, statementList, middleNode,
                         predicate.getUriAsString() );
@@ -239,6 +302,20 @@ public class VerboseQuadStore extends RdfStoreImpl
             }
         }
         return statementList;
+    }
+
+    private boolean literalMatches( Node middleNode, String key, Object value )
+    {
+        Node literalNode = middleNode.getSingleRelationship(
+            new RelationshipTypeImpl( key ), Direction.OUTGOING ).getEndNode();
+        Object literalValue = literalNode.getProperty( key );
+        return value.equals( literalValue );
+    }
+
+    private Node getObjectNode( Node middleNode, String key )
+    {
+        return middleNode.getSingleRelationship(
+            new RelationshipTypeImpl( key ), Direction.OUTGOING ).getEndNode();
     }
 
     private Iterable<CompleteStatement> handleWildcardPredicateObject(

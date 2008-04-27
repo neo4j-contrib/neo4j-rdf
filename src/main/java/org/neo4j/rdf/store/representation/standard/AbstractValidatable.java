@@ -49,6 +49,20 @@ public abstract class AbstractValidatable implements Validatable
         return this.neoUtil;
     }
 
+    public String[] getSimplePropertyKeys()
+    {
+        HashSet<String> keys = new HashSet<String>();
+        addSimplePropertyKeys( keys );
+        return keys.toArray( new String[ keys.size() ] );
+    }
+
+    public String[] getComplexPropertyKeys()
+    {
+        HashSet<String> keys = new HashSet<String>();
+        addComplexPropertyKeys( keys );
+        return keys.toArray( new String[ keys.size() ] );
+    }
+
     protected boolean isPropertyKey( String key )
     {
         return !key.contains( UriBasedExecutor.CONTEXT_DELIMITER );
