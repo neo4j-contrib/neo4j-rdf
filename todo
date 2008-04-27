@@ -1,0 +1,5 @@
+TODO
+
+ o In RDF the literal/datatype pair is unique (would equal different nodes
+ 	in the node space).
+ o In RDF you can't have datatype AND language on the same literal.
