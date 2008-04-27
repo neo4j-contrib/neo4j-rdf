@@ -113,10 +113,6 @@ public class AlwaysMiddleNodesStrategy
         {
             contexts.add( c );
         }
-        if ( contexts.isEmpty() )
-        {
-            contexts.add( null );
-        }
         return contexts;
     }
 

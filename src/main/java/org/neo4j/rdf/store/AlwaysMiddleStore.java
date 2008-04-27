@@ -237,6 +237,31 @@ public class AlwaysMiddleStore extends RdfStoreImpl
         };
     }
 
+    private static Context getContextForUri( String contextUri )
+    {
+        return isNull( contextUri ) ? null : new Context( contextUri );
+    }
+
+    private static boolean isNull( String uri )
+    {
+        return uri == null || uri.equals( "null" );
+    }
+
+    private Set<Context> getExistingContexts( Node middleNode )
+    {
+        Set<Context> set = new HashSet<Context>();
+        for ( Relationship relationship : middleNode.getRelationships(
+            AlwaysMiddleNodesStrategy.RelTypes.IN_CONTEXT,
+            Direction.OUTGOING ) )
+        {
+            Node contextNode = relationship.getEndNode();
+            String uri = ( String ) contextNode.getProperty(
+                AbstractUriBasedExecutor.URI_PROPERTY_KEY );
+            set.add( getContextForUri( uri ) );
+        }
+        return set;
+    }
+
     private void addIfInContext( Statement statement,
         List<Statement> statements, Node middleNode, String predicate )
     {
@@ -245,38 +270,20 @@ public class AlwaysMiddleStore extends RdfStoreImpl
         Node subjectNode = rel.getStartNode();
         Validatable validatable = newValidatable( subjectNode );
         Uri subject = validatable.getUri();
-        Set<String> contextsInNeo = new HashSet<String>();
-        for ( Relationship relationship : middleNode.getRelationships(
-            AlwaysMiddleNodesStrategy.RelTypes.IN_CONTEXT,
-            Direction.OUTGOING ) )
-        {
-            Node contextNode = relationship.getEndNode();
-            String uri = ( String ) contextNode.getProperty(
-                AbstractUriBasedExecutor.URI_PROPERTY_KEY, null );
-            if ( uri != null )
-            {
-                contextsInNeo.add( uri );
-            }
-        }
-
+        Set<Context> existingContexts = getExistingContexts( middleNode );
         Set<Context> contextsToAdd = new HashSet<Context>();
         if ( !statement.getContexts().iterator().hasNext() )
         {
-            for ( String c : contextsInNeo )
-            {
-                contextsToAdd.add( new Context( c ) );
-            }
+            contextsToAdd = existingContexts;
         }
         else
         {
             for ( Context context : statement.getContexts() )
             {
-                if ( context != null && context.getUriAsString() != null &&
-                    !contextsInNeo.contains( context.getUriAsString() ) )
+                if ( existingContexts.contains( context ) )
                 {
-                    continue;
+                    contextsToAdd.add( context );
                 }
-                contextsToAdd.add( context );
             }
         }
 
@@ -288,18 +295,15 @@ public class AlwaysMiddleStore extends RdfStoreImpl
                 AbstractUriBasedExecutor.URI_PROPERTY_KEY, null );
             Value object = uri == null ? new Literal( objectNode.getProperty(
                 predicate ) ) : new Uri( uri );
-            Context[] contexts = context == null ||
-                context.getUriAsString().endsWith( "null" ) ? new Context[ 0 ] :
-                new Context[] { context };
             if ( object instanceof Resource )
             {
                 statements.add( new CompleteStatement( subject,
-                    new Uri( predicate ), ( Resource ) object, contexts ) );
+                    new Uri( predicate ), ( Resource ) object, context ) );
             }
             else
             {
                 statements.add( new CompleteStatement( subject,
-                    new Uri( predicate ), ( Literal ) object, contexts ) );
+                    new Uri( predicate ), ( Literal ) object, context ) );
             }
         }
     }

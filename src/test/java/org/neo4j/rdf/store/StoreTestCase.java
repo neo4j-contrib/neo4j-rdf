@@ -10,6 +10,7 @@ import org.neo4j.rdf.model.Literal;
 import org.neo4j.rdf.model.Resource;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
+import org.neo4j.rdf.model.WildcardStatement;
 
 public abstract class StoreTestCase extends NeoTestCase
 {
@@ -43,7 +44,7 @@ public abstract class StoreTestCase extends NeoTestCase
         add( store, statement, 2 );
     }
 
-    protected void remove( RdfStore store, Statement statement,
+    protected void remove( RdfStore store, WildcardStatement statement,
         int numberOfTimes )
     {
         while ( numberOfTimes-- > 0 )
@@ -53,23 +54,23 @@ public abstract class StoreTestCase extends NeoTestCase
         }
     }
 
-    protected void removeTwice( RdfStore store, Statement statement )
+    protected void removeTwice( RdfStore store, WildcardStatement statement )
     {
         remove( store, statement, 2 );
     }
 
     protected Statement statement( String subject, String predicate,
-        Resource object, Context... contexts )
+        Resource object, Context context, Context... contexts )
     {
         return new CompleteStatement( new Uri( subject ), new Uri( predicate ),
-            object, contexts );
+            object, context, contexts );
     }
 
     protected Statement statement( String subject, String predicate,
-        Object object, Context... contexts )
+        Object object, Context context, Context... contexts )
     {
         return new CompleteStatement( new Uri( subject ), new Uri( predicate ),
-            new Literal( object ), contexts );
+            new Literal( object ), context, contexts );
     }
 
     protected void removeStatements( RdfStore store,
@@ -85,7 +86,11 @@ public abstract class StoreTestCase extends NeoTestCase
         {
             Statement statement = statements.remove(
                 new Random().nextInt( statements.size() ) );
-            remove( store, statement, numberOfTimesForEach );
+            WildcardStatement wildcardStatement =
+                statement instanceof CompleteStatement ?
+                    ( ( CompleteStatement ) statement ).asWildcardStatement() :
+                        ( WildcardStatement ) statement;
+            remove( store, wildcardStatement, numberOfTimesForEach );
         }
     }
 

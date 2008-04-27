@@ -1,43 +1,33 @@
 package org.neo4j.rdf.store;
 
-import java.util.Random;
-
-import org.neo4j.neometa.structure.DatatypeClassRange;
-import org.neo4j.neometa.structure.MetaStructure;
-import org.neo4j.neometa.structure.MetaStructureClass;
-import org.neo4j.neometa.structure.MetaStructureClassRange;
-import org.neo4j.neometa.structure.MetaStructureImpl;
-import org.neo4j.neometa.structure.MetaStructureProperty;
-import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
-import org.neo4j.rdf.store.representation.standard.PureQuadRepresentationStrategy;
 
 public class TestPureQuad extends StoreTestCase
 {
-    private static final Random RANDOM = new Random();
-
-    private MetaStructure newMetaStructure()
-    {
-        MetaStructure meta = new MetaStructureImpl( neo() );
-        MetaStructureClass personClass = meta.getGlobalNamespace().
-            getMetaClass( PERSON.getUriAsString(), true );
-        MetaStructureProperty nameProperty = meta.getGlobalNamespace().
-            getMetaProperty( NICKNAME.getUriAsString(), true );
-        MetaStructureProperty knowsProperty = meta.getGlobalNamespace().
-            getMetaProperty( KNOWS.getUriAsString(), true );
-        personClass.getDirectProperties().add( nameProperty );
-        personClass.getDirectProperties().add( knowsProperty );
-        nameProperty.setRange( new DatatypeClassRange( String.class ) );
-        knowsProperty.setRange( new MetaStructureClassRange( personClass ) );
-        return meta;
-    }
-
-    private RdfStore newRdfStore()
-    {
-        MetaStructure meta = newMetaStructure();
-        return new PureQuadRdfStore( neo(), meta,
-            new PureQuadRepresentationStrategy( neo(),
-                AbstractUriBasedExecutor.newIndex( neo() ), meta ) );
-    }
+//    private static final Random RANDOM = new Random();
+//
+//    private MetaStructure newMetaStructure()
+//    {
+//        MetaStructure meta = new MetaStructureImpl( neo() );
+//        MetaStructureClass personClass = meta.getGlobalNamespace().
+//            getMetaClass( PERSON.getUriAsString(), true );
+//        MetaStructureProperty nameProperty = meta.getGlobalNamespace().
+//            getMetaProperty( NICKNAME.getUriAsString(), true );
+//        MetaStructureProperty knowsProperty = meta.getGlobalNamespace().
+//            getMetaProperty( KNOWS.getUriAsString(), true );
+//        personClass.getDirectProperties().add( nameProperty );
+//        personClass.getDirectProperties().add( knowsProperty );
+//        nameProperty.setRange( new DatatypeClassRange( String.class ) );
+//        knowsProperty.setRange( new MetaStructureClassRange( personClass ) );
+//        return meta;
+//    }
+//
+//    private RdfStore newRdfStore()
+//    {
+//        MetaStructure meta = newMetaStructure();
+//        return new PureQuadRdfStore( neo(), meta,
+//            new PureQuadRepresentationStrategy( neo(),
+//                AbstractUriBasedExecutor.newIndex( neo() ), meta ) );
+//    }
 
 //    public void testQuad() throws Exception
 //    {

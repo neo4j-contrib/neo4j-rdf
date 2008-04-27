@@ -12,36 +12,31 @@ public class AlwaysMiddleTest extends StoreTestCase
     public void testWeirdCases() throws Exception
     {
         AlwaysMiddleStore store = new AlwaysMiddleStore( neo(), null );
-        Uri r1 = new Uri( "something" );
-        Context context = new Context( r1.getUriAsString() );
-//        store.addStatements( new CompleteStatement(
-//            resource, resource, resource, new Context( resource.getUriAsString() ) ) );
-//        for ( Statement s : store.getStatements( new WildcardStatement( resource,
-//            new Wildcard( "p" ), new Wildcard( "o" ),
-//            new Context( resource.getUriAsString() ), null ), false ) )
+        Uri r1 = new Uri( "http://emil" );
+        Uri r2 = new Uri( "http://knows" );
+        Uri r3 = new Uri( "http://mattias" );
+        Context context = new Context( "http://context" );
+        store.addStatements( new CompleteStatement( r1, r2, r3,
+            context, ( Context ) null ) );
+        store.removeStatements( new WildcardStatement(
+            r1, new Wildcard( "p" ), new Wildcard( "o" ),
+            ( Context ) null ) );
+//        for ( Statement s : store.getStatements( new WildcardStatement(
+//            r1, new Wildcard( "p" ), new Wildcard( "o" ) ), false ) )
 //        {
 //            System.out.println( "" + s );
 //        }
-
-//        Context[] contexts = new Context[] { context, null };
-//        store.addStatements( new CompleteStatement(
-//            resource, resource, resource, contexts ) );
-//        for ( Statement s : store.getStatements( new WildcardStatement( resource,
-//            new Wildcard( "p" ), new Wildcard( "o" ) ), false ) )
-//        {
-//            System.out.println( "" + s );
-//        }
-
-        Uri r2 = new Uri( "osjsodj" );
-        Uri r3 = new Uri( "djk" );
-        store.addStatements( new CompleteStatement( r1, r2, r3 ) );
-        for ( Statement s :
-            store.getStatements( new WildcardStatement( r1, new Wildcard( "p" ),
-                new Wildcard( "o" ) ), false ) )
+        for ( Statement s : store.getStatements( new WildcardStatement(
+            r1, new Wildcard( "p" ), new Wildcard( "o" ), ( Context ) null ),
+            false ) )
         {
             System.out.println( "" + s );
         }
-
+//        for ( Statement s : store.getStatements( new WildcardStatement(
+//            r1, new Wildcard( "p" ), new Wildcard( "o" ), context ), false ) )
+//        {
+//            System.out.println( "" + s );
+//        }
         deleteEntireNodeSpace();
     }
 

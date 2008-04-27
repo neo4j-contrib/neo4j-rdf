@@ -198,8 +198,8 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     {
         Relationship relationship = null;
         Iterable<Relationship> relationships = directionOrNull == null ?
-            startNode.getRelationships() :
-                startNode.getRelationships( directionOrNull );
+            startNode.getRelationships( relType ) :
+                startNode.getRelationships( relType, directionOrNull );
         for ( Relationship rel : relationships )
         {
             if ( rel.getOtherNode( startNode ).equals( endNode ) )

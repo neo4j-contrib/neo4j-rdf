@@ -16,7 +16,7 @@ public interface RdfStore
      * @param contexts the additional context information about the statement.
      */
     void addStatements( CompleteStatement... statements );
-    
+
     /**
      * Queries the store for matching statements.
      * @param statement a {@link Statement} with optional wildcard members
@@ -26,10 +26,10 @@ public interface RdfStore
      */
     Iterable<Statement> getStatements( WildcardStatement statement,
         boolean includeInferredStatements );
-    
+
     /**
      * Removes any matching statement from the store.
      * @param statement a {@link Statement} with optional wildcard members
      */
-    void removeStatements( Statement statement );
+    void removeStatements( WildcardStatement statement );
 }

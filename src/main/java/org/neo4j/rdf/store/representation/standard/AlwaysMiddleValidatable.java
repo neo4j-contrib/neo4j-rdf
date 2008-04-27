@@ -41,6 +41,17 @@ public class AlwaysMiddleValidatable extends AbstractValidatable
                 continue;
             }
             Node middleNode = rel.getEndNode();
+//            if ( middleNode.getSingleRelationship(
+//                rel.getType(), Direction.OUTGOING ) == null )
+//            {
+//                System.out.println( "NULL for " + middleNode + ":" +
+//                    rel.getType().name() );
+//                for ( Relationship r : middleNode.getRelationships() )
+//                {
+//                    System.out.println( r.getStartNode() + " --[" +
+//                        r.getType().name() + "]--> " + r.getEndNode() );
+//                }
+//            }
             Node otherNode = middleNode.getSingleRelationship(
                 rel.getType(), Direction.OUTGOING ).getEndNode();
             if ( otherNode.hasProperty(

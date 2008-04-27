@@ -348,6 +348,7 @@ public class AlwaysMiddleExecutor extends UriBasedExecutor
             for ( Relationship relationship : middleNode.getRelationships(
                 AlwaysMiddleNodesStrategy.RelTypes.IN_CONTEXT ) )
             {
+                debugRemoveRelationship( relationship );
                 relationship.delete();
             }
             disconnectMiddle( middleNode, middleToObject, objectNode,
@@ -389,7 +390,8 @@ public class AlwaysMiddleExecutor extends UriBasedExecutor
         {
             deleteNode( subjectNode, abstractSubjectNode.getUriOrNull() );
         }
-        if ( nodeIsEmpty( abstractObjectNode, objectNode, true ) )
+        if ( !subjectNode.equals( objectNode ) &&
+            nodeIsEmpty( abstractObjectNode, objectNode, true ) )
         {
             deleteNode( objectNode, abstractObjectNode.getUriOrNull() );
         }
@@ -427,7 +429,9 @@ public class AlwaysMiddleExecutor extends UriBasedExecutor
 
         Collection<AbstractRelationship> contextRelationships =
             getContextRelationships( representation, middleNode, nodeMapping );
-        if ( contextRelationships.isEmpty() )
+        if ( contextRelationships.isEmpty() ||
+            ( contextRelationships.size() == 1 &&
+            contextRelationships.iterator().next().getEndNode().getUriOrNull() == null ) )
         {
             // Remove all the contexts (if any) and the literal.
             for ( Relationship relationship : middleNode.getRelationships(

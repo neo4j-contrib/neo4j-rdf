@@ -49,6 +49,22 @@ public class RdfStoreImpl implements RdfStore
         return this.representationStrategy;
     }
 
+//    private void assertContexts( Statement statement )
+//    {
+//        int count = 0;
+//        for ( Context c : statement.getContexts() )
+//        {
+//            if ( c != null && c.getUriAsString() != null )
+//            {
+//                count++;
+//            }
+//        }
+//        if ( count == 0 )
+//        {
+//            throw new RuntimeException( "Must have context" );
+//        }
+//    }
+
     public void addStatements( CompleteStatement... statements )
     {
         Transaction tx = neo.beginTx();
@@ -57,7 +73,8 @@ public class RdfStoreImpl implements RdfStore
         {
             for ( Statement statement : statements )
             {
-                System.out.println( statement.toString() );
+//                assertContexts( statement );
+                System.out.println( "addStmt: " + statement.toString() );
                 lastStatement = statement;
                 AbstractRepresentation fragment = representationStrategy
                     .getAbstractRepresentation( statement );
@@ -75,6 +92,11 @@ public class RdfStoreImpl implements RdfStore
         {
             tx.finish();
         }
+    }
+
+    protected void addStatement( Statement statement )
+    {
+
     }
 
     private RepresentationExecutor getExecutor()
@@ -163,28 +185,15 @@ public class RdfStoreImpl implements RdfStore
         return shouldBeNull ? object == null : object != null;
     }
 
-    public void removeStatements( Statement statementWithOptionalNulls )
+    public void removeStatements( WildcardStatement statement )
     {
-        if ( !theseAreNull( statementWithOptionalNulls, false, false, false ) )
+        for ( Statement statementFromGet : getStatements( statement, false ) )
         {
-            throw new UnsupportedOperationException( "Not yet implemented" );
-        }
-        if ( statementWithOptionalNulls instanceof WildcardStatement )
-        {
-            for ( Statement statement :
-                getStatements( ( WildcardStatement ) statementWithOptionalNulls,
-                false ) )
-            {
-                removeStatements( statement );
-            }
-        }
-        else
-        {
-            removeStatementsSimple( statementWithOptionalNulls );
+            removeStatementSimple( statementFromGet );
         }
     }
 
-    private void removeStatementsSimple( Statement statement )
+    private void removeStatementSimple( Statement statement )
     {
         System.out.println( "removeStmt:" + statement );
         Transaction tx = neo.beginTx();
