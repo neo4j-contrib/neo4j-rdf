@@ -260,7 +260,7 @@ public class AlwaysMiddleStore extends RdfStoreImpl
         }
         for ( Context context : statement.getContexts() )
         {
-            if ( context.getUriAsString() != null &&
+            if ( context == null || context.getUriAsString() != null &&
                 !contextsInNeo.contains( context.getUriAsString() ) )
             {
                 return;

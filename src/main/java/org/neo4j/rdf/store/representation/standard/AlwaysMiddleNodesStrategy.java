@@ -95,6 +95,11 @@ public class AlwaysMiddleNodesStrategy
         // Connect to contexts (if any)
         for ( Context context : statement.getContexts() )
         {
+            if ( context == null )
+            {
+                continue;
+            }
+
             AbstractNode contextNode = getContextNode( nodeMapping, context );
             AbstractRelationship middleToContext = new AbstractRelationship(
                 middleNode, RelTypes.IN_CONTEXT.name(), contextNode );
