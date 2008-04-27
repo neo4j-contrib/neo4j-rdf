@@ -198,6 +198,13 @@ public class VerboseQuadStore extends RdfStoreImpl
                 new AbstractNode( statement.getObject() );
             Node objectNode = getRepresentationStrategy().getExecutor().
                 lookupNode( abstractObjectNode );
+            Relationship objectToMiddle = objectNode.getSingleRelationship(
+                predicateType, Direction.INCOMING );
+            if ( objectToMiddle == null )
+            {
+                return statementList;
+            }
+
             Node middleNode = objectNode.getSingleRelationship(
                 predicateType, Direction.INCOMING ).getStartNode();
             if ( objectNode == null )

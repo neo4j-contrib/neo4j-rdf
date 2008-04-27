@@ -73,10 +73,10 @@ public class RdfStoreImpl implements RdfStore
         {
             for ( Statement statement : statements )
             {
-//                assertContexts( statement );
                 lastStatement = statement;
                 AbstractRepresentation fragment = representationStrategy
                     .getAbstractRepresentation( statement );
+                System.out.println( "addStmt:" + statement );
                 getExecutor().addToNodeSpace( fragment );
             }
             tx.success();
