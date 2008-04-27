@@ -2,6 +2,9 @@ TODO
 
  o In RDF the literal/datatype pair is unique (would equal different nodes
  	in the node space).
+	I.e. "literal" != "literal"^^xsd:string
+	I.e. "literal"^^float != "literal"^^double
+	I.e. "literal"@en != "literal"
  o In RDF you can't have datatype AND language on the same literal.
  o We now pass everything down as strings, we should implement the conversion
    code in Literal correctly
