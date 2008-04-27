@@ -17,8 +17,10 @@ import org.neo4j.util.index.IndexService;
 
 public class VerboseQuadExecutor extends UriBasedExecutor
 {
-    public static final String LITERAL_DATATYPE_KEY = "datatype";
-    public static final String LITERAL_LANGUAGE_KEY = "language";
+    public static final String LITERAL_DATATYPE_KEY =
+        START_OF_ILLEGAL_URI + "datatype";
+    public static final String LITERAL_LANGUAGE_KEY =
+        START_OF_ILLEGAL_URI + "language";
 
     public VerboseQuadExecutor( NeoService neo, IndexService index,
         MetaStructure meta )

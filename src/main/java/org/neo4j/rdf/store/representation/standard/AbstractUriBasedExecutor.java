@@ -28,6 +28,8 @@ import org.neo4j.util.index.IndexService;
 
 public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
 {
+    public static final String START_OF_ILLEGAL_URI = "%";
+
     public static final String URI_PROPERTY_KEY = "uri";
     public static final String LITERAL_VALUE_KEY = "value";
     public static final String META_EXECUTOR_INFO_KEY = "meta";
