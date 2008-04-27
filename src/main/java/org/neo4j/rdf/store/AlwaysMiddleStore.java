@@ -258,30 +258,42 @@ public class AlwaysMiddleStore extends RdfStoreImpl
                 contextsInNeo.add( uri );
             }
         }
+
+        Set<Context> contextToAdd = new HashSet<Context>();
         for ( Context context : statement.getContexts() )
         {
-            if ( context == null || context.getUriAsString() != null &&
+            if ( context != null && context.getUriAsString() != null &&
                 !contextsInNeo.contains( context.getUriAsString() ) )
             {
-                return;
+                continue;
             }
+            contextToAdd.add( context );
+        }
+        if ( !statement.getContexts().iterator().hasNext() )
+        {
+            contextToAdd.add( null );
         }
 
-        Node objectNode = middleNode.getSingleRelationship(
-            relType( predicate ), Direction.OUTGOING ).getEndNode();
-        String uri = ( String ) objectNode.getProperty(
-            AbstractUriBasedExecutor.URI_PROPERTY_KEY, null );
-        Value object = uri == null ? new Literal( objectNode.getProperty(
-            predicate ) ) : new Uri( uri );
-        if ( object instanceof Resource )
+        for ( Context context : contextToAdd )
         {
-            statements.add( new CompleteStatement( subject,
-                new Uri( predicate ), ( Resource ) object ) );
-        }
-        else
-        {
-            statements.add( new CompleteStatement( subject,
-                new Uri( predicate ), ( Literal ) object ) );
+            Node objectNode = middleNode.getSingleRelationship(
+                relType( predicate ), Direction.OUTGOING ).getEndNode();
+            String uri = ( String ) objectNode.getProperty(
+                AbstractUriBasedExecutor.URI_PROPERTY_KEY, null );
+            Value object = uri == null ? new Literal( objectNode.getProperty(
+                predicate ) ) : new Uri( uri );
+            Context[] contexts = context == null ? new Context[ 0 ] :
+                new Context[] { context };
+            if ( object instanceof Resource )
+            {
+                statements.add( new CompleteStatement( subject,
+                    new Uri( predicate ), ( Resource ) object, contexts ) );
+            }
+            else
+            {
+                statements.add( new CompleteStatement( subject,
+                    new Uri( predicate ), ( Literal ) object, contexts ) );
+            }
         }
     }
 

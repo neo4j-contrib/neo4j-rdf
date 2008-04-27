@@ -2,7 +2,10 @@ package org.neo4j.rdf.store;
 
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
+import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
+import org.neo4j.rdf.model.Wildcard;
+import org.neo4j.rdf.model.WildcardStatement;
 
 public class AlwaysMiddleTest extends StoreTestCase
 {
@@ -11,9 +14,13 @@ public class AlwaysMiddleTest extends StoreTestCase
         AlwaysMiddleStore store = new AlwaysMiddleStore( neo(), null );
         Uri resource = new Uri( "something" );
         store.addStatements( new CompleteStatement(
-            resource, resource, resource ) );
-        store.addStatements( new CompleteStatement( resource,
-            resource, resource, new Context( resource.getUriAsString() ) ) );
+            resource, resource, resource, new Context( resource.getUriAsString() ) ) );
+        for ( Statement s : store.getStatements( new WildcardStatement( resource,
+            new Wildcard( "p" ), new Wildcard( "o" ),
+            new Context( resource.getUriAsString() ), null ), false ) )
+        {
+            System.out.println( "" + s );
+        }
         deleteEntireNodeSpace();
     }
 
