@@ -3,6 +3,7 @@ package org.neo4j.rdf.store;
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Literal;
+import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Value;
 import org.neo4j.rdf.model.WildcardStatement;
@@ -62,6 +63,21 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
         System.out.println( text );
     }
 
+    protected void assertResult( WildcardStatement wildcard,
+        CompleteStatement... expectedResult )
+    {
+        // TODO mattias
+    }
+        
+    protected void assertEquivalentStatement( Statement first,
+        Statement second )
+    {
+        assertEquals( first.getSubject(), second.getSubject() );
+        assertEquals( first.getPredicate(), second.getPredicate() );
+        assertEquals( first.getObject(), second.getObject() );
+        assertEquals( first.getContext(), second.getContext() );
+    }
+    
     protected void addStatements( CompleteStatement... statements )
     {
         store().addStatements( statements );
