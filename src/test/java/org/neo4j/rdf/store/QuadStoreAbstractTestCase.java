@@ -13,28 +13,28 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
 {
     public static final String BASE_URI = "http://uri.neo4j.org/";
     private RdfStore store = null;
-    
+
     @Override
     protected void setUp() throws Exception
     {
-        super.setUp();        
+        super.setUp();
         createStoreIfNeeded();
     }
-    
+
     @Override
     protected void tearDown() throws Exception
     {
         tearDownStoreIfNeeded();
         super.tearDown();
     }
-    
+
     private void createStoreIfNeeded()
     {
         if ( store() == null )
         {
             this.store = instantiateStore();
         }
-    }    
+    }
 
     private void tearDownStoreIfNeeded()
     {
@@ -43,7 +43,7 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
             this.store = null;
         }
     }
-    
+
     protected RdfStore store()
     {
         return this.store;
@@ -54,14 +54,14 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
     {
         return new NeoIndexService( neo() );
     }
-    
+
     protected abstract RdfStore instantiateStore();
 
     protected void debug( String text )
     {
         System.out.println( text );
     }
-    
+
     protected void addStatements( CompleteStatement... statements )
     {
         store().addStatements( statements );
@@ -83,7 +83,7 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
             new Uri( objectUri ),
             new Context( contextUri ) );
     }
-        
+
     static CompleteStatement completeStatement( TestUri subject,
         TestUri predicate, Object objectLiteral, TestUri context )
     {
@@ -94,12 +94,12 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
             new Literal( objectLiteral ),
             new Context( context.uriAsString() ) );
     }
-    
+
     static WildcardStatement wildcardStatement( Value subject, Value predicate,
         Value object, Value context )
     {
         return null;
-            
+
     }
 
     public enum TestUri
@@ -113,7 +113,7 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
         MATTIAS_PRIVATE_GRAPH( "context/mattias-private" ),
         NULL_CONTEXT( Context.NULL.getUriAsString() ),
         ;
-        
+
         private final String uri;
         TestUri( String uri )
         {
@@ -123,22 +123,23 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
             }
             else
             {
-                this.uri = BASE_URI + uri; 
+                this.uri = BASE_URI + uri;
             }
             System.out.println( "My name is " + this.name() + " and my URI " +
                 "is " + uri );
         }
-        
+
         public String uriAsString()
         {
             return this.uri;
         }
-        
+
         public Uri toUri()
         {
             return new Uri( uriAsString() );
         }
-        
+
+        @Override
         public String toString()
         {
             return uriAsString();
