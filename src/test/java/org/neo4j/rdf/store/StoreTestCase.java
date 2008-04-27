@@ -21,7 +21,7 @@ public abstract class StoreTestCase extends NeoTestCase
 
     protected void debug( String text )
     {
-//        System.out.println( text );
+        System.out.println( text );
     }
 
     protected void add( RdfStore store, Statement statement, int numberOfTimes )

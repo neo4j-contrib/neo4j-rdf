@@ -82,6 +82,10 @@ public class AlwaysMiddleStore extends RdfStoreImpl
             {
                 result = handleWildcardPredicateObject( statement );
             }
+            else if ( wildcardPattern( statement, false, false, false ) )
+            {
+                result = handleSubjectPredicateObject( statement );
+            }
             else
             {
                 result = super.getStatements( statement,
@@ -95,6 +99,58 @@ public class AlwaysMiddleStore extends RdfStoreImpl
         {
             tx.finish();
         }
+    }
+
+    private Iterable<Statement> handleSubjectPredicateObject(
+        Statement statement )
+    {
+        ArrayList<Statement> statements = new ArrayList<Statement>();
+        Uri subject = ( Uri ) statement.getSubject();
+        Uri predicate = ( Uri ) statement.getPredicate();
+
+        AbstractNode abstractSubjectNode = new AbstractNode( subject );
+        Node subjectNode = getRepresentationStrategy().getExecutor().
+            lookupNode( abstractSubjectNode );
+        if ( subjectNode == null )
+        {
+            return new ArrayList<Statement>();
+        }
+
+        AlwaysMiddleValidatable validatable = newValidatable( subjectNode );
+        if ( statement.getObject() instanceof Uri )
+        {
+            AbstractNode abstractObjectNode =
+                new AbstractNode( statement.getObject() );
+            Node objectNode = getRepresentationStrategy().getExecutor().
+                lookupNode( abstractObjectNode );
+            if ( objectNode == null )
+            {
+                return new ArrayList<Statement>();
+            }
+            for ( Validatable complexProperty : validatable.complexProperties(
+                predicate.getUriAsString() ) )
+            {
+                if ( complexProperty.getUnderlyingNode().equals( objectNode ) )
+                {
+                    statements.add( statement );
+                    break;
+                }
+            }
+        }
+        else
+        {
+            Object value = ( ( Literal ) statement.getObject() ).getValue();
+            for ( Object property : validatable.getProperties(
+                predicate.getUriAsString() ) )
+            {
+                if ( property.equals( value ) )
+                {
+                    statements.add( statement );
+                    break;
+                }
+            }
+        }
+        return statements;
     }
 
     private Iterable<Statement> handleWildcardPredicateObject(
@@ -167,12 +223,6 @@ public class AlwaysMiddleStore extends RdfStoreImpl
 
             addIfInContext( statement, statements, middleNode,
                 thePredicate.getUriAsString() );
-//            Node subjectNode = middleNode.getSingleRelationship(
-//                rel.getType(), Direction.INCOMING ).getStartNode();
-//            Validatable validatable = newValidatable( subjectNode );
-//            Uri subject = validatable.getUri();
-//            statements.add( new CompleteStatement( subject, thePredicate,
-//                objectUri ) );
         }
     }
 
