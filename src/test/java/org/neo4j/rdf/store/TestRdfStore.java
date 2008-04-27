@@ -13,7 +13,7 @@ public class TestRdfStore extends StoreTestCase
 //	public void testDense() throws Exception
 //	{
 //	    RepresentationExecutor executor = new UriBasedExecutor( neo(),
-//	        AbstractUriBasedExecutor.newIndex( neo() ), null );
+//	        indexService(), null );
 //		RdfStore store = new RdfStoreImpl( neo(),
 //			new DenseRepresentationStrategy( executor, null ) );
 //		applyAndRemoveStatements( store );
@@ -27,7 +27,7 @@ public class TestRdfStore extends StoreTestCase
 //	public void testVerbose() throws Exception
 //	{
 //        RepresentationExecutor executor = new UriBasedExecutor( neo(),
-//            AbstractUriBasedExecutor.newIndex( neo() ), null );
+//            indexService(), null );
 //		RdfStore store = new RdfStoreImpl( neo(),
 //			new VerboseRepresentationStrategy( executor, null ) );
 //		applyAndRemoveStatements( store );
@@ -43,7 +43,7 @@ public class TestRdfStore extends StoreTestCase
 //	{
 //	    MetaStructure meta = new MetaStructureImpl( neo() );
 //	    RepresentationExecutor executor = new UriBasedExecutor( neo(),
-//	        AbstractUriBasedExecutor.newIndex( neo() ), meta );
+//	        indexService(), meta );
 //	    RepresentationStrategy strategy = new VerboseRepresentationStrategy(
 //	        executor, meta );
 //	    RdfStore store = new RdfStoreImpl( neo(), strategy );

@@ -13,6 +13,7 @@ import org.neo4j.api.core.Node;
 import org.neo4j.api.core.Relationship;
 import org.neo4j.api.core.Transaction;
 import org.neo4j.util.EntireGraphDeletor;
+import org.neo4j.util.index.IndexService;
 
 /**
  * Base class for the meta model tests.
@@ -20,12 +21,14 @@ import org.neo4j.util.EntireGraphDeletor;
 public abstract class NeoTestCase extends TestCase
 {
     private static NeoService neo;
+    private IndexService indexService = null;
 
     private Transaction tx;
 
     @Override
     protected void setUp() throws Exception
     {
+        super.setUp();        
         if ( neo == null )
         {
             neo = new EmbeddedNeo( "var/test/neo" );
@@ -39,14 +42,49 @@ public abstract class NeoTestCase extends TestCase
             } );
         }
         tx = neo().beginTx();
+        createIndexServiceIfNeeded();
+    }
+
+    private void createIndexServiceIfNeeded()
+    {
+        if ( indexService() == null )
+        {
+            setIndexService( instantiateIndexService() );
+        }
     }
 
     @Override
     protected void tearDown() throws Exception
     {
+        if ( indexService() != null )
+        {
+            indexService().shutdown();
+            setIndexService( null );
+        }
         tx.success();
         tx.finish();
         super.tearDown();
+    }
+    
+    /**
+     * In every setUp(), this class will check if there's an existing
+     * IndexSerivce (using {@link #indexService()}). If not, one will be
+     * created by invoking this method.
+     * @return the newly instantiated index service
+     */
+    protected IndexService instantiateIndexService()
+    {
+        return null;
+    }
+    
+    private void setIndexService( IndexService indexService )
+    {
+        this.indexService = indexService;
+    }
+    
+    protected IndexService indexService()
+    {
+        return this.indexService;
     }
 
     protected NeoService neo()

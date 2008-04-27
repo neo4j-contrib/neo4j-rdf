@@ -7,7 +7,7 @@ public class TestRdfStoreWithContexts extends StoreTestCase
 //    {
 //        MetaStructure meta = new MetaStructureImpl( neo() );
 //        RepresentationExecutor executor = new UriBasedExecutor( neo(),
-//            AbstractUriBasedExecutor.newIndex( neo() ), meta );
+//            indexService(), meta );
 //        RepresentationStrategy strategy = new VerboseRepresentationStrategy(
 //            executor, meta );
 //        RdfStore store = new RdfStoreImpl( neo(), strategy );

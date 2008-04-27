@@ -28,16 +28,17 @@ import org.neo4j.rdf.store.representation.standard.AlwaysMiddleExecutor;
 import org.neo4j.rdf.store.representation.standard.AlwaysMiddleNodesStrategy;
 import org.neo4j.rdf.store.representation.standard.AlwaysMiddleValidatable;
 import org.neo4j.rdf.validation.Validatable;
+import org.neo4j.util.index.IndexService;
 
 public class AlwaysMiddleStore extends RdfStoreImpl
 {
-    private MetaStructure meta;
+    private final MetaStructure meta;
 
-    public AlwaysMiddleStore( NeoService neo, MetaStructure meta )
+    public AlwaysMiddleStore( NeoService neo, IndexService indexer,
+        MetaStructure meta )
     {
         super( neo, new AlwaysMiddleNodesStrategy(
-            new AlwaysMiddleExecutor( neo, AbstractUriBasedExecutor.newIndex(
-                neo ), meta ), meta ) );
+            new AlwaysMiddleExecutor( neo, indexer, meta ), meta ) );
         this.meta = meta;
     }
 

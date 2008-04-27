@@ -10,6 +10,8 @@ import org.neo4j.rdf.model.Literal;
 import org.neo4j.rdf.model.Resource;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
+import org.neo4j.util.index.IndexService;
+import org.neo4j.util.index.NeoIndexService;
 import org.neo4j.rdf.model.WildcardStatement;
 
 public abstract class StoreTestCase extends NeoTestCase
@@ -19,6 +21,12 @@ public abstract class StoreTestCase extends NeoTestCase
     public static final Uri NICKNAME = new Uri( "http://nickname" );
     public static final Uri KNOWS = new Uri( "http://knows" );
     public static final Context TEST_CONTEXT = new Context( "aTest" );
+
+    @Override
+    protected IndexService instantiateIndexService()
+    {
+        return new NeoIndexService( neo() );
+    }    
 
     protected void debug( String text )
     {

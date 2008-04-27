@@ -11,7 +11,8 @@ public class AlwaysMiddleTest extends StoreTestCase
 {
     public void testWeirdCases() throws Exception
     {
-        AlwaysMiddleStore store = new AlwaysMiddleStore( neo(), null );
+        AlwaysMiddleStore store = new AlwaysMiddleStore( neo(), indexService(),
+            null );
         Uri r1 = new Uri( "http://emil" );
         Uri r2 = new Uri( "http://knows" );
         Uri r3 = new Uri( "http://mattias" );

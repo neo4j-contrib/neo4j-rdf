@@ -28,6 +28,29 @@ public class TestPureQuad extends StoreTestCase
 //            new PureQuadRepresentationStrategy( neo(),
 //                AbstractUriBasedExecutor.newIndex( neo() ), meta ) );
 //    }
+//    
+//    private MetaStructure newMetaStructure()
+//    {
+//        MetaStructure meta = new MetaStructureImpl( neo() );
+//        MetaStructureClass personClass = meta.getGlobalNamespace().
+//            getMetaClass( PERSON.getUriAsString(), true );
+//        MetaStructureProperty nameProperty = meta.getGlobalNamespace().
+//            getMetaProperty( NICKNAME.getUriAsString(), true );
+//        MetaStructureProperty knowsProperty = meta.getGlobalNamespace().
+//            getMetaProperty( KNOWS.getUriAsString(), true );
+//        personClass.getDirectProperties().add( nameProperty );
+//        personClass.getDirectProperties().add( knowsProperty );
+//        nameProperty.setRange( new DatatypeClassRange( String.class ) );
+//        knowsProperty.setRange( new MetaStructureClassRange( personClass ) );
+//        return meta;
+//    }
+//
+//    private RdfStore newRdfStore()
+//    {
+//        MetaStructure meta = newMetaStructure();
+//        return new PureQuadRdfStore( neo(), meta,
+//            new PureQuadRepresentationStrategy( neo(), indexService(), meta ) );
+//    }
 
 //    public void testQuad() throws Exception
 //    {

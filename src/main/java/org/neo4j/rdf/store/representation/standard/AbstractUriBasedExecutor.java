@@ -22,7 +22,6 @@ import org.neo4j.rdf.store.representation.RepresentationExecutor;
 import org.neo4j.util.NeoPropertyArraySet;
 import org.neo4j.util.NeoUtil;
 import org.neo4j.util.index.IndexService;
-import org.neo4j.util.index.NeoIndexService;
 
 public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
 {
@@ -33,10 +32,10 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
     public static final String RDF_TYPE_URI = RDF_NAMESPACE + "type";
 
-    private NeoService neo;
-    private NeoUtil neoUtil;
-    private IndexService index;
-    private MetaStructure meta;
+    private final NeoService neo;
+    private final NeoUtil neoUtil;
+    private final IndexService index;
+    private final MetaStructure meta;
 
     public AbstractUriBasedExecutor( NeoService neo, IndexService index,
         MetaStructure optionalMeta )
@@ -45,12 +44,6 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         this.index = index;
         this.neoUtil = new NeoUtil( neo );
         this.meta = optionalMeta;
-    }
-
-    public static IndexService newIndex( NeoService neo )
-    {
-//        return new LuceneIndexService( neo );
-        return new NeoIndexService( neo );
     }
 
     protected NeoService neo()
