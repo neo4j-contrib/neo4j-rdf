@@ -22,7 +22,7 @@ import org.neo4j.rdf.store.representation.RepresentationExecutor;
 import org.neo4j.util.NeoPropertyArraySet;
 import org.neo4j.util.NeoUtil;
 import org.neo4j.util.index.IndexService;
-import org.neo4j.util.index.LuceneIndexService;
+import org.neo4j.util.index.NeoIndexService;
 
 public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
 {
@@ -49,7 +49,8 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
 
     public static IndexService newIndex( NeoService neo )
     {
-        return new LuceneIndexService( neo );
+//        return new LuceneIndexService( neo );
+        return new NeoIndexService( neo );
     }
 
     protected NeoService neo()
@@ -110,7 +111,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     protected String getNodeUri( AbstractNode node )
     {
         Uri uri = node.getUriOrNull();
-        return uri == null ? null : uri.getUriAsString();
+        return uri == null ? "null" : uri.getUriAsString();
     }
 
     public Node lookupNode( AbstractNode abstractNode )

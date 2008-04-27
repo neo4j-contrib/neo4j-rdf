@@ -81,10 +81,21 @@ public class CompleteStatement implements Statement
     @Override
     public String toString()
     {
+        StringBuffer contexts = new StringBuffer();
+        for ( Context context : getContexts() )
+        {
+            if ( contexts.length() > 0 )
+            {
+                contexts.append( "," );
+            }
+            contexts.append( context == null ? "null" :
+                context.getUriAsString() );
+        }
         return "s,p,o=[" +
             labelify( getSubject() ) + ", " +
             labelify( getPredicate() ) + ", " +
-            labelify( getObject() ) + "]";
+            labelify( getObject() ) + "] (" +
+            contexts.toString() + ")";
     }
 
     private String labelify( Value value )

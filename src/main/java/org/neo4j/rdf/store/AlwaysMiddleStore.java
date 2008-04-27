@@ -259,22 +259,28 @@ public class AlwaysMiddleStore extends RdfStoreImpl
             }
         }
 
-        Set<Context> contextToAdd = new HashSet<Context>();
-        for ( Context context : statement.getContexts() )
-        {
-            if ( context != null && context.getUriAsString() != null &&
-                !contextsInNeo.contains( context.getUriAsString() ) )
-            {
-                continue;
-            }
-            contextToAdd.add( context );
-        }
+        Set<Context> contextsToAdd = new HashSet<Context>();
         if ( !statement.getContexts().iterator().hasNext() )
         {
-            contextToAdd.add( null );
+            for ( String c : contextsInNeo )
+            {
+                contextsToAdd.add( new Context( c ) );
+            }
+        }
+        else
+        {
+            for ( Context context : statement.getContexts() )
+            {
+                if ( context != null && context.getUriAsString() != null &&
+                    !contextsInNeo.contains( context.getUriAsString() ) )
+                {
+                    continue;
+                }
+                contextsToAdd.add( context );
+            }
         }
 
-        for ( Context context : contextToAdd )
+        for ( Context context : contextsToAdd )
         {
             Node objectNode = middleNode.getSingleRelationship(
                 relType( predicate ), Direction.OUTGOING ).getEndNode();
