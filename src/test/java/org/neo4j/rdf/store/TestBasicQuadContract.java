@@ -1,16 +1,11 @@
 package org.neo4j.rdf.store;
 
-import java.util.Iterator;
-
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
-import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Wildcard;
 
 public class TestBasicQuadContract extends QuadStoreAbstractTestCase
 {
-    private static final boolean PRINT_STUFF = true;
-
     private static final Wildcard WILDCARD_SUBJECT = new Wildcard( "subject" );
     private static final Wildcard WILDCARD_PREDICATE= new Wildcard(
         "predicate" );
@@ -62,49 +57,83 @@ public class TestBasicQuadContract extends QuadStoreAbstractTestCase
     {
         addStatements( EMIL_KNOWS_MATTIAS_PUBLIC, EMIL_KNOWS_MATTIAS_PRIVATE,
             EMIL_KNOWS_MATTIAS_NULL ); 
-//            completeStatement(
-//                TestUri.EMIL,
-//                TestUri.FOAF_KNOWS,
-//                TestUri.MATTIAS,
-//                TestUri.EMIL_PUBLIC_GRAPH ),
-//            completeStatement(
-//                TestUri.EMIL,
-//                TestUri.FOAF_KNOWS,
-//                TestUri.MATTIAS,
-//                TestUri.EMIL_PRIVATE_GRAPH ),
-//            completeStatement(
-//                TestUri.EMIL,
-//                TestUri.FOAF_KNOWS,
-//                TestUri.MATTIAS,
-//                Context.NULL )
-//            );        
     }
 
+    // Test getStatements()
+    
+    public void testGetSPO()
+    {
+        assertResult(
+            wildcardStatement(
+                TestUri.EMIL,
+                TestUri.FOAF_KNOWS,
+                TestUri.MATTIAS,
+                WILDCARD_CONTEXT ),
+            EMIL_KNOWS_MATTIAS_PUBLIC,
+            EMIL_KNOWS_MATTIAS_PRIVATE,
+            EMIL_KNOWS_MATTIAS_NULL );
+    }
+    
     public void testGetSPONull()
     {
-        Iterator<CompleteStatement> results = store().getStatements(
+        assertResult(
             wildcardStatement(
                 TestUri.EMIL,
                 TestUri.FOAF_KNOWS,
                 TestUri.MATTIAS,
                 Context.NULL ),
-                false ).iterator();
-        
-        CompleteStatement result = results.next();
-        assertFalse( results.hasNext() );
-        assertEquivalentStatement( result, EMIL_KNOWS_MATTIAS_NULL );        
+            EMIL_KNOWS_MATTIAS_NULL );
     }
     
-    private void assertEquivalentStatement( Statement first, Statement second )
+    public void testGetSPOC()
     {
-        assertEquals( first.getSubject(), second.getSubject() );
-        assertEquals( first.getPredicate(), second.getPredicate() );
-        assertEquals( first.getObject(), second.getObject() );
-        assertEquals( first.getContext(), second.getContext() );
-        if ( PRINT_STUFF )
-        {
-            debug( first.toString() );
-        }
+        assertResult(
+            wildcardStatement(
+                TestUri.EMIL,
+                TestUri.FOAF_KNOWS,
+                TestUri.MATTIAS,
+                TestUri.EMIL_PUBLIC_GRAPH ),
+            EMIL_KNOWS_MATTIAS_PUBLIC );        
     }
 
+    public void testGetSPOC1C2()
+    {
+        assertResult(
+            wildcardStatement(
+                TestUri.EMIL,
+                TestUri.FOAF_KNOWS,
+                TestUri.MATTIAS,
+                TestUri.EMIL_PUBLIC_GRAPH ),
+            EMIL_KNOWS_MATTIAS_NULL );        
+        assertResult(
+            wildcardStatement(
+                TestUri.EMIL,
+                TestUri.FOAF_KNOWS,
+                TestUri.MATTIAS,
+                TestUri.EMIL_PRIVATE_GRAPH ),
+            EMIL_KNOWS_MATTIAS_PRIVATE );        
+    }
+    
+    // Test removeStatements()
+
+    public void testRemoveSPO()
+    {
+        store().removeStatements(
+            wildcardStatement(
+                TestUri.EMIL,
+                TestUri.FOAF_KNOWS,
+                TestUri.MATTIAS,
+                WILDCARD_CONTEXT ) );
+        assertResultCount(
+            wildcardStatement(
+                TestUri.EMIL,
+                TestUri.FOAF_KNOWS,
+                TestUri.MATTIAS,
+                WILDCARD_CONTEXT ), 0 );
+    }
+//    
+//    private void assertResultCount( WildcardStatement wildcard, int expected )
+//    {
+//        
+//    }
 }
