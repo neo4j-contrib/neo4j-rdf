@@ -33,7 +33,31 @@ public class BlankNode implements Resource
     public boolean isWildcard()
     {        
         return false;
-    }   
+    }
+    
+    @Override
+    public int hashCode()
+    {
+        return getInternalIdOrNull() == null
+            ? getInternalIdOrNull().hashCode()
+                : super.hashCode();
+    }
+
+    @Override
+    public boolean equals( Object o )
+    {
+        if ( getInternalIdOrNull() == null )
+        {
+            return super.equals( o );
+        }
+        else if ( o instanceof BlankNode)
+        {
+            return getInternalIdOrNull().equals( ( ( BlankNode ) o ).
+                getInternalIdOrNull() );
+        }
+        return false;
+    }
+
 
     @Override
     public String toString()
