@@ -103,6 +103,13 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
             new Context( context.uriAsString() ) );
     }
 
+    static WildcardStatement wildcardStatement( TestUri subject, TestUri
+        predicate, TestUri object, Value context )
+    {
+        return wildcardStatement( subject.toUri(), predicate.toUri(),
+            object.toUri(), context );
+    }
+
     static WildcardStatement wildcardStatement( Value subject, Value predicate,
         Value object, Value context )
     {
