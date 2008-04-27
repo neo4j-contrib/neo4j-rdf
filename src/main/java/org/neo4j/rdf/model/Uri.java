@@ -26,11 +26,14 @@ public class Uri implements Resource
         return this.uriAsString;
     }
 
-    @Override
-    public String toString()
-    {
-        return "Uri[" + uriAsString + "]";
-    }
+    /**
+     * Returns <code>false</code> (a Uri is not a wildcard).
+     * @return <code>false</code>
+     */
+    public boolean isWildcard()
+    {        
+        return false;
+    }   
 
     @Override
     public int hashCode()
@@ -46,5 +49,11 @@ public class Uri implements Resource
             return getUriAsString().equals( ( ( Uri ) o ).getUriAsString() );
         }
         return false;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "Uri[" + uriAsString + "]";
     }
 }

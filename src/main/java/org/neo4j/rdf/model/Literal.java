@@ -59,7 +59,16 @@ public class Literal implements Value
         return this.language;
     }
     
-    @Override
+    /**
+     * Returns <code>false</code> (a literal is not a wildcard).
+     * @return <code>false</code>
+     */
+    public boolean isWildcard()
+    {        
+        return false;
+    }   
+
+   @Override
     public String toString()
     {
         return "Literal[" + this.value + "]";

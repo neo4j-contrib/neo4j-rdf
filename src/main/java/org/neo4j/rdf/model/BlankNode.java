@@ -25,6 +25,15 @@ public class BlankNode implements Resource
     {
         return this.internalId;
     }
+    
+    /**
+     * Returns <code>false</code> (a bnode is not a wildcard).
+     * @return <code>false</code>
+     */
+    public boolean isWildcard()
+    {        
+        return false;
+    }   
 
     @Override
     public String toString()
@@ -32,3 +41,4 @@ public class BlankNode implements Resource
         return "BlankNode[" + internalId + "]";
     }
 }
+ 
