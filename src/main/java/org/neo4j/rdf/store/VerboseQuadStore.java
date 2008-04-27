@@ -154,7 +154,7 @@ public class VerboseQuadStore extends RdfStoreImpl
                 Node literalNode = middleNode.getSingleRelationship(
                     predicateType, Direction.OUTGOING ).getEndNode();
                 Object literalValue = literalNode.getProperty(
-                    AbstractUriBasedExecutor.LITERAL_VALUE_KEY );
+                    predicate.getUriAsString() );
                 if ( literalValue.equals( value ) )
                 {
                     addIfInContext( statement, statementList, middleNode,

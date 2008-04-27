@@ -381,7 +381,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     protected Node createLiteralNode( String predicate, Object value )
     {
         Node node = neo.createNode();
-        node.setProperty( LITERAL_VALUE_KEY, value );
+        node.setProperty( predicate, value );
         debugCreateNode( node, "(literal)" );
         index().index( node, LITERAL_VALUE_KEY, value );
         return node;
@@ -416,7 +416,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         Uri uri = abstractNode.getUriOrNull();
         if ( uri != null )
         {
-            node.setProperty( URI_PROPERTY_KEY, uri.toString() );
+            node.setProperty( URI_PROPERTY_KEY, uri.getUriAsString() );
         }
         applyRepresentation( abstractNode, node );
         debugCreateNode( node, uri == null ? null : uri.toString() );

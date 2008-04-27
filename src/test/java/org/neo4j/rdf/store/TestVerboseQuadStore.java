@@ -18,14 +18,26 @@ public class TestVerboseQuadStore extends StoreTestCase
         Context c1 = new Context( "http://context1" );
         Context c2 = new Context( "http://context2" );
 
-        CompleteStatement sEmilName = new CompleteStatement( r1, NAME,
-            new Literal( "Emil" ), Context.NULL );
-        CompleteStatement sEmilKnows = new CompleteStatement( r1, KNOWS, r2,
-            Context.NULL );
+        CompleteStatement sEmilNameC1 =
+            new CompleteStatement( r1, NAME, new Literal( "Emil" ), c1 );
+        CompleteStatement sEmilKnowsC1 =
+            new CompleteStatement( r1, KNOWS, r2, c1 );
+        CompleteStatement sEmilNameC2 =
+            new CompleteStatement( r1, NAME, new Literal( "Emil" ), c2 );
+        CompleteStatement sEmilKnowsC2 =
+            new CompleteStatement( r1, KNOWS, r2, c2 );
+        CompleteStatement sStupidC1 =
+            new CompleteStatement( r1, r1, r1, new Context( r1.getUriAsString() ) );
         List<CompleteStatement> statements = addStatements( store,
-                sEmilName
-//                ,
-//                sEmilKnows
+                sEmilNameC1
+                ,
+                sEmilKnowsC1
+                ,
+                sEmilNameC2
+                ,
+                sEmilKnowsC2
+                ,
+                sStupidC1
                 );
         removeStatements( store, statements );
         deleteEntireNodeSpace();
