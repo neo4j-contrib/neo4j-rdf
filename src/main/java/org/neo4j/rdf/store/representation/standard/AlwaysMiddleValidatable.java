@@ -96,17 +96,7 @@ public class AlwaysMiddleValidatable extends AbstractValidatable
         return list.toArray();
     }
 
-    public Node[] getSimplePropertiesAsMiddleNodes( String key )
-    {
-        return getPropertiesAsMiddleNodes( key, false );
-    }
-
-    public Node[] getComplexPropertiesAsMiddleNodes( String key )
-    {
-        return getPropertiesAsMiddleNodes( key, true );
-    }
-
-    private Node[] getPropertiesAsMiddleNodes( String key, boolean complex )
+    public Node[] getPropertiesAsMiddleNodes( String key )
     {
         ArrayList<Node> list = new ArrayList<Node>();
         for ( Relationship rel : getUnderlyingNode().getRelationships(
@@ -123,11 +113,11 @@ public class AlwaysMiddleValidatable extends AbstractValidatable
             Node middleNode = rel.getEndNode();
             Node otherNode = middleNode.getSingleRelationship(
                 rel.getType(), Direction.OUTGOING ).getEndNode();
-            if ( otherNode.hasProperty(
-                AbstractUriBasedExecutor.URI_PROPERTY_KEY ) == complex )
-            {
+//            if ( otherNode.hasProperty(
+//                AbstractUriBasedExecutor.URI_PROPERTY_KEY ) == complex )
+//            {
                 list.add( middleNode );
-            }
+//            }
         }
         return list.toArray( new Node[ list.size() ] );
     }

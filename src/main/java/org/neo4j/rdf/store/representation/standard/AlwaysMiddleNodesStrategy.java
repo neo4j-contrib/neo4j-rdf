@@ -15,7 +15,6 @@ import org.neo4j.rdf.store.representation.RepresentationExecutor;
 public class AlwaysMiddleNodesStrategy
     extends StandardAbstractRepresentationStrategy
 {
-    // :) TODO big time.
     public static final String EXECUTOR_INFO_NODE_TYPE = "nodetype";
     public static final String TYPE_SUBJECT = "subject";
     public static final String TYPE_MIDDLE = "middle";

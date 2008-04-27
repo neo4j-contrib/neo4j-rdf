@@ -328,25 +328,12 @@ public class AlwaysMiddleStore extends RdfStoreImpl
         Uri subject, Uri predicate, Node subjectNode,
         AlwaysMiddleValidatable validatableInstance )
     {
-        if ( getRepresentationStrategy().pointsToObjectType( predicate ) )
+        Node[] middleNodes = validatableInstance.
+            getPropertiesAsMiddleNodes( predicate.getUriAsString() );
+        for ( Node middleNode : middleNodes )
         {
-            Node[] middleNodes = validatableInstance.
-                getComplexPropertiesAsMiddleNodes( predicate.getUriAsString() );
-            for ( Node middleNode : middleNodes )
-            {
-                addIfInContext( statement, statementList, middleNode,
-                    predicate.getUriAsString() );
-            }
-        }
-        else
-        {
-            Node[] middleNodes = validatableInstance.
-                getSimplePropertiesAsMiddleNodes( predicate.getUriAsString() );
-            for ( Node middleNode : middleNodes )
-            {
-                addIfInContext( statement, statementList, middleNode,
-                    predicate.getUriAsString() );
-            }
+            addIfInContext( statement, statementList, middleNode,
+                predicate.getUriAsString() );
         }
     }
 
