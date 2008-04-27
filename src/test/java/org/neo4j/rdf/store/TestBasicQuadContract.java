@@ -1,5 +1,8 @@
 package org.neo4j.rdf.store;
 
+import org.neo4j.rdf.model.CompleteStatement;
+import org.neo4j.rdf.model.Context;
+
 public class TestBasicQuadContract extends QuadStoreAbstractTestCase
 {
     @Override
@@ -20,15 +23,22 @@ public class TestBasicQuadContract extends QuadStoreAbstractTestCase
                 TestUri.EMIL,
                 TestUri.FOAF_KNOWS,
                 TestUri.MATTIAS,
-                TestUri.NULL_CONTEXT )
+                Context.NULL )
             );
-        store().getStatements(
+        
+        Iterable<CompleteStatement> results = store().getStatements(
             wildcardStatement(
                 TestUri.EMIL.toUri(),
                 TestUri.FOAF_KNOWS.toUri(),
                 TestUri.MATTIAS.toUri(),
-                TestUri.NULL_CONTEXT.toUri() ),
+                Context.NULL ),
                 false );
+        
+        for ( CompleteStatement result : results )
+        {
+            System.out.println( result );
+        }        
+        
     }
 
 }

@@ -74,6 +74,14 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
             context.uriAsString() );
     }
 
+    static CompleteStatement completeStatement( TestUri subject,
+        TestUri predicate, TestUri object, Context context )
+    {
+        return completeStatement( subject.uriAsString(),
+            predicate.uriAsString(), object.uriAsString(),
+            context.getUriAsString() );        
+    }
+
     static CompleteStatement completeStatement( String subjectUri,
         String predicateUri, String objectUri, String contextUri )
     {
@@ -98,8 +106,7 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
     static WildcardStatement wildcardStatement( Value subject, Value predicate,
         Value object, Value context )
     {
-        return null;
-
+        return new WildcardStatement( subject, predicate, object, context );            
     }
 
     public enum TestUri
@@ -110,8 +117,7 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
         EMIL_PUBLIC_GRAPH( "context/emil-public" ),
         EMIL_PRIVATE_GRAPH( "context/emil-private" ),
         MATTIAS_PUBLIC_GRAPH( "context/mattias-public" ),
-        MATTIAS_PRIVATE_GRAPH( "context/mattias-private" ),
-        NULL_CONTEXT( Context.NULL.getUriAsString() ),
+        MATTIAS_PRIVATE_GRAPH( "context/mattias-private" ),        
         ;
 
         private final String uri;
@@ -125,8 +131,6 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
             {
                 this.uri = BASE_URI + uri;
             }
-            System.out.println( "My name is " + this.name() + " and my URI " +
-                "is " + uri );
         }
 
         public String uriAsString()
