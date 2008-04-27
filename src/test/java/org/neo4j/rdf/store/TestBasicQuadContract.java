@@ -55,7 +55,9 @@ public class TestBasicQuadContract extends QuadStoreAbstractTestCase
     
     private void initializeStore()
     {
-        addStatements( EMIL_KNOWS_MATTIAS_PUBLIC, EMIL_KNOWS_MATTIAS_PRIVATE,
+        addStatements(
+            EMIL_KNOWS_MATTIAS_PUBLIC,
+            EMIL_KNOWS_MATTIAS_PRIVATE,
             EMIL_KNOWS_MATTIAS_NULL ); 
     }
 
@@ -104,7 +106,7 @@ public class TestBasicQuadContract extends QuadStoreAbstractTestCase
                 TestUri.FOAF_KNOWS,
                 TestUri.MATTIAS,
                 TestUri.EMIL_PUBLIC_GRAPH ),
-            EMIL_KNOWS_MATTIAS_NULL );        
+            EMIL_KNOWS_MATTIAS_PUBLIC );        
         assertResult(
             wildcardStatement(
                 TestUri.EMIL,
@@ -131,9 +133,64 @@ public class TestBasicQuadContract extends QuadStoreAbstractTestCase
                 TestUri.MATTIAS,
                 WILDCARD_CONTEXT ), 0 );
     }
-//    
-//    private void assertResultCount( WildcardStatement wildcard, int expected )
-//    {
-//        
-//    }
+    
+    public void testRemoveSPONull()
+    {
+        store().removeStatements(
+            wildcardStatement(
+                TestUri.EMIL,
+                TestUri.FOAF_KNOWS,
+                TestUri.MATTIAS,
+                Context.NULL ) );
+        assertResult(
+            wildcardStatement(
+                TestUri.EMIL,
+                TestUri.FOAF_KNOWS,
+                TestUri.MATTIAS,
+                WILDCARD_CONTEXT ),
+            EMIL_KNOWS_MATTIAS_PUBLIC,
+            EMIL_KNOWS_MATTIAS_PRIVATE );
+    }
+    
+    public void testRemoveSPOC()
+    {
+        store().removeStatements(
+            wildcardStatement(
+                TestUri.EMIL,
+                TestUri.FOAF_KNOWS,
+                TestUri.MATTIAS,
+                TestUri.EMIL_PUBLIC_GRAPH ) );
+        assertResult(
+            wildcardStatement(
+                TestUri.EMIL,
+                TestUri.FOAF_KNOWS,
+                TestUri.MATTIAS,
+                WILDCARD_CONTEXT ),
+            EMIL_KNOWS_MATTIAS_PRIVATE,
+            EMIL_KNOWS_MATTIAS_NULL );        
+    }
+    
+    public void testRemoveSPOC1C2()
+    {
+        store().removeStatements(
+            wildcardStatement(
+                TestUri.EMIL,
+                TestUri.FOAF_KNOWS,
+                TestUri.MATTIAS,
+                TestUri.EMIL_PUBLIC_GRAPH ) );
+        store().removeStatements(
+            wildcardStatement(
+                TestUri.EMIL,
+                TestUri.FOAF_KNOWS,
+                TestUri.MATTIAS,
+                TestUri.EMIL_PRIVATE_GRAPH ) );
+        assertResult(
+            wildcardStatement(
+                TestUri.EMIL,
+                TestUri.FOAF_KNOWS,
+                TestUri.MATTIAS,
+                WILDCARD_CONTEXT ),
+            EMIL_KNOWS_MATTIAS_NULL );
+    }
+    
 }
