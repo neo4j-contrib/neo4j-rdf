@@ -24,21 +24,22 @@ import org.neo4j.rdf.model.Wildcard;
 import org.neo4j.rdf.model.WildcardStatement;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
-import org.neo4j.rdf.store.representation.standard.AlwaysMiddleExecutor;
-import org.neo4j.rdf.store.representation.standard.AlwaysMiddleNodesStrategy;
-import org.neo4j.rdf.store.representation.standard.AlwaysMiddleValidatable;
+import org.neo4j.rdf.store.representation.standard.VerboseQuadExecutor;
+import org.neo4j.rdf.store.representation.standard.VerboseQuadStrategy;
+import org.neo4j.rdf.store.representation.standard.VerboseQuadValidatable;
+import org.neo4j.rdf.store.representation.standard.RelationshipTypeImpl;
 import org.neo4j.rdf.validation.Validatable;
 import org.neo4j.util.index.IndexService;
 
-public class AlwaysMiddleStore extends RdfStoreImpl
+public class VerboseQuadStore extends RdfStoreImpl
 {
     private final MetaStructure meta;
 
-    public AlwaysMiddleStore( NeoService neo, IndexService indexer,
+    public VerboseQuadStore( NeoService neo, IndexService indexer,
         MetaStructure meta )
     {
-        super( neo, new AlwaysMiddleNodesStrategy(
-            new AlwaysMiddleExecutor( neo, indexer, meta ), meta ) );
+        super( neo, new VerboseQuadStrategy(
+            new VerboseQuadExecutor( neo, indexer, meta ), meta ) );
         this.meta = meta;
     }
 
@@ -48,13 +49,14 @@ public class AlwaysMiddleStore extends RdfStoreImpl
     }
 
     @Override
-    protected AlwaysMiddleNodesStrategy getRepresentationStrategy()
+    protected VerboseQuadStrategy getRepresentationStrategy()
     {
-        return ( AlwaysMiddleNodesStrategy ) super.getRepresentationStrategy();
+        return ( VerboseQuadStrategy ) super.getRepresentationStrategy();
     }
 
     @Override
-    public Iterable<Statement> getStatements( WildcardStatement statement,
+    public Iterable<CompleteStatement> getStatements(
+        WildcardStatement statement,
         boolean includeInferredStatements )
     {
         Transaction tx = neo().beginTx();
@@ -66,7 +68,7 @@ public class AlwaysMiddleStore extends RdfStoreImpl
                     "support getStatements() with reasoning enabled" );
             }
 
-            Iterable<Statement> result = null;
+            Iterable<CompleteStatement> result = null;
             if ( wildcardPattern( statement, false, false, true ) )
             {
                 result = handleSubjectPredicateWildcard( statement );
@@ -102,73 +104,82 @@ public class AlwaysMiddleStore extends RdfStoreImpl
         }
     }
 
-    private Iterable<Statement> handleSubjectPredicateObject(
+    private Iterable<CompleteStatement> handleSubjectPredicateObject(
         Statement statement )
     {
-        ArrayList<Statement> statements = new ArrayList<Statement>();
+        ArrayList<CompleteStatement> statementList =
+            new ArrayList<CompleteStatement>();
         Uri subject = ( Uri ) statement.getSubject();
         Uri predicate = ( Uri ) statement.getPredicate();
+        RelationshipType predicateType = new RelationshipTypeImpl(
+            predicate.getUriAsString() );
 
         AbstractNode abstractSubjectNode = new AbstractNode( subject );
         Node subjectNode = getRepresentationStrategy().getExecutor().
             lookupNode( abstractSubjectNode );
         if ( subjectNode == null )
         {
-            return new ArrayList<Statement>();
+            return statementList;
         }
 
-        AlwaysMiddleValidatable validatable = newValidatable( subjectNode );
+        VerboseQuadValidatable validatable = newValidatable( subjectNode );
         if ( statement.getObject() instanceof Uri )
         {
             AbstractNode abstractObjectNode =
                 new AbstractNode( statement.getObject() );
             Node objectNode = getRepresentationStrategy().getExecutor().
                 lookupNode( abstractObjectNode );
+            Node middleNode = objectNode.getSingleRelationship(
+                predicateType, Direction.INCOMING ).getStartNode();
             if ( objectNode == null )
             {
-                return new ArrayList<Statement>();
+                return new ArrayList<CompleteStatement>();
             }
             for ( Validatable complexProperty : validatable.complexProperties(
                 predicate.getUriAsString() ) )
             {
                 if ( complexProperty.getUnderlyingNode().equals( objectNode ) )
                 {
-                    statements.add( statement );
-                    break;
+                    addIfInContext( statement, statementList, middleNode,
+                        predicate.getUriAsString() );
                 }
             }
         }
         else
         {
             Object value = ( ( Literal ) statement.getObject() ).getValue();
-            for ( Object property : validatable.getProperties(
+            for ( Node middleNode : validatable.getPropertiesAsMiddleNodes(
                 predicate.getUriAsString() ) )
             {
-                if ( property.equals( value ) )
+                Node literalNode = middleNode.getSingleRelationship(
+                    predicateType, Direction.OUTGOING ).getEndNode();
+                Object literalValue = literalNode.getProperty(
+                    AbstractUriBasedExecutor.LITERAL_VALUE_KEY );
+                if ( literalValue.equals( value ) )
                 {
-                    statements.add( statement );
-                    break;
+                    addIfInContext( statement, statementList, middleNode,
+                        predicate.getUriAsString() );
                 }
             }
         }
-        return statements;
+        return statementList;
     }
 
-    private Iterable<Statement> handleWildcardPredicateObject(
+    private Iterable<CompleteStatement> handleWildcardPredicateObject(
         WildcardStatement statement )
     {
         return handleWildcardWildcardObject( statement );
     }
 
-    private AlwaysMiddleValidatable newValidatable( Node subjectNode )
+    private VerboseQuadValidatable newValidatable( Node subjectNode )
     {
-        return new AlwaysMiddleValidatable( neo(), subjectNode, meta() );
+        return new VerboseQuadValidatable( neo(), subjectNode, meta() );
     }
 
     private void buildStatementsOfObjectHits( Statement statement,
-        List<Statement> statements, Literal literal )
+        List<CompleteStatement> statementList, Literal literal )
     {
-        AlwaysMiddleExecutor executor = ( AlwaysMiddleExecutor )
+        VerboseQuadExecutor executor = ( VerboseQuadExecutor )
             getRepresentationStrategy().getExecutor();
         Object value = literal.getValue();
         String predicate = statement.getPredicate() instanceof Wildcard ?
@@ -186,7 +197,7 @@ public class AlwaysMiddleStore extends RdfStoreImpl
                     continue;
                 }
 
-                addIfInContext( statement, statements, middleNode,
+                addIfInContext( statement, statementList, middleNode,
                     thePredicate.getUriAsString() );
 //                Node subjectNode = middleNode.getSingleRelationship(
 //                    rel.getType(), Direction.INCOMING ).getStartNode();
@@ -199,7 +210,7 @@ public class AlwaysMiddleStore extends RdfStoreImpl
     }
 
     private void buildStatementsOfObjectHits( Statement statement,
-        List<Statement> statements, Uri object )
+        List<CompleteStatement> statementList, Uri object )
     {
         Uri objectUri = ( Uri ) statement.getObject();
         Node objectNode = getRepresentationStrategy().getExecutor().
@@ -222,7 +233,7 @@ public class AlwaysMiddleStore extends RdfStoreImpl
                 continue;
             }
 
-            addIfInContext( statement, statements, middleNode,
+            addIfInContext( statement, statementList, middleNode,
                 thePredicate.getUriAsString() );
         }
     }
@@ -252,7 +263,7 @@ public class AlwaysMiddleStore extends RdfStoreImpl
     {
         Set<Context> set = new HashSet<Context>();
         for ( Relationship relationship : middleNode.getRelationships(
-            AlwaysMiddleNodesStrategy.RelTypes.IN_CONTEXT,
+            VerboseQuadStrategy.RelTypes.IN_CONTEXT,
             Direction.OUTGOING ) )
         {
             Node contextNode = relationship.getEndNode();
@@ -264,7 +275,8 @@ public class AlwaysMiddleStore extends RdfStoreImpl
     }
 
     private void addIfInContext( Statement statement,
-        List<Statement> statements, Node middleNode, String predicate )
+        List<CompleteStatement> statementList, Node middleNode,
+        String predicate )
     {
         Relationship rel = middleNode.getSingleRelationship(
             relType( predicate ), Direction.INCOMING );
@@ -273,18 +285,15 @@ public class AlwaysMiddleStore extends RdfStoreImpl
         Uri subject = validatable.getUri();
         Set<Context> existingContexts = getExistingContexts( middleNode );
         Set<Context> contextsToAdd = new HashSet<Context>();
-        if ( !statement.getContexts().iterator().hasNext() )
+        if ( statement.getContext() instanceof Wildcard )
         {
             contextsToAdd = existingContexts;
         }
         else
         {
-            for ( Context context : statement.getContexts() )
+            if ( existingContexts.contains( statement.getContext() ) )
             {
-                if ( existingContexts.contains( context ) )
-                {
-                    contextsToAdd.add( context );
-                }
+                contextsToAdd.add( ( Context ) statement.getContext() );
             }
         }
 
@@ -298,35 +307,36 @@ public class AlwaysMiddleStore extends RdfStoreImpl
                 predicate ) ) : new Uri( uri );
             if ( object instanceof Resource )
             {
-                statements.add( new CompleteStatement( subject,
+                statementList.add( new CompleteStatement( subject,
                     new Uri( predicate ), ( Resource ) object, context ) );
             }
             else
             {
-                statements.add( new CompleteStatement( subject,
+                statementList.add( new CompleteStatement( subject,
                     new Uri( predicate ), ( Literal ) object, context ) );
             }
         }
     }
 
-    private Iterable<Statement> handleWildcardWildcardObject(
+    private Iterable<CompleteStatement> handleWildcardWildcardObject(
         WildcardStatement statement )
     {
-        List<Statement> statements = new ArrayList<Statement>();
+        List<CompleteStatement> statementList =
+            new ArrayList<CompleteStatement>();
         if ( statement.getObject() instanceof Literal )
         {
-            buildStatementsOfObjectHits( statement, statements,
+            buildStatementsOfObjectHits( statement, statementList,
                 ( Literal ) statement.getObject() );
         }
         else
         {
-            buildStatementsOfObjectHits( statement, statements,
+            buildStatementsOfObjectHits( statement, statementList,
                 ( Uri ) statement.getObject() );
         }
-        return statements;
+        return statementList;
     }
 
-    private Iterable<Statement> handleSubjectPredicateWildcard(
+    private Iterable<CompleteStatement> handleSubjectPredicateWildcard(
         WildcardStatement statement )
     {
         Uri subject = ( Uri ) statement.getSubject();
@@ -337,20 +347,22 @@ public class AlwaysMiddleStore extends RdfStoreImpl
             lookupNode( abstractSubjectNode );
         if ( subjectNode == null )
         {
-            return new ArrayList<Statement>();
+            return new ArrayList<CompleteStatement>();
         }
 
-        AlwaysMiddleValidatable validatableInstance =
+        VerboseQuadValidatable validatableInstance =
             newValidatable( subjectNode );
-        List<Statement> statementList = new LinkedList<Statement>();
+        List<CompleteStatement> statementList =
+            new LinkedList<CompleteStatement>();
         addObjects( statement, statementList, subject, predicate, subjectNode,
             validatableInstance );
         return statementList;
     }
 
-    private void addObjects( Statement statement, List<Statement> statementList,
+    private void addObjects( Statement statement,
+        List<CompleteStatement> statementList,
         Uri subject, Uri predicate, Node subjectNode,
-        AlwaysMiddleValidatable validatableInstance )
+        VerboseQuadValidatable validatableInstance )
     {
         Node[] middleNodes = validatableInstance.
             getPropertiesAsMiddleNodes( predicate.getUriAsString() );
@@ -361,8 +373,9 @@ public class AlwaysMiddleStore extends RdfStoreImpl
         }
     }
 
-    private void addObjects( Statement statement, List<Statement> statementList,
-        Uri subject, Node subjectNode, AlwaysMiddleValidatable instance )
+    private void addObjects( Statement statement,
+        List<CompleteStatement> statementList,
+        Uri subject, Node subjectNode, VerboseQuadValidatable instance )
     {
         for ( String predicate : instance.getAllPropertyKeys() )
         {
@@ -377,7 +390,7 @@ public class AlwaysMiddleStore extends RdfStoreImpl
 //        }
     }
 
-    private Iterable<Statement> handleSubjectWildcardWildcard(
+    private Iterable<CompleteStatement> handleSubjectWildcardWildcard(
         WildcardStatement statement )
     {
         Uri subject = ( Uri ) statement.getSubject();
@@ -386,12 +399,13 @@ public class AlwaysMiddleStore extends RdfStoreImpl
             lookupNode( abstractSubjectNode );
         if ( subjectNode == null )
         {
-            return new ArrayList<Statement>();
+            return new ArrayList<CompleteStatement>();
         }
 
-        AlwaysMiddleValidatable validatableInstance =
+        VerboseQuadValidatable validatableInstance =
             newValidatable( subjectNode );
-        List<Statement> statementList = new ArrayList<Statement>();
+        List<CompleteStatement> statementList =
+            new ArrayList<CompleteStatement>();
         addObjects( statement, statementList, subject,
             subjectNode, validatableInstance );
         return statementList;

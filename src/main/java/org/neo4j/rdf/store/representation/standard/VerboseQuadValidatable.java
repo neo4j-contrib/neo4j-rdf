@@ -11,9 +11,9 @@ import org.neo4j.api.core.Relationship;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.rdf.validation.Validatable;
 
-public class AlwaysMiddleValidatable extends AbstractValidatable
+public class VerboseQuadValidatable extends AbstractValidatable
 {
-    public AlwaysMiddleValidatable( NeoService neo, Node node,
+    public VerboseQuadValidatable( NeoService neo, Node node,
         MetaStructure meta )
     {
         super( neo, node, meta );
@@ -41,17 +41,6 @@ public class AlwaysMiddleValidatable extends AbstractValidatable
                 continue;
             }
             Node middleNode = rel.getEndNode();
-//            if ( middleNode.getSingleRelationship(
-//                rel.getType(), Direction.OUTGOING ) == null )
-//            {
-//                System.out.println( "NULL for " + middleNode + ":" +
-//                    rel.getType().name() );
-//                for ( Relationship r : middleNode.getRelationships() )
-//                {
-//                    System.out.println( r.getStartNode() + " --[" +
-//                        r.getType().name() + "]--> " + r.getEndNode() );
-//                }
-//            }
             Node otherNode = middleNode.getSingleRelationship(
                 rel.getType(), Direction.OUTGOING ).getEndNode();
             if ( otherNode.hasProperty(
@@ -78,7 +67,7 @@ public class AlwaysMiddleValidatable extends AbstractValidatable
             if ( otherNode.hasProperty(
                 AbstractUriBasedExecutor.URI_PROPERTY_KEY ) )
             {
-                list.add( new AlwaysMiddleValidatable( neoUtil().neo(),
+                list.add( new VerboseQuadValidatable( neoUtil().neo(),
                     otherNode, meta() ) );
             }
         }
@@ -122,13 +111,7 @@ public class AlwaysMiddleValidatable extends AbstractValidatable
                 continue;
             }
             Node middleNode = rel.getEndNode();
-            Node otherNode = middleNode.getSingleRelationship(
-                rel.getType(), Direction.OUTGOING ).getEndNode();
-//            if ( otherNode.hasProperty(
-//                AbstractUriBasedExecutor.URI_PROPERTY_KEY ) == complex )
-//            {
-                list.add( middleNode );
-//            }
+            list.add( middleNode );
         }
         return list.toArray( new Node[ list.size() ] );
     }

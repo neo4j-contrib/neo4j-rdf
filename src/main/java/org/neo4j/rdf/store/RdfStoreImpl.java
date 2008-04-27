@@ -74,7 +74,6 @@ public class RdfStoreImpl implements RdfStore
             for ( Statement statement : statements )
             {
 //                assertContexts( statement );
-                System.out.println( "addStmt: " + statement.toString() );
                 lastStatement = statement;
                 AbstractRepresentation fragment = representationStrategy
                     .getAbstractRepresentation( statement );
@@ -105,23 +104,23 @@ public class RdfStoreImpl implements RdfStore
     }
 
 
-    public Iterable<Statement> getStatements( WildcardStatement statement,
-        boolean includeInferredStatements )
+    public Iterable<CompleteStatement> getStatements(
+        WildcardStatement statement, boolean includeInferredStatements )
     {
-        if ( weCanHandleStatement( statement ) )
-        {
-            // TODO: pseudo code below
-            return graphMatchingFacade().getMatchingStatements(
-                representationStrategy.getAbstractRepresentation( statement ) );
-        }
+//        if ( weCanHandleStatement( statement ) )
+//        {
+//            // TODO: pseudo code below
+//            return graphMatchingFacade().getMatchingStatements(
+//                representationStrategy.getAbstractRepresentation( statement ) );
+//        }
         throw new UnsupportedOperationException( "We can't handle get() for " +
             "this statement: " + statement );
     }
 
-    private boolean weCanHandleStatement( WildcardStatement statement )
-    {
-        return false;
-    }
+//    private boolean weCanHandleStatement( WildcardStatement statement )
+//    {
+//        return false;
+//    }
 
     protected boolean wildcardPattern( WildcardStatement statement,
         boolean subjectWildcard, boolean predicateWildcard,
@@ -195,7 +194,6 @@ public class RdfStoreImpl implements RdfStore
 
     private void removeStatementSimple( Statement statement )
     {
-        System.out.println( "removeStmt:" + statement );
         Transaction tx = neo.beginTx();
         try
         {

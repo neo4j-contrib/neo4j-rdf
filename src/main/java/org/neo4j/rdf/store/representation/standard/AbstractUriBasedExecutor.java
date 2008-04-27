@@ -86,19 +86,19 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         debugRelationship( relationship, true );
     }
 
-    protected void debugRemoveRelationship( Relationship relationship )
+    protected void debugDeleteRelationship( Relationship relationship )
     {
         debugRelationship( relationship, false );
     }
 
     protected void debugCreateNode( Node node, String uri )
     {
-        debug( "\t+Node (" + node.getId() + ") '" + uri + "'" );
+        debug( "\t+Node (" + node.getId() + ") " + ( uri == null ? "" : uri ) );
     }
 
     protected void debugDeleteNode( Node node, String uri )
     {
-        debug( "\t-Node (" + node.getId() + ") '" + uri + "'" );
+        debug( "\t-Node (" + node.getId() + ") " + ( uri == null ? "" : uri ) );
     }
 
     protected String getNodeUri( AbstractNode node )
@@ -130,10 +130,8 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         if ( node == null )
         {
             String uri = getNodeUri( abstractNode );
-            node = neo().createNode();
-            node.setProperty( URI_PROPERTY_KEY, uri );
+            node = createNode( abstractNode );
             index.index( node, URI_PROPERTY_KEY, uri );
-            debugCreateNode( node, uri );
         }
         if ( abstractNodeToNodeMap != null )
         {
@@ -151,6 +149,14 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         {
             index().removeIndex( node, URI_PROPERTY_KEY,
                 uriOrNull.getUriAsString() );
+        }
+    }
+
+    protected void deleteNodeIfEmpty( AbstractNode abstractNode, Node node )
+    {
+        if ( nodeIsEmpty( abstractNode, node, true ) )
+        {
+            deleteNode( node, abstractNode.getUriOrNull() );
         }
     }
 
@@ -205,33 +211,35 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     }
 
     protected void ensureDirectlyDisconnected( Node startNode,
-        RelationshipType relType, Node endNode )
+        AbstractRelationship abstractRelationship, Node endNode )
     {
+        RelationshipType relType = relationshipType(
+            abstractRelationship.getRelationshipTypeName() );
         Relationship relationship = findDirectRelationship( startNode, relType,
             endNode, Direction.OUTGOING );
         if ( relationship != null )
         {
-            debugRemoveRelationship( relationship );
-            relationship.delete();
+            deleteRelationship( relationship );
         }
     }
 
     protected Relationship ensureDirectlyConnected( Node startNode,
-        RelationshipType relType, Node endNode )
+        AbstractRelationship abstractRelationship, Node endNode )
     {
+        RelationshipType relType = relationshipType(
+            abstractRelationship.getRelationshipTypeName() );
         Relationship relationship = findDirectRelationship(
             startNode, relType, endNode, Direction.OUTGOING );
         if ( relationship == null )
         {
-            relationship = startNode.createRelationshipTo( endNode, relType );
-            debugCreateRelationship( relationship );
+            createRelationship( startNode, endNode, abstractRelationship );
         }
         return relationship;
     }
 
     protected RelationshipType relationshipType( String name )
     {
-        return new ARelationshipType( name );
+        return new RelationshipTypeImpl( name );
     }
 
     protected String getMetaExecutorInfo( AbstractNode node )
@@ -373,7 +381,8 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     protected Node createLiteralNode( String predicate, Object value )
     {
         Node node = neo.createNode();
-        debugCreateNode( node, predicate );
+        node.setProperty( LITERAL_VALUE_KEY, value );
+        debugCreateNode( node, "(literal)" );
         index().index( node, LITERAL_VALUE_KEY, value );
         return node;
     }
@@ -390,18 +399,33 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         return index().getNodes( LITERAL_VALUE_KEY, value );
     }
 
-    private static class ARelationshipType implements RelationshipType
+    protected Relationship createRelationship( Node from, Node to,
+        AbstractRelationship abstractRelationship )
     {
-        private String name;
+        Relationship relationship = from.createRelationshipTo( to,
+            relationshipType( abstractRelationship.
+                getRelationshipTypeName() ) );
+        applyRepresentation( abstractRelationship, relationship );
+        debugCreateRelationship( relationship );
+        return relationship;
+    }
 
-        public ARelationshipType( String name )
+    protected Node createNode( AbstractNode abstractNode )
+    {
+        Node node = neo.createNode();
+        Uri uri = abstractNode.getUriOrNull();
+        if ( uri != null )
         {
-            this.name = name;
+            node.setProperty( URI_PROPERTY_KEY, uri.toString() );
         }
+        applyRepresentation( abstractNode, node );
+        debugCreateNode( node, uri == null ? null : uri.toString() );
+        return node;
+    }
 
-        public String name()
-        {
-            return this.name;
-        }
+    protected void deleteRelationship( Relationship relationship )
+    {
+        debugDeleteRelationship( relationship );
+        relationship.delete();
     }
 }

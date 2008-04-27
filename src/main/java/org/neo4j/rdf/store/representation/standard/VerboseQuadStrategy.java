@@ -1,7 +1,5 @@
 package org.neo4j.rdf.store.representation.standard;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import org.neo4j.api.core.RelationshipType;
@@ -14,7 +12,7 @@ import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractRepresentation;
 import org.neo4j.rdf.store.representation.RepresentationExecutor;
 
-public class AlwaysMiddleNodesStrategy
+public class VerboseQuadStrategy
     extends StandardAbstractRepresentationStrategy
 {
     public static final String EXECUTOR_INFO_NODE_TYPE = "nodetype";
@@ -26,7 +24,7 @@ public class AlwaysMiddleNodesStrategy
 
     public static final String KEY_OBJECT_URI_ON_MIDDLE_NODE = "object_uri";
 
-    public AlwaysMiddleNodesStrategy( RepresentationExecutor executor,
+    public VerboseQuadStrategy( RepresentationExecutor executor,
         MetaStructure meta )
     {
         super( executor, meta );
@@ -93,10 +91,10 @@ public class AlwaysMiddleNodesStrategy
         AbstractRepresentation representation, AbstractNode middleNode,
         Map<String, AbstractNode> nodeMapping, Statement statement )
     {
-        // Connect to contexts (if any)
-        for ( Context context : contextsAsList( statement ) )
+        if ( !statement.getContext().isWildcard() )
         {
-            AbstractNode contextNode = getContextNode( nodeMapping, context );
+            AbstractNode contextNode = getContextNode( nodeMapping,
+                ( Context ) statement.getContext() );
             AbstractRelationship middleToContext = new AbstractRelationship(
                 middleNode, RelTypes.IN_CONTEXT.name(), contextNode );
             representation.addRelationship( middleToContext );
@@ -104,16 +102,6 @@ public class AlwaysMiddleNodesStrategy
                 TYPE_CONTEXT );
             representation.addNode( contextNode );
         }
-    }
-
-    private List<Context> contextsAsList( Statement statement )
-    {
-        ArrayList<Context> contexts = new ArrayList<Context>();
-        for ( Context c : statement.getContexts() )
-        {
-            contexts.add( c );
-        }
-        return contexts;
     }
 
     protected void addObjectTypeRepresentation(

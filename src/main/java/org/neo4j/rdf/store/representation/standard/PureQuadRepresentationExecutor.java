@@ -46,10 +46,8 @@ public class PureQuadRepresentationExecutor extends AbstractUriBasedExecutor
                     getStartNode(), abstractNodeToNodeMap );
                 Node endNode = lookupOrCreateNode(
                     abstractRelationship.getEndNode(), abstractNodeToNodeMap );
-                RelationshipType relationshipType = relationshipType(
-                    abstractRelationship.getRelationshipTypeName() );
                 relationship = ensureDirectlyConnected( startNode,
-                    relationshipType, endNode );
+                    abstractRelationship, endNode );
             }
             else if ( getNodeUri( abstractEndNode ) == null )
             {
@@ -226,7 +224,7 @@ public class PureQuadRepresentationExecutor extends AbstractUriBasedExecutor
         if ( !triedToRemoveSomeContext || contextRelationshipIsEmpty(
             abstractRelationship, relationship ) )
         {
-            debugRemoveRelationship( relationship );
+            debugDeleteRelationship( relationship );
             relationship.delete();
             if ( endNode.getUriOrNull() == null )
             {

@@ -178,7 +178,7 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
             removeFromRelationship( abstractRelationship, relationship );
             if ( relationshipIsEmpty( abstractRelationship, relationship ) )
             {
-                debugRemoveRelationship( relationship );
+                debugDeleteRelationship( relationship );
                 relationship.delete();
             }
         }

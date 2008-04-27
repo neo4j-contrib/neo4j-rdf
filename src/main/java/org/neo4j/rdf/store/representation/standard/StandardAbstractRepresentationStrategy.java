@@ -143,10 +143,10 @@ abstract class StandardAbstractRepresentationStrategy
         subjectNode.addProperty( predicate, literalValue );
         String predicateContext = UriBasedExecutor.formContextPropertyKey(
             predicate, literalValue );
-        for ( Context context : statement.getContexts() )
+        if ( !statement.getContext().isWildcard() )
         {
             subjectNode.addProperty( predicateContext,
-                context.getUriAsString() );
+                ( ( Context ) statement.getContext() ).getUriAsString() );
         }
         Map<String, String> contextKeys = new HashMap<String, String>();
         contextKeys.put( predicateContext, predicate );
@@ -276,10 +276,10 @@ abstract class StandardAbstractRepresentationStrategy
     protected void addSingleContextsToElement( Statement statement,
         AbstractElement element )
     {
-        for ( Context context : statement.getContexts() )
+        if ( !statement.getContext().isWildcard() )
         {
             element.addProperty( CONTEXT_PROPERTY_POSTFIX,
-                context.getUriAsString() );
+                ( ( Context ) statement.getContext() ).getUriAsString() );
         }
         Map<String, String> contextKeys = new HashMap<String, String>();
         contextKeys.put( CONTEXT_PROPERTY_POSTFIX, null );

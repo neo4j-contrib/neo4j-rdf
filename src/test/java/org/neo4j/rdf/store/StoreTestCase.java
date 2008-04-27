@@ -26,7 +26,7 @@ public abstract class StoreTestCase extends NeoTestCase
     protected IndexService instantiateIndexService()
     {
         return new NeoIndexService( neo() );
-    }    
+    }
 
     protected void debug( String text )
     {
@@ -47,11 +47,6 @@ public abstract class StoreTestCase extends NeoTestCase
         }
     }
 
-    protected void addTwice( RdfStore store, Statement statement )
-    {
-        add( store, statement, 2 );
-    }
-
     protected void remove( RdfStore store, WildcardStatement statement,
         int numberOfTimes )
     {
@@ -62,53 +57,46 @@ public abstract class StoreTestCase extends NeoTestCase
         }
     }
 
-    protected void removeTwice( RdfStore store, WildcardStatement statement )
+    protected Statement statement( String subject, String predicate,
+        Resource object, Context context )
     {
-        remove( store, statement, 2 );
+        return new CompleteStatement( new Uri( subject ), new Uri( predicate ),
+            object, context );
     }
 
     protected Statement statement( String subject, String predicate,
-        Resource object, Context context, Context... contexts )
+        Object object, Context context )
     {
         return new CompleteStatement( new Uri( subject ), new Uri( predicate ),
-            object, context, contexts );
-    }
-
-    protected Statement statement( String subject, String predicate,
-        Object object, Context context, Context... contexts )
-    {
-        return new CompleteStatement( new Uri( subject ), new Uri( predicate ),
-            new Literal( object ), context, contexts );
+            new Literal( object ), context );
     }
 
     protected void removeStatements( RdfStore store,
-        List<Statement> statements )
+        List<CompleteStatement> statements )
     {
-        removeStatements( store, statements, 2 );
+        removeStatements( store, statements, 1 );
     }
 
     protected void removeStatements( RdfStore store,
-        List<Statement> statements, int numberOfTimesForEach )
+        List<CompleteStatement> statements, int numberOfTimesForEach )
     {
         while ( !statements.isEmpty() )
         {
-            Statement statement = statements.remove(
+            CompleteStatement statement = statements.remove(
                 new Random().nextInt( statements.size() ) );
             WildcardStatement wildcardStatement =
-                statement instanceof CompleteStatement ?
-                    ( ( CompleteStatement ) statement ).asWildcardStatement() :
-                        ( WildcardStatement ) statement;
+                statement.asWildcardStatement();
             remove( store, wildcardStatement, numberOfTimesForEach );
         }
     }
 
-    protected List<Statement> addStatements(
-        RdfStore store, Statement... statements )
+    protected List<CompleteStatement> addStatements(
+        RdfStore store, CompleteStatement... statements )
     {
-        ArrayList<Statement> list = new ArrayList<Statement>();
-        for ( Statement statement : statements )
+        ArrayList<CompleteStatement> list = new ArrayList<CompleteStatement>();
+        for ( CompleteStatement statement : statements )
         {
-            add( store, ( CompleteStatement ) statement, 1 );
+            add( store, statement, 1 );
             list.add( statement );
         }
         return list;
