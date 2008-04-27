@@ -39,6 +39,7 @@ public class TestVerboseQuadStore extends StoreTestCase
                 ,
                 sStupidC1
                 );
+
         removeStatements( store, statements );
         deleteEntireNodeSpace();
     }

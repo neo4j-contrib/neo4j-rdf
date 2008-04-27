@@ -59,7 +59,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         AbstractNode abstractLiteralNode = getNodeByType( representation,
             VerboseQuadStrategy.TYPE_LITERAL );
 
-        Node[] nodes = findLiteralNode( subjectNode, subjectToMiddle,
+        Node[] nodes = findMiddleAndObjectNode( subjectNode, subjectToMiddle,
             middleToLiteral, abstractLiteralNode );
         Node middleNode = nodes[ 0 ];
         Node literalNode = nodes[ 1 ];
@@ -85,18 +85,11 @@ public class VerboseQuadExecutor extends UriBasedExecutor
             return null;
         }
         contextNode = lookupOrCreateNode( abstractContextNode, nodeMapping );
-        for ( Relationship relationship : middleNode.getRelationships(
-            relationshipType( abstractRelationship.getRelationshipTypeName() ),
-            Direction.OUTGOING ) )
-        {
-            Node aContextNode = relationship.getEndNode();
-            if ( aContextNode.equals( contextNode ) )
-            {
-                return relationship;
-            }
-        }
-        return createRelationship( middleNode, contextNode,
-            abstractRelationship );
+        Relationship relationship = findDirectRelationship( middleNode,
+            relationshipType(  abstractRelationship.getRelationshipTypeName() ),
+            contextNode, Direction.OUTGOING );
+        return relationship != null ? relationship :
+            createRelationship( middleNode, contextNode, abstractRelationship );
     }
 
     private void handleAddObjectRepresentation(
@@ -119,8 +112,8 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         AbstractRelationship middleToObject = findAbstractRelationship(
             representation, VerboseQuadStrategy.TYPE_MIDDLE,
             VerboseQuadStrategy.TYPE_OBJECT );
-        Node middleNode = findObjectMiddleNode( subjectNode, subjectToMiddle,
-            middleToObject, objectNode );
+        Node middleNode = findMiddleAndObjectNode( subjectNode, subjectToMiddle,
+            middleToObject, abstractObjectNode )[ 0 ];
 
         if ( middleNode == null )
         {
@@ -131,39 +124,23 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         ensureContextsAreAdded( representation, middleNode, nodeMapping );
     }
 
-    private Node[] findLiteralNode( Node subjectNode,
+    private Node[] findMiddleAndObjectNode( Node subjectNode,
         AbstractRelationship subjectToMiddle,
-        AbstractRelationship middleToLiteral,
-        AbstractNode abstractLiteralNode )
+        AbstractRelationship middleToObject,
+        AbstractNode abstractObjectNode )
     {
         Node middleNode = null;
-        Node literalNode = null;
-        for ( Relationship relationship : subjectNode.getRelationships(
-            relationshipType( subjectToMiddle.getRelationshipTypeName() ),
-            Direction.OUTGOING ) )
+        Node objectNodeToLookFor = null;
+        if ( abstractObjectNode.getUriOrNull() != null )
         {
-            Node aMiddleNode = relationship.getEndNode();
-            for ( Relationship rel : aMiddleNode.getRelationships(
-                relationshipType( middleToLiteral.getRelationshipTypeName() ),
-                Direction.OUTGOING ) )
+            objectNodeToLookFor = lookupNode( abstractObjectNode );
+            if ( objectNodeToLookFor == null )
             {
-                Node aLiteralNode = rel.getEndNode();
-                if ( containsProperties( aLiteralNode,
-                    abstractLiteralNode.properties() ) )
-                {
-                    middleNode = aMiddleNode;
-                    literalNode = aLiteralNode;
-                    break;
-                }
+                return null;
             }
         }
-        return new Node[] { middleNode, literalNode };
-    }
 
-    private Node findObjectMiddleNode( Node subjectNode,
-        AbstractRelationship subjectToMiddle,
-        AbstractRelationship middleToObject, Node objectNode )
-    {
+        Node objectNode = null;
         for ( Relationship relationship : subjectNode.getRelationships(
             relationshipType( subjectToMiddle.getRelationshipTypeName() ),
             Direction.OUTGOING ) )
@@ -174,13 +151,18 @@ public class VerboseQuadExecutor extends UriBasedExecutor
                 Direction.OUTGOING ) )
             {
                 Node anObjectNode = rel.getEndNode();
-                if ( anObjectNode.equals( objectNode ) )
+                if ( ( objectNodeToLookFor != null &&
+                    anObjectNode.equals( objectNodeToLookFor ) ) ||
+                    ( objectNodeToLookFor == null && containsProperties(
+                        anObjectNode, abstractObjectNode.properties() ) ) )
                 {
-                    return aMiddleNode;
+                    middleNode = aMiddleNode;
+                    objectNode = anObjectNode;
+                    break;
                 }
             }
         }
-        return null;
+        return new Node[] { middleNode, objectNode };
     }
 
     private void ensureContextsAreAdded(
@@ -307,8 +289,8 @@ public class VerboseQuadExecutor extends UriBasedExecutor
             representation, VerboseQuadStrategy.TYPE_MIDDLE,
             VerboseQuadStrategy.TYPE_OBJECT );
 
-        Node middleNode = findObjectMiddleNode( subjectNode, subjectToMiddle,
-            middleToObject, objectNode );
+        Node middleNode = findMiddleAndObjectNode( subjectNode, subjectToMiddle,
+            middleToObject, abstractObjectNode )[ 0 ];
         if ( middleNode == null )
         {
             return;
@@ -322,6 +304,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         }
 
         deleteNodeIfEmpty( abstractSubjectNode, subjectNode );
+        // Special case where the subject and object are the same.
         if ( !subjectNode.equals( objectNode ) &&
             nodeIsEmpty( abstractObjectNode, objectNode, true ) )
         {
@@ -329,10 +312,17 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         }
     }
 
+    private Iterable<Relationship> getExistingContextRelationships(
+        Node middleNode )
+    {
+        return middleNode.getRelationships(
+            VerboseQuadStrategy.RelTypes.IN_CONTEXT );
+    }
+
     private void removeAllContextRelationships( Node middleNode )
     {
-        for ( Relationship relationship : middleNode.getRelationships(
-            VerboseQuadStrategy.RelTypes.IN_CONTEXT ) )
+        for ( Relationship relationship :
+            getExistingContextRelationships( middleNode ) )
         {
             deleteRelationship( relationship );
         }
@@ -396,7 +386,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         AbstractNode abstractLiteralNode = getNodeByType( representation,
             VerboseQuadStrategy.TYPE_LITERAL );
 
-        Node[] nodes = findLiteralNode( subjectNode, subjectToMiddle,
+        Node[] nodes = findMiddleAndObjectNode( subjectNode, subjectToMiddle,
             middleToLiteral, abstractLiteralNode );
         Node middleNode = nodes[ 0 ];
         Node literalNode = nodes[ 1 ];
@@ -416,9 +406,8 @@ public class VerboseQuadExecutor extends UriBasedExecutor
 
     private boolean middleNodeHasContexts( Node middleNode )
     {
-        return middleNode.hasRelationship(
-            VerboseQuadStrategy.RelTypes.IN_CONTEXT,
-            Direction.OUTGOING );
+        return getExistingContextRelationships(
+            middleNode ).iterator().hasNext();
     }
 
     private void deleteMiddleAndLiteral( Node middleNode,
