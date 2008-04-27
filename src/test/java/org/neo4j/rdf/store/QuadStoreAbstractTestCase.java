@@ -3,6 +3,7 @@ package org.neo4j.rdf.store;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
@@ -65,6 +66,20 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
     protected void debug( String text )
     {
         System.out.println( text );
+    }
+
+    protected void assertResultCount( WildcardStatement wildcard,
+        int expectedCount )
+    {
+        Iterator<CompleteStatement> result =
+            store().getStatements( wildcard, false ).iterator();
+        int resultCount = 0;
+        while ( result.hasNext() )
+        {
+            result.next();
+            resultCount++;
+        }
+        assertEquals( expectedCount, resultCount );
     }
 
     protected void assertResult( WildcardStatement wildcard,
