@@ -46,6 +46,7 @@ public class VerboseQuadStore extends RdfStoreImpl
         super( neo, new VerboseQuadStrategy(
             new VerboseQuadExecutor( neo, indexer, meta ), meta ) );
         this.meta = meta;
+        System.out.println( "======> VerboseQuadStore: I'm initialized! ");
     }
 
     protected MetaStructure meta()
@@ -299,7 +300,7 @@ public class VerboseQuadStore extends RdfStoreImpl
                         predicate.getUriAsString() );
                 }
             }
-        }
+        }        
         return statementList;
     }
 
