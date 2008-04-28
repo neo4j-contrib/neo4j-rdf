@@ -110,7 +110,7 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
                     break;
                 }
             }
-            assertTrue( "Result found in store, but in expected list: " +
+            assertTrue( "Result found in store, but not in expected list: " +
                 resultStatement, foundEquivalentStatement != null );
             expectedResultCollection.remove( foundEquivalentStatement );
         }
