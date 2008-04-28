@@ -99,6 +99,10 @@ public class VerboseQuadStore extends RdfStoreImpl
             {
                 result = handleSubjectPredicateObject( statement );
             }
+            else if ( wildcardPattern( statement, true, false, true ) )
+            {
+                result = handleWildcardPredicateWildcard( statement );
+            }
             else if ( wildcardPattern( statement, true, true, true ) )
             {
                 result = handleWildcardWildcardWildcard( statement );
@@ -134,6 +138,12 @@ public class VerboseQuadStore extends RdfStoreImpl
             lookupNode( new AbstractNode( uri ) );
     }
 
+    private Iterable<CompleteStatement> handleWildcardPredicateWildcard(
+        Statement statement )
+    {
+        return handleWildcardWildcardWildcard( statement );
+    }
+
     private Iterable<CompleteStatement> handleWildcardWildcardWildcard(
         Statement statement )
     {
@@ -151,6 +161,8 @@ public class VerboseQuadStore extends RdfStoreImpl
 
         List<CompleteStatement> statementList =
             new LinkedList<CompleteStatement>();
+        Uri statementPredicate = statement.getPredicate().isWildcard() ?
+            null : ( Uri ) statement.getPredicate();
         for ( Relationship contextRelationship : contextNode.getRelationships(
             VerboseQuadStrategy.RelTypes.IN_CONTEXT, Direction.INCOMING ) )
         {
@@ -162,11 +174,16 @@ public class VerboseQuadStore extends RdfStoreImpl
                 throw new RuntimeException( "Error, no subject for " +
                     middleNode );
             }
+            Uri predicate = new Uri( subjectRelationship.getType().name() );
+            if ( statementPredicate != null &&
+                !statementPredicate.equals( predicate ) )
+            {
+                continue;
+            }
             Node subjectNode = subjectRelationship.getOtherNode( middleNode );
             Node objectNode = getObjectNode(
                 middleNode, subjectRelationship.getType().name() );
             Uri subject = newValidatable( subjectNode ).getUri();
-            Uri predicate = new Uri( subjectRelationship.getType().name() );
             Value object = getValueForObjectNode( predicate.getUriAsString(),
                 objectNode );
             statementList.add( newStatement( subject, predicate,
