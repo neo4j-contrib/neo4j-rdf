@@ -16,7 +16,6 @@ import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Literal;
-import org.neo4j.rdf.model.Resource;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Value;
@@ -109,7 +108,7 @@ public class VerboseQuadStore extends RdfStoreImpl
                 result = super.getStatements( statement,
                     includeInferredStatements );
             }
-            
+
             for ( CompleteStatement resultStatement : result )
             {
                 debug( "getStatements() out: " + resultStatement );
@@ -170,18 +169,25 @@ public class VerboseQuadStore extends RdfStoreImpl
             Uri predicate = new Uri( subjectRelationship.getType().name() );
             Value object = getValueForObjectNode( predicate.getUriAsString(),
                 objectNode );
-            if ( object instanceof Literal )
-            {
-                statementList.add( new CompleteStatement(
-                    subject, predicate, ( Literal ) object, context ) );
-            }
-            else
-            {
-                statementList.add( new CompleteStatement(
-                    subject, predicate, ( Uri ) object, context ) );
-            }
+            statementList.add( newStatement( subject, predicate,
+                object, context ) );
         }
         return statementList;
+    }
+
+    private CompleteStatement newStatement( Uri subject, Uri predicate,
+        Value object, Context context )
+    {
+        if ( object instanceof Literal )
+        {
+            return new CompleteStatement(
+                subject, predicate, ( Literal ) object, context );
+        }
+        else
+        {
+            return new CompleteStatement(
+                subject, predicate, ( Uri ) object, context );
+        }
     }
 
     private Relationship findSubjectRelationship( Node middleNode )
@@ -311,7 +317,7 @@ public class VerboseQuadStore extends RdfStoreImpl
                         predicate.getUriAsString() );
                 }
             }
-        }        
+        }
         return statementList;
     }
 
@@ -460,16 +466,8 @@ public class VerboseQuadStore extends RdfStoreImpl
             Node objectNode = middleNode.getSingleRelationship(
                 relType( predicate ), Direction.OUTGOING ).getEndNode();
             Value object = getValueForObjectNode( predicate, objectNode );
-            if ( object instanceof Resource )
-            {
-                statementList.add( new CompleteStatement( subject,
-                    new Uri( predicate ), ( Resource ) object, context ) );
-            }
-            else
-            {
-                statementList.add( new CompleteStatement( subject,
-                    new Uri( predicate ), ( Literal ) object, context ) );
-            }
+            statementList.add( newStatement( subject, new Uri( predicate ),
+                object, context ) );
         }
     }
 
