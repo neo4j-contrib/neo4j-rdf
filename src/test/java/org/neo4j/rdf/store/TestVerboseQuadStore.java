@@ -5,6 +5,7 @@ import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Literal;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Wildcard;
+import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
 
 public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
 {
@@ -58,5 +59,37 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
 
             mattiasKnowsEmilPublic,
             mattiasNamePublic );
+        deleteEntireNodeSpace();
+    }
+
+    public void testType() throws Exception
+    {
+        Uri rdfType = new Uri( AbstractUriBasedExecutor.RDF_TYPE_URI );
+        CompleteStatement mattiasKnowsEmilPublic =
+            completeStatement(
+                TestUri.MATTIAS,
+                TestUri.FOAF_KNOWS,
+                TestUri.EMIL,
+                TestUri.MATTIAS_PUBLIC_GRAPH );
+        CompleteStatement mattiasTypePerson =
+            new CompleteStatement(
+                TestUri.MATTIAS.toUri(),
+                rdfType,
+                TestUri.PERSON.toUri(),
+                Context.NULL );
+        addStatements(
+            mattiasTypePerson,
+            mattiasKnowsEmilPublic );
+
+        assertResult(
+            wildcardStatement(
+                TestUri.MATTIAS.toUri(),
+                rdfType,
+                new Wildcard( "o" ),
+                new Wildcard( "g" ) ),
+
+            mattiasTypePerson );
+
+        deleteEntireNodeSpace();
     }
 }

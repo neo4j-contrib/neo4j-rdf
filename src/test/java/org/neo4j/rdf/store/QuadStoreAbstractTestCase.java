@@ -211,6 +211,7 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
         EMIL_PRIVATE_GRAPH( "context/emil-private" ),
         MATTIAS_PUBLIC_GRAPH( "context/mattias-public" ),
         MATTIAS_PRIVATE_GRAPH( "context/mattias-private" ),
+        PERSON( "person" );
         ;
 
         private final String uri;
