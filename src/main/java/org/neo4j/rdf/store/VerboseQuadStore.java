@@ -46,7 +46,7 @@ public class VerboseQuadStore extends RdfStoreImpl
         super( neo, new VerboseQuadStrategy(
             new VerboseQuadExecutor( neo, indexer, meta ), meta ) );
         this.meta = meta;
-        System.out.println( "======> VerboseQuadStore: I'm initialized! ");
+        debug( "I'm initialized!" );
     }
 
     protected MetaStructure meta()
@@ -65,6 +65,7 @@ public class VerboseQuadStore extends RdfStoreImpl
         WildcardStatement statement,
         boolean includeInferredStatements )
     {
+        debug( "getStatements() in: " + statement );
         Transaction tx = neo().beginTx();
         try
         {
@@ -108,6 +109,11 @@ public class VerboseQuadStore extends RdfStoreImpl
                 result = super.getStatements( statement,
                     includeInferredStatements );
             }
+            
+            for ( CompleteStatement resultStatement : result )
+            {
+                debug( "getStatements() out: " + resultStatement );
+            }
 
             tx.success();
             return result;
@@ -116,6 +122,11 @@ public class VerboseQuadStore extends RdfStoreImpl
         {
             tx.finish();
         }
+    }
+
+    private void debug( String message )
+    {
+        System.out.println( "====> VerboseQuadStore: " + message );
     }
 
     private Node lookupNode( Value uri )
