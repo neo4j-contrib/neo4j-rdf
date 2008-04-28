@@ -152,9 +152,8 @@ public class VerboseQuadStore extends RdfStoreImpl
                     middleNode );
             }
             Node subjectNode = subjectRelationship.getOtherNode( middleNode );
-            Node objectNode = middleNode.getSingleRelationship(
-                subjectRelationship.getType(),
-                Direction.OUTGOING ).getEndNode();
+            Node objectNode = getObjectNode(
+                middleNode, subjectRelationship.getType().name() );
             Uri subject = newValidatable( subjectNode ).getUri();
             Uri predicate = new Uri( subjectRelationship.getType().name() );
             Value object = getValueForObjectNode( predicate.getUriAsString(),
@@ -193,9 +192,7 @@ public class VerboseQuadStore extends RdfStoreImpl
         ArrayList<CompleteStatement> statementList =
             new ArrayList<CompleteStatement>();
         Uri subject = ( Uri ) statement.getSubject();
-        AbstractNode abstractSubjectNode = new AbstractNode( subject );
-        Node subjectNode = getRepresentationStrategy().getExecutor().
-            lookupNode( abstractSubjectNode );
+        Node subjectNode = lookupNode( subject );
         if ( subjectNode == null )
         {
             return statementList;
@@ -205,9 +202,7 @@ public class VerboseQuadStore extends RdfStoreImpl
         if ( statement.getObject() instanceof Uri )
         {
             Uri object = ( Uri ) statement.getObject();
-            AbstractNode abstractObjectNode = new AbstractNode( object );
-            Node objectNode = getRepresentationStrategy().getExecutor().
-                lookupNode( abstractObjectNode );
+            Node objectNode = lookupNode( object );
             if ( objectNode == null )
             {
                 return statementList;
@@ -258,10 +253,7 @@ public class VerboseQuadStore extends RdfStoreImpl
         Uri predicate = ( Uri ) statement.getPredicate();
         RelationshipType predicateType = new RelationshipTypeImpl(
             predicate.getUriAsString() );
-
-        AbstractNode abstractSubjectNode = new AbstractNode( subject );
-        Node subjectNode = getRepresentationStrategy().getExecutor().
-            lookupNode( abstractSubjectNode );
+        Node subjectNode = lookupNode( subject );
         if ( subjectNode == null )
         {
             return statementList;
@@ -270,10 +262,7 @@ public class VerboseQuadStore extends RdfStoreImpl
         VerboseQuadValidatable validatable = newValidatable( subjectNode );
         if ( statement.getObject() instanceof Uri )
         {
-            AbstractNode abstractObjectNode =
-                new AbstractNode( statement.getObject() );
-            Node objectNode = getRepresentationStrategy().getExecutor().
-                lookupNode( abstractObjectNode );
+            Node objectNode = lookupNode( statement.getObject() );
             Relationship objectToMiddle = objectNode.getSingleRelationship(
                 predicateType, Direction.INCOMING );
             if ( objectToMiddle == null )

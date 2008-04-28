@@ -318,7 +318,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         }
     }
 
-    private Iterable<Relationship> getExistingContextRelationships(
+    static Iterable<Relationship> getExistingContextRelationships(
         Node middleNode )
     {
         return middleNode.getRelationships(
