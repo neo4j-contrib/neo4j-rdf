@@ -228,13 +228,11 @@ public class VerboseQuadStore extends RdfStoreImpl
 
             for ( String key : validatable.getComplexPropertyKeys() )
             {
-                for ( Validatable otherObject : validatable.complexProperties(
+                for ( Node middleNode : validatable.getPropertiesAsMiddleNodes(
                     key ) )
                 {
-                    Node middleNode = otherObject.getUnderlyingNode().
-                        getSingleRelationship( new RelationshipTypeImpl( key ),
-                        Direction.INCOMING ).getStartNode();
-                    if ( otherObject.getUnderlyingNode().equals( objectNode ) )
+                    Node otherObject = getObjectNode( middleNode, key );
+                    if ( otherObject.equals( objectNode ) )
                     {
                         addIfInContext( statement, statementList,
                             middleNode, key );
