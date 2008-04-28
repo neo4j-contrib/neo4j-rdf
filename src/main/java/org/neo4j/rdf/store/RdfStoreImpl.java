@@ -26,6 +26,7 @@ public class RdfStoreImpl implements RdfStore
 {
     private final NeoService neo;
     private final RepresentationStrategy representationStrategy;
+    private int addCounter = 0;
 
     /**
      * @param neo the {@link NeoService}.
@@ -49,22 +50,6 @@ public class RdfStoreImpl implements RdfStore
         return this.representationStrategy;
     }
 
-//    private void assertContexts( Statement statement )
-//    {
-//        int count = 0;
-//        for ( Context c : statement.getContexts() )
-//        {
-//            if ( c != null && c.getUriAsString() != null )
-//            {
-//                count++;
-//            }
-//        }
-//        if ( count == 0 )
-//        {
-//            throw new RuntimeException( "Must have context" );
-//        }
-//    }
-
     public void addStatements( CompleteStatement... statements )
     {
         Transaction tx = neo.beginTx();
@@ -76,8 +61,13 @@ public class RdfStoreImpl implements RdfStore
                 lastStatement = statement;
                 AbstractRepresentation fragment = representationStrategy
                     .getAbstractRepresentation( statement );
-//                System.out.println( "addStmt:" + statement );
                 getExecutor().addToNodeSpace( fragment );
+                if ( ++addCounter % 500 == 0 )
+                {
+                    System.out.println( "Added " + addCounter +
+                        " statements tx=" + tx );
+                }
+//                System.out.println( "addStmt:" + statement );
             }
             tx.success();
         }

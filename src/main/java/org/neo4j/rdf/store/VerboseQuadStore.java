@@ -557,12 +557,6 @@ public class VerboseQuadStore extends RdfStoreImpl
             addObjects( statement, statementList, subject, new Uri( predicate ),
                 subjectNode, instance );
         }
-//        for ( MetaStructureClass cls : validatableInstance.getClasses() )
-//        {
-//            statementList.add( new CompleteStatement( subject, new Uri(
-//                AbstractUriBasedExecutor.RDF_TYPE_URI ), new Uri(
-//                    cls.getName() ) ) );
-//        }
     }
 
     private Iterable<CompleteStatement> handleSubjectWildcardWildcard(

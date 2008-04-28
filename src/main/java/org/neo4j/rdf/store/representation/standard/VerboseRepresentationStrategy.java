@@ -35,12 +35,12 @@ public class VerboseRepresentationStrategy
     public AbstractRepresentation getAbstractRepresentation(
         Statement statement )
     {
-        AbstractRepresentation representation =
-            super.getAbstractRepresentation( statement );
-        if ( representation != null )
-        {
-            return representation;
-        }
+        AbstractRepresentation representation = null;
+//            super.getAbstractRepresentation( statement );
+//        if ( representation != null )
+//        {
+//            return representation;
+//        }
 
         if ( isObjectType( statement.getObject() ) )
         {

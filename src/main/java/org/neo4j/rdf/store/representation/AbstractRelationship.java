@@ -1,6 +1,7 @@
 package org.neo4j.rdf.store.representation;
 
 import org.neo4j.api.core.Relationship;
+import org.neo4j.neometa.structure.MetaStructureRelTypes;
 
 /**
  * Represents a more simple abstraction of a {@link Relationship}.
@@ -21,6 +22,10 @@ public class AbstractRelationship extends AbstractElement
         this.RELATIONSHIP_TYPE_NAME = relTypeName;
         this.startNode = startNode;
         this.endNode = endNode;
+        if ( relTypeName.equals( MetaStructureRelTypes.META_IS_INSTANCE_OF.name() ) )
+        {
+            Thread.dumpStack();
+        }
     }
 
     /**
