@@ -28,7 +28,7 @@ public abstract class NeoTestCase extends TestCase
     @Override
     protected void setUp() throws Exception
     {
-        super.setUp();        
+        super.setUp();
         if ( neo == null )
         {
             neo = new EmbeddedNeo( "var/test/neo" );
@@ -43,6 +43,13 @@ public abstract class NeoTestCase extends TestCase
         }
         tx = neo().beginTx();
         createIndexServiceIfNeeded();
+    }
+
+    protected void restartTx()
+    {
+        tx.success();
+        tx.finish();
+        tx = neo.beginTx();
     }
 
     private void createIndexServiceIfNeeded()
@@ -65,7 +72,7 @@ public abstract class NeoTestCase extends TestCase
         tx.finish();
         super.tearDown();
     }
-    
+
     /**
      * In every setUp(), this class will check if there's an existing
      * IndexSerivce (using {@link #indexService()}). If not, one will be
@@ -76,12 +83,12 @@ public abstract class NeoTestCase extends TestCase
     {
         return null;
     }
-    
+
     private void setIndexService( IndexService indexService )
     {
         this.indexService = indexService;
     }
-    
+
     protected IndexService indexService()
     {
         return this.indexService;
@@ -94,16 +101,6 @@ public abstract class NeoTestCase extends TestCase
 
     protected void deleteEntireNodeSpace()
     {
-//        tx.success();
-//        tx.finish();
-//        try
-//        {
-//            Thread.sleep( 500 );
-//        }
-//        catch ( InterruptedException e )
-//        {
-//        }
-//        tx = neo.beginTx();
         for ( Relationship rel : neo().getReferenceNode().getRelationships() )
         {
             Node node = rel.getOtherNode( neo().getReferenceNode() );

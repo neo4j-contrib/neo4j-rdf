@@ -92,4 +92,32 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
 
         deleteEntireNodeSpace();
     }
+
+    public void testDuplicateWithLiterals() throws Exception
+    {
+        CompleteStatement mattiasTypePerson =
+            completeStatement(
+                TestUri.MATTIAS,
+                TestUri.RDF_TYPE,
+                TestUri.PERSON,
+                TestUri.MATTIAS_PUBLIC_GRAPH );
+        CompleteStatement mattiasNamePublic =
+            completeStatement(
+                TestUri.MATTIAS,
+                TestUri.FOAF_NICK,
+                "Mattias",
+                TestUri.MATTIAS_PUBLIC_GRAPH );
+
+        addStatements( mattiasTypePerson, mattiasNamePublic );
+        restartTx();
+
+        assertResult(
+            wildcardStatement(
+                new Wildcard( "s" ),
+                new Wildcard( "p" ),
+                new Literal( "Mattias" ),
+                new Wildcard( "g" ) ),
+
+            mattiasNamePublic );
+    }
 }
