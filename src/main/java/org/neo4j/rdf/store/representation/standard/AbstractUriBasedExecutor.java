@@ -73,7 +73,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
 
     protected void debug( String message )
     {
-        System.out.println( message );
+//        System.out.println( message );
     }
 
     private void debugRelationship( Relationship relationship,

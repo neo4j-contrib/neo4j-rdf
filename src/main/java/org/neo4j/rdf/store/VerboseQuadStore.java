@@ -39,7 +39,7 @@ public class VerboseQuadStore extends RdfStoreImpl
     {
         this( neo, indexer, null );
     }
-    
+
     public VerboseQuadStore( NeoService neo, IndexService indexer,
         MetaStructure meta )
     {
@@ -117,6 +117,12 @@ public class VerboseQuadStore extends RdfStoreImpl
         }
     }
 
+    private Node lookupNode( Value uri )
+    {
+        return getRepresentationStrategy().getExecutor().
+            lookupNode( new AbstractNode( uri ) );
+    }
+
     private Iterable<CompleteStatement> handleWildcardWildcardWildcard(
         Statement statement )
     {
@@ -126,8 +132,7 @@ public class VerboseQuadStore extends RdfStoreImpl
         }
 
         Context context = ( Context ) statement.getContext();
-        Node contextNode = getRepresentationStrategy().getExecutor().
-            lookupNode( new AbstractNode( context ) );
+        Node contextNode = lookupNode( context );
         if ( contextNode == null )
         {
             return new ArrayList<CompleteStatement>();

@@ -76,14 +76,14 @@ public class RdfStoreImpl implements RdfStore
                 lastStatement = statement;
                 AbstractRepresentation fragment = representationStrategy
                     .getAbstractRepresentation( statement );
-                System.out.println( "addStmt:" + statement );
+//                System.out.println( "addStmt:" + statement );
                 getExecutor().addToNodeSpace( fragment );
             }
             tx.success();
         }
         catch ( RuntimeException e )
         {
-            System.out.println( "FAILING STATEMENT:" + lastStatement );
+//            System.out.println( "FAILING STATEMENT:" + lastStatement );
             e.printStackTrace();
             throw e;
         }
