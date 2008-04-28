@@ -115,7 +115,8 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
                 resultStatement, foundEquivalentStatement != null );
             expectedResultCollection.remove( foundEquivalentStatement );
         }
-        assertTrue( expectedResultCollection.isEmpty() );
+        assertTrue( "Is " + expectedResultCollection,
+            expectedResultCollection.isEmpty() );
     }
 
     protected void assertEquivalentStatement( Statement first,

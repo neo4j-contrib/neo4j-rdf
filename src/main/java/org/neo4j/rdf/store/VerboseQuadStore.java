@@ -281,23 +281,11 @@ public class VerboseQuadStore extends RdfStoreImpl
         if ( statement.getObject() instanceof Uri )
         {
             Node objectNode = lookupNode( statement.getObject() );
-            Relationship objectToMiddle = objectNode.getSingleRelationship(
-                predicateType, Direction.INCOMING );
-            if ( objectToMiddle == null )
-            {
-                return statementList;
-            }
-
-            Node middleNode = objectNode.getSingleRelationship(
-                predicateType, Direction.INCOMING ).getStartNode();
-            if ( objectNode == null )
-            {
-                return new ArrayList<CompleteStatement>();
-            }
-            for ( Validatable complexProperty : validatable.complexProperties(
+            for ( Node middleNode : validatable.getPropertiesAsMiddleNodes(
                 predicate.getUriAsString() ) )
             {
-                if ( complexProperty.getUnderlyingNode().equals( objectNode ) )
+                if ( middleNode.getSingleRelationship( predicateType,
+                    Direction.OUTGOING ).getEndNode().equals( objectNode ) )
                 {
                     addIfInContext( statement, statementList, middleNode,
                         predicate.getUriAsString() );
