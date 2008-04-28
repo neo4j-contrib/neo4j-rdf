@@ -126,7 +126,7 @@ public class VerboseQuadStore extends RdfStoreImpl
 
     private void debug( String message )
     {
-        System.out.println( "====> VerboseQuadStore: " + message );
+//        System.out.println( "====> VerboseQuadStore: " + message );
     }
 
     private Node lookupNode( Value uri )
