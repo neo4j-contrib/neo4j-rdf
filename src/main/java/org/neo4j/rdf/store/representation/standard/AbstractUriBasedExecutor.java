@@ -171,7 +171,6 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         String metaInfo = getMetaExecutorInfo( node );
         if ( node.getUriOrNull() == null )
         {
-            thing = null;
         }
         else if ( metaInfo.equals( "class" ) )
         {

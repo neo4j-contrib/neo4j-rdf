@@ -1,33 +1,36 @@
 package org.neo4j.rdf.store;
 
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
 
 import org.neo4j.api.core.Direction;
 import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
 import org.neo4j.api.core.Relationship;
 import org.neo4j.api.core.RelationshipType;
+import org.neo4j.api.core.ReturnableEvaluator;
+import org.neo4j.api.core.StopEvaluator;
 import org.neo4j.api.core.Transaction;
+import org.neo4j.api.core.TraversalPosition;
+import org.neo4j.api.core.Traverser.Order;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Literal;
+import org.neo4j.rdf.model.Resource;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Value;
-import org.neo4j.rdf.model.Wildcard;
 import org.neo4j.rdf.model.WildcardStatement;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
-import org.neo4j.rdf.store.representation.standard.RelationshipTypeImpl;
 import org.neo4j.rdf.store.representation.standard.VerboseQuadExecutor;
 import org.neo4j.rdf.store.representation.standard.VerboseQuadStrategy;
-import org.neo4j.rdf.store.representation.standard.VerboseQuadValidatable;
-import org.neo4j.rdf.validation.Validatable;
+import org.neo4j.util.FilteringIterable;
+import org.neo4j.util.IterableWrapper;
+import org.neo4j.util.OneOfRelTypesReturnableEvaluator;
+import org.neo4j.util.PrefetchingIterator;
+import org.neo4j.util.RelationshipToNodeIterable;
 import org.neo4j.util.index.IndexService;
 
 public class VerboseQuadStore extends RdfStoreImpl
@@ -85,7 +88,7 @@ public class VerboseQuadStore extends RdfStoreImpl
             }
             else if ( wildcardPattern( statement, false, true, false ) )
             {
-                result = handleSubjectWilcardObject( statement );
+                result = handleSubjectWildcardObject( statement );
             }
             else if ( wildcardPattern( statement, true, true, false ) )
             {
@@ -112,10 +115,10 @@ public class VerboseQuadStore extends RdfStoreImpl
                 result = super.getStatements( statement,
                     includeInferredStatements );
             }
-
-            for ( CompleteStatement resultStatement : result )
+            
+            if ( result == null )
             {
-                debug( "getStatements() out: " + resultStatement );
+            	result = new LinkedList<CompleteStatement>();
             }
 
             tx.success();
@@ -138,342 +141,12 @@ public class VerboseQuadStore extends RdfStoreImpl
             lookupNode( new AbstractNode( uri ) );
     }
 
-    private Iterable<CompleteStatement> handleWildcardPredicateWildcard(
-        Statement statement )
-    {
-        return handleWildcardWildcardWildcard( statement );
-    }
-
-    private Iterable<CompleteStatement> handleWildcardWildcardWildcard(
-        Statement statement )
-    {
-        if ( statement.getContext().isWildcard() )
-        {
-            throw new RuntimeException( "We can't handle ?S ?P ?O ?G" );
-        }
-
-        Context context = ( Context ) statement.getContext();
-        Node contextNode = lookupNode( context );
-        if ( contextNode == null )
-        {
-            return new ArrayList<CompleteStatement>();
-        }
-
-        List<CompleteStatement> statementList =
-            new LinkedList<CompleteStatement>();
-        Uri statementPredicate = statement.getPredicate().isWildcard() ?
-            null : ( Uri ) statement.getPredicate();
-        for ( Relationship contextRelationship : contextNode.getRelationships(
-            VerboseQuadStrategy.RelTypes.IN_CONTEXT, Direction.INCOMING ) )
-        {
-            Node middleNode = contextRelationship.getStartNode();
-            Relationship subjectRelationship = findSubjectRelationship(
-                middleNode );
-            if ( subjectRelationship == null )
-            {
-                throw new RuntimeException( "Error, no subject for " +
-                    middleNode );
-            }
-            Uri predicate = new Uri( subjectRelationship.getType().name() );
-            if ( statementPredicate != null &&
-                !statementPredicate.equals( predicate ) )
-            {
-                continue;
-            }
-            Node subjectNode = subjectRelationship.getOtherNode( middleNode );
-            Node objectNode = getObjectNode(
-                middleNode, subjectRelationship.getType().name() );
-            Uri subject = newValidatable( subjectNode ).getUri();
-            Value object = getValueForObjectNode( predicate.getUriAsString(),
-                objectNode );
-            statementList.add( newStatement( subject, predicate,
-                object, context ) );
-        }
-        return statementList;
-    }
-
-    private CompleteStatement newStatement( Uri subject, Uri predicate,
-        Value object, Context context )
-    {
-        if ( object instanceof Literal )
-        {
-            return new CompleteStatement(
-                subject, predicate, ( Literal ) object, context );
-        }
-        else
-        {
-            return new CompleteStatement(
-                subject, predicate, ( Uri ) object, context );
-        }
-    }
-
-    private Relationship findSubjectRelationship( Node middleNode )
-    {
-        for ( Relationship relationship : middleNode.getRelationships(
-            Direction.INCOMING ) )
-        {
-            if ( !relationship.getType().name().equals( VerboseQuadStrategy.
-                RelTypes.IN_CONTEXT.name() ) )
-            {
-                return relationship;
-            }
-        }
-        return null;
-    }
-
-    private Iterable<CompleteStatement> handleSubjectWilcardObject(
-        Statement statement )
-    {
-        ArrayList<CompleteStatement> statementList =
-            new ArrayList<CompleteStatement>();
-        Uri subject = ( Uri ) statement.getSubject();
-        Node subjectNode = lookupNode( subject );
-        if ( subjectNode == null )
-        {
-            return statementList;
-        }
-
-        VerboseQuadValidatable validatable = newValidatable( subjectNode );
-        if ( statement.getObject() instanceof Uri )
-        {
-            Uri object = ( Uri ) statement.getObject();
-            Node objectNode = lookupNode( object );
-            if ( objectNode == null )
-            {
-                return statementList;
-            }
-
-            for ( String key : validatable.getComplexPropertyKeys() )
-            {
-                for ( Node middleNode : validatable.getPropertiesAsMiddleNodes(
-                    key ) )
-                {
-                    Node otherObject = getObjectNode( middleNode, key );
-                    if ( otherObject.equals( objectNode ) )
-                    {
-                        addIfInContext( statement, statementList,
-                            middleNode, key );
-                    }
-                }
-            }
-        }
-        else
-        {
-            Literal literal = ( Literal ) statement.getObject();
-            Object value = literal.getValue();
-            for ( String key : validatable.getSimplePropertyKeys() )
-            {
-                for ( Node middleNode : validatable.getPropertiesAsMiddleNodes(
-                    key ) )
-                {
-                    if ( literalMatches( middleNode, key, value ) )
-                    {
-                        addIfInContext( statement, statementList, middleNode,
-                            key );
-                    }
-                }
-            }
-        }
-        return statementList;
-    }
-
-    private Iterable<CompleteStatement> handleSubjectPredicateObject(
-        Statement statement )
-    {
-        ArrayList<CompleteStatement> statementList =
-            new ArrayList<CompleteStatement>();
-        Uri subject = ( Uri ) statement.getSubject();
-        Uri predicate = ( Uri ) statement.getPredicate();
-        RelationshipType predicateType = new RelationshipTypeImpl(
-            predicate.getUriAsString() );
-        Node subjectNode = lookupNode( subject );
-        if ( subjectNode == null )
-        {
-            return statementList;
-        }
-
-        VerboseQuadValidatable validatable = newValidatable( subjectNode );
-        if ( statement.getObject() instanceof Uri )
-        {
-            Node objectNode = lookupNode( statement.getObject() );
-            for ( Node middleNode : validatable.getPropertiesAsMiddleNodes(
-                predicate.getUriAsString() ) )
-            {
-                if ( middleNode.getSingleRelationship( predicateType,
-                    Direction.OUTGOING ).getEndNode().equals( objectNode ) )
-                {
-                    addIfInContext( statement, statementList, middleNode,
-                        predicate.getUriAsString() );
-                }
-            }
-        }
-        else
-        {
-            Object value = ( ( Literal ) statement.getObject() ).getValue();
-            for ( Node middleNode : validatable.getPropertiesAsMiddleNodes(
-                predicate.getUriAsString() ) )
-            {
-                if ( literalMatches( middleNode, predicate.getUriAsString(),
-                    value ) )
-                {
-                    addIfInContext( statement, statementList, middleNode,
-                        predicate.getUriAsString() );
-                }
-            }
-        }
-        return statementList;
-    }
-
-    private boolean literalMatches( Node middleNode, String key, Object value )
-    {
-        Node literalNode = middleNode.getSingleRelationship(
-            new RelationshipTypeImpl( key ), Direction.OUTGOING ).getEndNode();
-        Object literalValue = literalNode.getProperty( key );
-        return value.equals( literalValue );
-    }
-
-    private Node getObjectNode( Node middleNode, String key )
-    {
-        return middleNode.getSingleRelationship(
-            new RelationshipTypeImpl( key ), Direction.OUTGOING ).getEndNode();
-    }
-
-    private Iterable<CompleteStatement> handleWildcardPredicateObject(
-        WildcardStatement statement )
-    {
-        return handleWildcardWildcardObject( statement );
-    }
-
-    private VerboseQuadValidatable newValidatable( Node subjectNode )
-    {
-        return new VerboseQuadValidatable( neo(), subjectNode, meta() );
-    }
-
-    private void buildStatementsOfObjectHits( Statement statement,
-        List<CompleteStatement> statementList, Literal literal )
-    {
-        VerboseQuadExecutor executor = ( VerboseQuadExecutor )
-            getRepresentationStrategy().getExecutor();
-        Object value = literal.getValue();
-        String predicate = statement.getPredicate() instanceof Wildcard ?
-            null : ( ( Uri ) statement.getPredicate() ).getUriAsString();
-        for ( Node literalNode : executor.findLiteralNodes( value ) )
-        {
-            for ( Relationship rel : literalNode.getRelationships(
-                Direction.INCOMING ) )
-            {
-                Node middleNode = rel.getStartNode();
-                Uri thePredicate = new Uri( rel.getType().name() );
-                if ( predicate != null &&
-                    !thePredicate.getUriAsString().equals( predicate ) )
-                {
-                    continue;
-                }
-
-                addIfInContext( statement, statementList, middleNode,
-                    thePredicate.getUriAsString() );
-            }
-        }
-    }
-
-    private void buildStatementsOfObjectHits( Statement statement,
-        List<CompleteStatement> statementList, Uri object )
-    {
-        Uri objectUri = ( Uri ) statement.getObject();
-        Node objectNode = getRepresentationStrategy().getExecutor().
-            lookupNode( new AbstractNode( objectUri ) );
-        if ( objectNode == null )
-        {
-            return;
-        }
-
-        String predicate = statement.getPredicate() instanceof Wildcard ?
-            null : ( ( Uri ) statement.getPredicate() ).getUriAsString();
-        for ( Relationship rel : objectNode.getRelationships(
-            Direction.INCOMING ) )
-        {
-            Node middleNode = rel.getStartNode();
-            Uri thePredicate = new Uri( rel.getType().name() );
-            if ( predicate != null &&
-                !thePredicate.getUriAsString().equals( predicate ) )
-            {
-                continue;
-            }
-
-            addIfInContext( statement, statementList, middleNode,
-                thePredicate.getUriAsString() );
-        }
-    }
-
-    private RelationshipType relType( final String name )
-    {
-        return new RelationshipType()
-        {
-            public String name()
-            {
-                return name;
-            }
-        };
-    }
-
-    private static Context getContextForUri( String contextUri )
-    {
-        return isNull( contextUri ) ? null : new Context( contextUri );
-    }
-
-    private static boolean isNull( String uri )
-    {
-        return uri == null || uri.equals( "null" );
-    }
-
-    private Set<Context> getExistingContexts( Node middleNode )
-    {
-        Set<Context> set = new HashSet<Context>();
-        for ( Relationship relationship : middleNode.getRelationships(
-            VerboseQuadStrategy.RelTypes.IN_CONTEXT,
-            Direction.OUTGOING ) )
-        {
-            Node contextNode = relationship.getEndNode();
-            String uri = ( String ) contextNode.getProperty(
-                AbstractUriBasedExecutor.URI_PROPERTY_KEY );
-            set.add( getContextForUri( uri ) );
-        }
-        return set;
-    }
-
-    private void addIfInContext( Statement statement,
-        List<CompleteStatement> statementList, Node middleNode,
-        String predicate )
-    {
-        Relationship rel = middleNode.getSingleRelationship(
-            relType( predicate ), Direction.INCOMING );
-        Node subjectNode = rel.getStartNode();
-        Validatable validatable = newValidatable( subjectNode );
-        Uri subject = validatable.getUri();
-        Set<Context> existingContexts = getExistingContexts( middleNode );
-        Set<Context> contextsToAdd = new HashSet<Context>();
-        if ( statement.getContext() instanceof Wildcard )
-        {
-            contextsToAdd = existingContexts;
-        }
-        else
-        {
-            if ( existingContexts.contains( statement.getContext() ) )
-            {
-                contextsToAdd.add( ( Context ) statement.getContext() );
-            }
-        }
-
-        for ( Context context : contextsToAdd )
-        {
-            Node objectNode = middleNode.getSingleRelationship(
-                relType( predicate ), Direction.OUTGOING ).getEndNode();
-            Value object = getValueForObjectNode( predicate, objectNode );
-            statementList.add( newStatement( subject, new Uri( predicate ),
-                object, context ) );
-        }
-    }
-
+	private String getNodeUriOrNull( Node node )
+	{
+		return ( String ) node.getProperty(
+			AbstractUriBasedExecutor.URI_PROPERTY_KEY, null );
+	}
+	
     private Value getValueForObjectNode( String predicate, Node objectNode )
     {
         String uri = ( String ) objectNode.getProperty(
@@ -493,91 +166,382 @@ public class VerboseQuadStore extends RdfStoreImpl
                 new Uri( datatype ), language );
         }
     }
-
-    private Iterable<CompleteStatement> handleWildcardWildcardObject(
-        WildcardStatement statement )
+    
+    private RelationshipType relType( final String name )
     {
-        List<CompleteStatement> statementList =
-            new ArrayList<CompleteStatement>();
-        if ( statement.getObject() instanceof Literal )
+        return new RelationshipType()
         {
-            buildStatementsOfObjectHits( statement, statementList,
-                ( Literal ) statement.getObject() );
-        }
-        else
-        {
-            buildStatementsOfObjectHits( statement, statementList,
-                ( Uri ) statement.getObject() );
-        }
-        return statementList;
+            public String name()
+            {
+                return name;
+            }
+        };
     }
-
+    
+    private RelationshipType relType( Value value )
+    {
+    	return relType( ( ( Uri ) value ).getUriAsString() );
+    }
+    
+    private RelationshipType relType( Statement statement )
+    {
+    	return relType( statement.getPredicate() );
+    }
+    
+    private Iterable<Node> getMiddleNodesFromLiterals( Statement statement )
+    {
+		Literal literal = ( Literal ) statement.getObject();
+		Iterable<Node> literalNodes = getRepresentationStrategy().
+			getExecutor().findLiteralNodes( literal.getValue() );
+		return new LiteralToMiddleNodeIterable( literalNodes );
+    }
+    
+    private Iterable<Node> getMiddleNodesFromAllContexts()
+	{
+		return getRepresentationStrategy().getExecutor().
+			getContextsReferenceNode().traverse( Order.DEPTH_FIRST,
+				StopEvaluator.END_OF_NETWORK,
+				new OneOfRelTypesReturnableEvaluator(
+					VerboseQuadStrategy.RelTypes.IN_CONTEXT ),
+				VerboseQuadExecutor.RelTypes.IS_A_CONTEXT, Direction.OUTGOING,
+				VerboseQuadStrategy.RelTypes.IN_CONTEXT, Direction.INCOMING );
+	}
+    
     private Iterable<CompleteStatement> handleSubjectPredicateWildcard(
-        WildcardStatement statement )
-    {
-        Uri subject = ( Uri ) statement.getSubject();
-        Uri predicate = ( Uri ) statement.getPredicate();
-
-        AbstractNode abstractSubjectNode = new AbstractNode( subject );
-        Node subjectNode = getRepresentationStrategy().getExecutor().
-            lookupNode( abstractSubjectNode );
-        if ( subjectNode == null )
-        {
-            return new ArrayList<CompleteStatement>();
-        }
-
-        VerboseQuadValidatable validatableInstance =
-            newValidatable( subjectNode );
-        List<CompleteStatement> statementList =
-            new LinkedList<CompleteStatement>();
-        addObjects( statement, statementList, subject, predicate, subjectNode,
-            validatableInstance );
-        return statementList;
-    }
-
-    private void addObjects( Statement statement,
-        List<CompleteStatement> statementList,
-        Uri subject, Uri predicate, Node subjectNode,
-        VerboseQuadValidatable validatableInstance )
-    {
-        Node[] middleNodes = validatableInstance.
-            getPropertiesAsMiddleNodes( predicate.getUriAsString() );
-        for ( Node middleNode : middleNodes )
-        {
-            addIfInContext( statement, statementList, middleNode,
-                predicate.getUriAsString() );
-        }
-    }
-
-    private void addObjects( Statement statement,
-        List<CompleteStatement> statementList,
-        Uri subject, Node subjectNode, VerboseQuadValidatable instance )
-    {
-        for ( String predicate : instance.getAllPropertyKeys() )
-        {
-            addObjects( statement, statementList, subject, new Uri( predicate ),
-                subjectNode, instance );
-        }
-    }
-
+    	Statement statement )
+	{
+    	Node subjectNode = lookupNode( statement.getSubject() );
+    	if ( subjectNode == null )
+    	{
+    		return null;
+    	}
+    	Iterable<Node> middleNodes = new RelationshipToNodeIterable(
+    		subjectNode, subjectNode.getRelationships( relType( statement ),
+    			Direction.OUTGOING ) );
+    	return new MiddleNodeToStatementIterable( statement, middleNodes );
+	}
+    
     private Iterable<CompleteStatement> handleSubjectWildcardWildcard(
-        WildcardStatement statement )
+    	Statement statement )
+	{
+    	Node subjectNode = lookupNode( statement.getSubject() );
+    	if ( subjectNode == null )
+    	{
+    		return null;
+    	}
+    	Iterable<Node> middleNodes = new RelationshipToNodeIterable(
+    		subjectNode, subjectNode.getRelationships( Direction.OUTGOING ) );
+    	return new MiddleNodeToStatementIterable( statement, middleNodes );
+	}
+    
+    private Iterable<CompleteStatement> handleSubjectWildcardObject(
+    	final Statement statement )
+	{
+    	// TODO Optimization: maybe check which has least rels (S or O)
+    	// and start there.
+    	Node subjectNode = lookupNode( statement.getSubject() );
+    	if ( subjectNode == null )
+    	{
+    		return null;
+    	}
+    	Iterable<Relationship> relationships =
+    		subjectNode.getRelationships( Direction.OUTGOING );
+    	relationships = new ObjectFilteredRelationships( statement,
+    		relationships );
+    	Iterable<Node> middleNodes = new RelationshipToNodeIterable(
+    		subjectNode, relationships );
+    	return new MiddleNodeToStatementIterable( statement, middleNodes );
+	}
+    
+    private Iterable<CompleteStatement> handleSubjectPredicateObject(
+    	Statement statement )
+	{
+    	Node subjectNode = lookupNode( statement.getSubject() );
+    	if ( subjectNode == null )
+    	{
+    		return null;
+    	}
+    	Iterable<Relationship> relationships = subjectNode.getRelationships(
+    		relType( statement ), Direction.OUTGOING );
+    	relationships = new ObjectFilteredRelationships( statement,
+    		relationships );
+    	Iterable<Node> middleNodes = new RelationshipToNodeIterable(
+    		subjectNode, relationships );
+    	return new MiddleNodeToStatementIterable( statement, middleNodes );
+	}
+    
+    private Iterable<CompleteStatement> handleWildcardWildcardObject(
+    	Statement statement )
+	{
+    	Iterable<Node> middleNodes = null;
+    	if ( statement.getObject() instanceof Literal )
+    	{
+    		middleNodes = getMiddleNodesFromLiterals( statement );
+    	}
+    	else
+    	{
+        	Node objectNode = lookupNode( statement.getObject() );
+        	if ( objectNode == null )
+        	{
+        		return null;
+        	}
+        	middleNodes = new RelationshipToNodeIterable(
+        		objectNode, objectNode.getRelationships( Direction.INCOMING ) );
+    	}
+    	return new MiddleNodeToStatementIterable( statement, middleNodes );
+	}
+    
+    private Iterable<CompleteStatement> handleWildcardPredicateWildcard(
+    	Statement statement )
+	{
+    	Iterable<Node> middleNodes = null;
+    	if ( statement.getContext().isWildcard() )
+    	{
+    		// TODO Slow
+    		middleNodes = getMiddleNodesFromAllContexts();
+    	}
+    	else
+    	{
+        	Node contextNode = lookupNode( statement.getContext() );
+        	if ( contextNode == null )
+        	{
+        		return null;
+        	}
+        	middleNodes = new RelationshipToNodeIterable(
+        		contextNode, contextNode.getRelationships(
+        			VerboseQuadStrategy.RelTypes.IN_CONTEXT,
+        			Direction.INCOMING ) );
+    	}
+    	middleNodes = new PredicateFilteredNodes( statement, middleNodes );
+    	return new MiddleNodeToStatementIterable( statement, middleNodes );
+	}
+    
+    private Iterable<CompleteStatement> handleWildcardPredicateObject(
+    	Statement statement )
+	{
+    	Iterable<Node> middleNodes = null;
+    	if ( statement.getObject() instanceof Literal )
+    	{
+	    	middleNodes = new PredicateFilteredNodes( statement,
+	    		getMiddleNodesFromLiterals( statement ) );
+    	}
+    	else
+    	{
+    		Node objectNode = lookupNode( statement.getObject() );
+    		if ( objectNode == null )
+    		{
+    			return null;
+    		}
+    		middleNodes = new RelationshipToNodeIterable(
+    			objectNode, objectNode.getRelationships( relType( statement ),
+    			Direction.INCOMING ) );
+    	}
+    	return new MiddleNodeToStatementIterable( statement, middleNodes );
+	}
+    
+    private Iterable<CompleteStatement> handleWildcardWildcardWildcard(
+    	Statement statement )
+	{
+    	Iterable<Node> middleNodes = null;
+    	if ( statement.getContext().isWildcard() )
+    	{
+    		// TODO Slow
+    		middleNodes = getMiddleNodesFromAllContexts();
+    	}
+    	else
+    	{
+	    	Node contextNode = lookupNode( statement.getContext() );
+	    	if ( contextNode == null )
+	    	{
+	    		return null;
+	    	}
+	    	middleNodes = new RelationshipToNodeIterable(
+	    		contextNode, contextNode.getRelationships(
+	    			VerboseQuadStrategy.RelTypes.IN_CONTEXT,
+	    			Direction.INCOMING ) );
+    	}
+    	return new MiddleNodeToStatementIterable( statement, middleNodes );
+	}
+    
+    private class MiddleNodeToStatementIterable
+    	implements Iterable<CompleteStatement>
     {
-        Uri subject = ( Uri ) statement.getSubject();
-        AbstractNode abstractSubjectNode = new AbstractNode( subject );
-        Node subjectNode = getRepresentationStrategy().getExecutor().
-            lookupNode( abstractSubjectNode );
-        if ( subjectNode == null )
+    	private Statement statement;
+    	private Iterable<Node> middleNodes;
+    	
+    	MiddleNodeToStatementIterable( Statement statement,
+    		Iterable<Node> middleNodes )
+		{
+    		this.statement = statement;
+    		this.middleNodes = middleNodes;
+		}
+    	
+		public Iterator<CompleteStatement> iterator()
         {
-            return new ArrayList<CompleteStatement>();
+			return new MiddleNodeToStatementIterator( statement,
+				middleNodes.iterator() );
         }
+    }
+    
+    private class MiddleNodeToStatementIterator
+    	extends PrefetchingIterator<CompleteStatement>
+    {
+    	private Iterator<Node> middleNodes;
+    	private ContextMatcherRE contextMatcher;
+    	
+    	// They are both null or both non-null synced.
+    	private Node currentMiddleNode;
+    	private Iterator<Node> currentMiddleNodeContexts;
+    	
+    	MiddleNodeToStatementIterator( Statement statement,
+    		Iterator<Node> middleNodes )
+    	{
+    		this.middleNodes = middleNodes;
+    		this.contextMatcher = new ContextMatcherRE( statement );
+    	}
+    	
+		@Override
+        protected CompleteStatement fetchNextOrNull()
+        {
+			if ( currentMiddleNodeContexts == null ||
+				!currentMiddleNodeContexts.hasNext() )
+			{
+				while ( middleNodes.hasNext() )
+				{
+					currentMiddleNode = middleNodes.next();
+					currentMiddleNodeContexts = currentMiddleNode.traverse(
+						Order.BREADTH_FIRST, StopEvaluator.END_OF_NETWORK,
+						contextMatcher, VerboseQuadStrategy.RelTypes.IN_CONTEXT,
+						Direction.OUTGOING ).iterator();
+					if ( currentMiddleNodeContexts.hasNext() )
+					{
+						break;
+					}
+				}
+			}
 
-        VerboseQuadValidatable validatableInstance =
-            newValidatable( subjectNode );
-        List<CompleteStatement> statementList =
-            new ArrayList<CompleteStatement>();
-        addObjects( statement, statementList, subject,
-            subjectNode, validatableInstance );
-        return statementList;
+			if ( currentMiddleNodeContexts != null &&
+				currentMiddleNodeContexts.hasNext() )
+			{
+				return newStatement();
+			}
+			return null;
+        }
+		
+		private CompleteStatement newStatement()
+		{
+			Node middleNode = currentMiddleNode;
+			Relationship subjectRelationship = middleNode.getRelationships(
+				Direction.INCOMING ).iterator().next();
+			Node subjectNode = subjectRelationship.getOtherNode( middleNode );
+			Uri subject = new Uri( getNodeUriOrNull( subjectNode ) );
+			Uri predicate = new Uri( subjectRelationship.getType().name() );
+			
+			Node objectNode = middleNode.getSingleRelationship(
+				subjectRelationship.getType(),
+					Direction.OUTGOING ).getEndNode();
+			Value object = getValueForObjectNode( predicate.getUriAsString(),
+				objectNode );
+			
+			Node contextNode = currentMiddleNodeContexts.next();
+			Context context = new Context( getNodeUriOrNull( contextNode ) );
+			
+			return object instanceof Literal ?
+				new CompleteStatement( subject, predicate, ( Literal ) object,
+					context ) :
+				new CompleteStatement( subject, predicate, ( Resource ) object,
+					context );
+		}
+    }
+    
+    private class ContextMatcherRE implements ReturnableEvaluator
+    {
+    	private Statement statement;
+    	
+    	ContextMatcherRE( Statement statement )
+    	{
+    		this.statement = statement;
+    	}
+    	
+		public boolean isReturnableNode( TraversalPosition position )
+        {
+			if ( position.depth() == 0 )
+			{
+				// This would be the starting node.
+				return false;
+			}
+			
+			Value statementContext = statement.getContext();
+			if ( statementContext.isWildcard() )
+			{
+				return true;
+			}
+			else
+			{
+				String contextUri = getNodeUriOrNull( position.currentNode() );
+				return new Context( contextUri ).equals( statementContext );
+			}
+        }
+    }
+    
+    private class PredicateFilteredNodes
+    	extends FilteringIterable<Node>
+    {
+    	private Statement statement;
+    	
+    	PredicateFilteredNodes( Statement statment, Iterable<Node> source )
+    	{
+    		super( source );
+    		this.statement = statment;
+    	}
+    	
+		@Override
+        protected boolean passes( Node middleNode )
+        {
+			Relationship relationship = middleNode.getRelationships(
+				Direction.INCOMING ).iterator().next();
+			return relationship.getType().name().equals( ( ( Uri )
+				statement.getPredicate() ).getUriAsString() );
+        }
+    }
+    
+    private class ObjectFilteredRelationships
+    	extends FilteringIterable<Relationship>
+    {
+    	private Statement statement;
+    	
+    	ObjectFilteredRelationships( Statement statement,
+    		Iterable<Relationship> source )
+    	{
+    		super( source );
+    		this.statement = statement;
+    	}
+    	
+		@Override
+        protected boolean passes( Relationship subjectToMiddleRel )
+        {
+			Node middleNode = subjectToMiddleRel.getEndNode();
+			Node objectNode = middleNode.getSingleRelationship(
+				subjectToMiddleRel.getType(), Direction.OUTGOING ).getEndNode();
+			Value objectValue = getValueForObjectNode(
+				subjectToMiddleRel.getType().name(), objectNode );
+			return objectValue.equals( statement.getObject() );
+        }
+    }
+    
+    private class LiteralToMiddleNodeIterable
+    	extends IterableWrapper<Node, Node>
+    {
+    	LiteralToMiddleNodeIterable( Iterable<Node> literalNodes )
+		{
+    		super( literalNodes );
+		}
+    	
+		@Override
+        protected Node underlyingObjectToObject( Node literalNode )
+        {
+	        return literalNode.getRelationships(
+	        	Direction.INCOMING ).iterator().next().getStartNode();
+        }
     }
 }

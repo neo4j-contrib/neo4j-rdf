@@ -55,10 +55,34 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
                 new Wildcard( "s" ),
                 new Wildcard( "p" ),
                 new Wildcard( "o" ),
-                new Context( TestUri.MATTIAS_PUBLIC_GRAPH.toUri().getUriAsString() ) ),
+                new Context( TestUri.MATTIAS_PUBLIC_GRAPH.toUri().
+                	getUriAsString() ) ),
 
             mattiasKnowsEmilPublic,
             mattiasNamePublic );
+
+        assertResult(
+            wildcardStatement(
+                new Wildcard( "s" ),
+                new Wildcard( "p" ),
+                new Wildcard( "o" ),
+                new Wildcard( "g" ) ),
+
+            mattiasKnowsEmilPublic,
+            mattiasKnowsEmilPrivate,
+            mattiasNamePublic,
+            mattiasNamePrivate );
+        
+        assertResult(
+            wildcardStatement(
+                new Wildcard( "s" ),
+                TestUri.FOAF_KNOWS.toUri(),
+                new Wildcard( "o" ),
+                new Wildcard( "g" ) ),
+
+            mattiasKnowsEmilPublic,
+            mattiasKnowsEmilPrivate );
+        
         deleteEntireNodeSpace();
     }
 
@@ -119,5 +143,6 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
                 new Wildcard( "g" ) ),
 
             mattiasNamePublic );
+        deleteEntireNodeSpace();
     }
 }

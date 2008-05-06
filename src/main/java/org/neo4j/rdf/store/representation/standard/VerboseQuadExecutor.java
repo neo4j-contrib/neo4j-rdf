@@ -9,6 +9,7 @@ import org.neo4j.api.core.Direction;
 import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
 import org.neo4j.api.core.Relationship;
+import org.neo4j.api.core.RelationshipType;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
@@ -21,11 +22,23 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         START_OF_ILLEGAL_URI + "datatype";
     public static final String LITERAL_LANGUAGE_KEY =
         START_OF_ILLEGAL_URI + "language";
+    
+    public static enum RelTypes implements RelationshipType
+    {
+    	REF_CONTEXTS,
+    	IS_A_CONTEXT,
+    }
 
     public VerboseQuadExecutor( NeoService neo, IndexService index,
         MetaStructure meta )
     {
         super( neo, index, meta );
+    }
+    
+    public Node getContextsReferenceNode()
+    {
+    	return this.neoUtil().getOrCreateSubReferenceNode(
+    		RelTypes.REF_CONTEXTS );
     }
 
     @Override
@@ -89,7 +102,16 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         {
             return null;
         }
+        
+        boolean willCreate = contextNode == null;
         contextNode = lookupOrCreateNode( abstractContextNode, nodeMapping );
+        if ( willCreate )
+        {
+	        Node contextRefNode = getContextsReferenceNode();
+	        contextRefNode.createRelationshipTo( contextNode,
+	        	RelTypes.IS_A_CONTEXT );
+        }
+        
         Relationship relationship = findDirectRelationship( middleNode,
             relationshipType(  abstractRelationship.getRelationshipTypeName() ),
             contextNode, Direction.OUTGOING );
