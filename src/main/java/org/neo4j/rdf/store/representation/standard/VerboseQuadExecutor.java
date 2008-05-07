@@ -163,7 +163,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
             objectNodeToLookFor = lookupNode( abstractObjectNode );
             if ( objectNodeToLookFor == null )
             {
-                return null;
+                return new Node[] { null, null };
             }
         }
 
