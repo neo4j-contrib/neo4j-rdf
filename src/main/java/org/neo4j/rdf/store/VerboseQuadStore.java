@@ -61,7 +61,7 @@ public class VerboseQuadStore extends RdfStoreImpl
     {
         return ( VerboseQuadStrategy ) super.getRepresentationStrategy();
     }
-
+    
     @Override
     public Iterable<CompleteStatement> getStatements(
         WildcardStatement statement,

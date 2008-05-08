@@ -1,23 +1,15 @@
 package org.neo4j.rdf.store;
 
-import java.util.Map;
-
 import org.neo4j.api.core.NeoService;
-import org.neo4j.api.core.Node;
 import org.neo4j.api.core.Transaction;
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Value;
 import org.neo4j.rdf.model.Wildcard;
 import org.neo4j.rdf.model.WildcardStatement;
-import org.neo4j.rdf.store.representation.AbstractElement;
 import org.neo4j.rdf.store.representation.AbstractRepresentation;
 import org.neo4j.rdf.store.representation.RepresentationExecutor;
 import org.neo4j.rdf.store.representation.RepresentationStrategy;
-import org.neo4j.util.matching.PatternElement;
-import org.neo4j.util.matching.PatternMatch;
-import org.neo4j.util.matching.PatternMatcher;
-import org.neo4j.util.matching.PatternNode;
 
 /**
  * Default implementation of an {@link RdfStore}.
@@ -26,7 +18,6 @@ public class RdfStoreImpl implements RdfStore
 {
     private final NeoService neo;
     private final RepresentationStrategy representationStrategy;
-    private int addCounter = 0;
 
     /**
      * @param neo the {@link NeoService}.
@@ -53,27 +44,16 @@ public class RdfStoreImpl implements RdfStore
     public void addStatements( CompleteStatement... statements )
     {
         Transaction tx = neo.beginTx();
-        Statement lastStatement = null;
         try
         {
             for ( Statement statement : statements )
             {
-                lastStatement = statement;
-                AbstractRepresentation fragment = representationStrategy
-                    .getAbstractRepresentation( statement );
-                getExecutor().addToNodeSpace( fragment );
-                if ( ++addCounter % 500 == 0 )
-                {
-                    System.out.println( "Added " + addCounter +
-                        " statements tx=" + tx );
-                }
-//                System.out.println( "addStmt:" + statement );
+                addStatement( statement );
             }
             tx.success();
         }
         catch ( RuntimeException e )
         {
-//            System.out.println( "FAILING STATEMENT:" + lastStatement );
             e.printStackTrace();
             throw e;
         }
@@ -85,7 +65,9 @@ public class RdfStoreImpl implements RdfStore
 
     protected void addStatement( Statement statement )
     {
-
+        AbstractRepresentation fragment = representationStrategy
+	        .getAbstractRepresentation( statement );
+	    getExecutor().addToNodeSpace( fragment );
     }
 
     private RepresentationExecutor getExecutor()
@@ -126,9 +108,9 @@ public class RdfStoreImpl implements RdfStore
         return potentialWildcard instanceof Wildcard;
     }
 
-    public Iterable<Statement> oldGetStatements( WildcardStatement statement,
-        boolean includeInferredStatements )
-    {
+//    public Iterable<Statement> oldGetStatements( WildcardStatement statement,
+//        boolean includeInferredStatements )
+//    {
 //      S, null, null         : No
 //      S, P, null            : Yes
 //      null, null, O         : No
@@ -153,26 +135,26 @@ public class RdfStoreImpl implements RdfStore
 //
 //      }
 //      String query = SparqlBuilder.getQuery( statementWithOptionalNulls );
+//
+//        throw new UnsupportedOperationException();
+//    }
 
-        throw new UnsupportedOperationException();
-    }
 
+//    private boolean theseAreNull( Statement statementWithOptionalNulls,
+//        boolean subjectIsNull, boolean predicateIsNull, boolean objectIsNull )
+//    {
+//        return objectComparesToNull( statementWithOptionalNulls.getSubject(),
+//            subjectIsNull )
+//            && objectComparesToNull( statementWithOptionalNulls.getPredicate(),
+//                predicateIsNull )
+//            && objectComparesToNull( statementWithOptionalNulls.getObject(),
+//                objectIsNull );
+//    }
 
-    private boolean theseAreNull( Statement statementWithOptionalNulls,
-        boolean subjectIsNull, boolean predicateIsNull, boolean objectIsNull )
-    {
-        return objectComparesToNull( statementWithOptionalNulls.getSubject(),
-            subjectIsNull )
-            && objectComparesToNull( statementWithOptionalNulls.getPredicate(),
-                predicateIsNull )
-            && objectComparesToNull( statementWithOptionalNulls.getObject(),
-                objectIsNull );
-    }
-
-    private boolean objectComparesToNull( Object object, boolean shouldBeNull )
-    {
-        return shouldBeNull ? object == null : object != null;
-    }
+//    private boolean objectComparesToNull( Object object, boolean shouldBeNull )
+//    {
+//        return shouldBeNull ? object == null : object != null;
+//    }
 
     public void removeStatements( WildcardStatement statement )
     {
@@ -198,22 +180,22 @@ public class RdfStoreImpl implements RdfStore
         }
     }
 
-    private static interface GraphMatchingFacade
-    {
-        /**
-         * Takes an abstract representation of a <i>single</i> statement with
-         * optional wildcards, and returns all matching statements in the
-         * node space.
-         * @param oneStatementWithWildcards an abstract representaiton of a
-         * single statement, potentially with wildcards
-         * @return all statements that match
-         * <code>oneStatementWithWildcards</code>
-         */
-        Iterable<Statement> getMatchingStatements( AbstractRepresentation
-            oneStatementWithWildcards );
-    }
+//    private static interface GraphMatchingFacade
+//    {
+//        /**
+//         * Takes an abstract representation of a <i>single</i> statement with
+//         * optional wildcards, and returns all matching statements in the
+//         * node space.
+//         * @param oneStatementWithWildcards an abstract representaiton of a
+//         * single statement, potentially with wildcards
+//         * @return all statements that match
+//         * <code>oneStatementWithWildcards</code>
+//         */
+//        Iterable<Statement> getMatchingStatements( AbstractRepresentation
+//            oneStatementWithWildcards );
+//    }
 
-    private GraphMatchingFacade graphMatchingFacade()
+/*    private GraphMatchingFacade graphMatchingFacade()
     {
         return new GraphMatchingFacade()
         {
@@ -268,5 +250,5 @@ public class RdfStoreImpl implements RdfStore
                 return null;
             }
         };
-    }
+    }*/
 }

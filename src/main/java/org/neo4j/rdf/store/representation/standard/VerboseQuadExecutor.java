@@ -78,7 +78,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
             VerboseQuadStrategy.TYPE_LITERAL );
 
         Node[] nodes = findMiddleAndObjectNode( subjectNode, subjectToMiddle,
-            middleToLiteral, abstractLiteralNode );
+            middleToLiteral, abstractLiteralNode, null );
         Node middleNode = nodes[ 0 ];
         Node literalNode = nodes[ 1 ];
 
@@ -140,7 +140,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
             representation, VerboseQuadStrategy.TYPE_MIDDLE,
             VerboseQuadStrategy.TYPE_OBJECT );
         Node middleNode = findMiddleAndObjectNode( subjectNode, subjectToMiddle,
-            middleToObject, abstractObjectNode )[ 0 ];
+            middleToObject, abstractObjectNode, objectNode )[ 0 ];
 
         if ( middleNode == null )
         {
@@ -154,17 +154,17 @@ public class VerboseQuadExecutor extends UriBasedExecutor
     private Node[] findMiddleAndObjectNode( Node subjectNode,
         AbstractRelationship subjectToMiddle,
         AbstractRelationship middleToObject,
-        AbstractNode abstractObjectNode )
+        AbstractNode abstractObjectNode, Node objectNodeIfResource )
     {
         Node middleNode = null;
         Node objectNodeToLookFor = null;
         if ( abstractObjectNode.getUriOrNull() != null )
         {
-            objectNodeToLookFor = lookupNode( abstractObjectNode );
-            if ( objectNodeToLookFor == null )
-            {
-                return new Node[] { null, null };
-            }
+            objectNodeToLookFor = objectNodeIfResource;
+//            if ( objectNodeToLookFor == null )
+//            {
+//                return new Node[] { null, null };
+//            }
         }
 
         Node objectNode = null;
@@ -318,7 +318,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
             VerboseQuadStrategy.TYPE_OBJECT );
 
         Node middleNode = findMiddleAndObjectNode( subjectNode, subjectToMiddle,
-            middleToObject, abstractObjectNode )[ 0 ];
+            middleToObject, abstractObjectNode, objectNode )[ 0 ];
         if ( middleNode == null )
         {
             return;
@@ -415,7 +415,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
             VerboseQuadStrategy.TYPE_LITERAL );
 
         Node[] nodes = findMiddleAndObjectNode( subjectNode, subjectToMiddle,
-            middleToLiteral, abstractLiteralNode );
+            middleToLiteral, abstractLiteralNode, null );
         Node middleNode = nodes[ 0 ];
         Node literalNode = nodes[ 1 ];
         if ( literalNode == null )
