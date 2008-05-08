@@ -459,8 +459,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
     {
         for ( String key : keys )
         {
-            if ( !key.equals( LITERAL_DATATYPE_KEY ) &&
-                !key.equals( LITERAL_LANGUAGE_KEY ) )
+            if ( !EXCLUDED_LITERAL_KEYS.contains( key ) )
             {
                 return key;
             }

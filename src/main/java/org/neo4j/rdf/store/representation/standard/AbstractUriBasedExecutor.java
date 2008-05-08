@@ -384,6 +384,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
 
     protected Object getRealLiteralValue( Literal literal )
     {
+    	// TODO Conversion?
         return literal.getValue();
     }
 
