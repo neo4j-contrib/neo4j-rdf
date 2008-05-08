@@ -8,10 +8,8 @@ import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
 import org.neo4j.api.core.Relationship;
 import org.neo4j.api.core.RelationshipType;
-import org.neo4j.api.core.ReturnableEvaluator;
 import org.neo4j.api.core.StopEvaluator;
 import org.neo4j.api.core.Transaction;
-import org.neo4j.api.core.TraversalPosition;
 import org.neo4j.api.core.Traverser.Order;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.rdf.model.CompleteStatement;
@@ -27,6 +25,7 @@ import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
 import org.neo4j.rdf.store.representation.standard.VerboseQuadExecutor;
 import org.neo4j.rdf.store.representation.standard.VerboseQuadStrategy;
 import org.neo4j.util.FilteringIterable;
+import org.neo4j.util.FilteringIterator;
 import org.neo4j.util.IterableWrapper;
 import org.neo4j.util.OneOfRelTypesReturnableEvaluator;
 import org.neo4j.util.PrefetchingIterator;
@@ -67,7 +66,7 @@ public class VerboseQuadStore extends RdfStoreImpl
         WildcardStatement statement,
         boolean includeInferredStatements )
     {
-        debug( "getStatements() in: " + statement );
+        debug( "getStatements( " + statement + " )" );
         Transaction tx = neo().beginTx();
         try
         {
@@ -386,8 +385,8 @@ public class VerboseQuadStore extends RdfStoreImpl
     private class MiddleNodeToStatementIterator
     	extends PrefetchingIterator<CompleteStatement>
     {
+    	private Statement statement;
     	private Iterator<Node> middleNodes;
-    	private ContextMatcherRE contextMatcher;
     	
     	// They are both null or both non-null synced.
     	private Node currentMiddleNode;
@@ -396,8 +395,8 @@ public class VerboseQuadStore extends RdfStoreImpl
     	MiddleNodeToStatementIterator( Statement statement,
     		Iterator<Node> middleNodes )
     	{
+    		this.statement = statement;
     		this.middleNodes = middleNodes;
-    		this.contextMatcher = new ContextMatcherRE( statement );
     	}
     	
 		@Override
@@ -409,10 +408,8 @@ public class VerboseQuadStore extends RdfStoreImpl
 				while ( middleNodes.hasNext() )
 				{
 					currentMiddleNode = middleNodes.next();
-					currentMiddleNodeContexts = currentMiddleNode.traverse(
-						Order.BREADTH_FIRST, StopEvaluator.END_OF_NETWORK,
-						contextMatcher, VerboseQuadStrategy.RelTypes.IN_CONTEXT,
-						Direction.OUTGOING ).iterator();
+					currentMiddleNodeContexts =
+						newContextIterator( currentMiddleNode );
 					if ( currentMiddleNodeContexts.hasNext() )
 					{
 						break;
@@ -427,6 +424,35 @@ public class VerboseQuadStore extends RdfStoreImpl
 			}
 			return null;
         }
+		
+		private Iterator<Node> newContextIterator( Node middleNode )
+		{
+			// TODO With the traverser it's... somewhat like
+			// 1000 times slower, why Johan why?
+//			currentMiddleNodeContexts = currentMiddleNode.traverse(
+//				Order.BREADTH_FIRST, StopEvaluator.END_OF_NETWORK,
+//				contextMatcher, VerboseQuadStrategy.RelTypes.IN_CONTEXT,
+//				Direction.OUTGOING ).iterator();
+			
+			Iterator<Node> iterator = new RelationshipToNodeIterable( 
+				middleNode, middleNode.getRelationships(
+					VerboseQuadStrategy.RelTypes.IN_CONTEXT,
+					Direction.OUTGOING ) ).iterator();
+			if ( !statement.getContext().isWildcard() )
+			{
+				iterator = new FilteringIterator<Node>( iterator )
+				{
+					@Override
+                    protected boolean passes( Node contextNode )
+                    {
+						String contextUri = getNodeUriOrNull( contextNode );
+						return new Context( contextUri ).equals(
+							statement.getContext() );
+                    }
+				};
+			}
+			return iterator;
+		}
 		
 		private CompleteStatement newStatement()
 		{
@@ -452,36 +478,6 @@ public class VerboseQuadStore extends RdfStoreImpl
 				new CompleteStatement( subject, predicate, ( Resource ) object,
 					context );
 		}
-    }
-    
-    private class ContextMatcherRE implements ReturnableEvaluator
-    {
-    	private Statement statement;
-    	
-    	ContextMatcherRE( Statement statement )
-    	{
-    		this.statement = statement;
-    	}
-    	
-		public boolean isReturnableNode( TraversalPosition position )
-        {
-			if ( position.depth() == 0 )
-			{
-				// This would be the starting node.
-				return false;
-			}
-			
-			Value statementContext = statement.getContext();
-			if ( statementContext.isWildcard() )
-			{
-				return true;
-			}
-			else
-			{
-				String contextUri = getNodeUriOrNull( position.currentNode() );
-				return new Context( contextUri ).equals( statementContext );
-			}
-        }
     }
     
     private class PredicateFilteredNodes
