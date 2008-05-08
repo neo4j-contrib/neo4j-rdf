@@ -1,6 +1,7 @@
 package org.neo4j.rdf.store.representation.standard;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,9 +44,10 @@ public class PureQuadRepresentationExecutor extends AbstractUriBasedExecutor
             {
                 // Its a connection to another resource.
                 Node startNode = lookupOrCreateNode( abstractRelationship.
-                    getStartNode(), abstractNodeToNodeMap );
+                    getStartNode(), abstractNodeToNodeMap ).getNode();
                 Node endNode = lookupOrCreateNode(
-                    abstractRelationship.getEndNode(), abstractNodeToNodeMap );
+                    abstractRelationship.getEndNode(), abstractNodeToNodeMap )
+                    .getNode();
                 relationship = ensureDirectlyConnected( startNode,
                     abstractRelationship, endNode );
             }
@@ -79,7 +81,8 @@ public class PureQuadRepresentationExecutor extends AbstractUriBasedExecutor
         Map<AbstractNode, Node> abstractNodeToNodeMap )
     {
         Node startNode = lookupOrCreateNode(
-            abstractRelationship.getStartNode(), abstractNodeToNodeMap );
+            abstractRelationship.getStartNode(), abstractNodeToNodeMap )
+            .getNode();
         RelationshipType relationshipType = relationshipType(
             abstractRelationship.getRelationshipTypeName() );
         Relationship relationship = findLiteralRelationship( startNode,
@@ -111,7 +114,8 @@ public class PureQuadRepresentationExecutor extends AbstractUriBasedExecutor
             node.getRelationships( relationshipType, Direction.OUTGOING ) )
         {
             Node literalNode = relationship.getOtherNode( node );
-            if ( containsProperties( literalNode, containingProperties ) )
+            if ( containsProperties( literalNode, containingProperties,
+            	Collections.<String>emptySet() ) )
             {
                 return relationship;
             }

@@ -55,7 +55,8 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
         {
             if ( abstractNode.getUriOrNull() != null )
             {
-                Node node = lookupOrCreateNode( abstractNode, nodeMapping );
+                Node node = lookupOrCreateNode(
+                	abstractNode, nodeMapping ).getNode();
                 applyOnNode( abstractNode, node );
             }
         }

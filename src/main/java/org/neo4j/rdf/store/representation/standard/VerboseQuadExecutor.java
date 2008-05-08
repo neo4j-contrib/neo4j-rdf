@@ -2,6 +2,7 @@ package org.neo4j.rdf.store.representation.standard;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.neo4j.api.core.Direction;
 import org.neo4j.api.core.NeoService;
@@ -20,6 +21,14 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         START_OF_ILLEGAL_URI + "datatype";
     public static final String LITERAL_LANGUAGE_KEY =
         START_OF_ILLEGAL_URI + "language";
+    
+    private static final Collection<String> EXCLUDED_LITERAL_KEYS =
+    	new HashSet<String>();
+    static
+    {
+    	EXCLUDED_LITERAL_KEYS.add( LITERAL_DATATYPE_KEY );
+    	EXCLUDED_LITERAL_KEYS.add( LITERAL_LANGUAGE_KEY );
+    }
     
     public static enum RelTypes implements RelationshipType
     {
@@ -63,7 +72,8 @@ public class VerboseQuadExecutor extends UriBasedExecutor
             VerboseQuadStrategy.TYPE_SUBJECT );
         AbstractNode abstractMiddleNode = getNodeByType( representation,
             VerboseQuadStrategy.TYPE_MIDDLE );
-        Node subjectNode = lookupOrCreateNode( abstractSubjectNode, null );
+        NodeContext subjectNode =
+        	lookupOrCreateNode( abstractSubjectNode, null );
         AbstractRelationship subjectToMiddle = findAbstractRelationship(
             representation, VerboseQuadStrategy.TYPE_SUBJECT,
             VerboseQuadStrategy.TYPE_MIDDLE );
@@ -73,15 +83,21 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         AbstractNode abstractLiteralNode = getNodeByType( representation,
             VerboseQuadStrategy.TYPE_LITERAL );
 
-        Node[] nodes = findMiddleAndObjectNode( subjectNode, subjectToMiddle,
-            middleToLiteral, abstractLiteralNode, null );
-        Node middleNode = nodes[ 0 ];
-        Node literalNode = nodes[ 1 ];
+        Node middleNode = null;
+        Node literalNode = null;
+        if ( !subjectNode.wasCreated() )
+        {
+	        Node[] nodes = findMiddleAndObjectNode( subjectNode.getNode(),
+	        	subjectToMiddle, middleToLiteral, abstractLiteralNode, null );
+	        middleNode = nodes[ 0 ];
+	        literalNode = nodes[ 1 ];
+        }
 
         if ( literalNode == null )
         {
             middleNode = createNode( abstractMiddleNode, null );
-            createRelationship( subjectNode, subjectToMiddle, middleNode );
+            createRelationship( subjectNode.getNode(),
+            	subjectToMiddle, middleNode );
             literalNode = createLiteralNode( abstractLiteralNode );
             createRelationship( middleNode, middleToLiteral, literalNode );
         }
@@ -128,22 +144,31 @@ public class VerboseQuadExecutor extends UriBasedExecutor
             VerboseQuadStrategy.TYPE_MIDDLE );
         AbstractNode abstractObjectNode = getNodeByType( representation,
             VerboseQuadStrategy.TYPE_OBJECT );
-        Node subjectNode = lookupOrCreateNode( abstractSubjectNode, null );
-        Node objectNode = lookupOrCreateNode( abstractObjectNode, null );
+        NodeContext subjectNode =
+        	lookupOrCreateNode( abstractSubjectNode, null );
+        NodeContext objectNode = lookupOrCreateNode( abstractObjectNode, null );
         AbstractRelationship subjectToMiddle = findAbstractRelationship(
             representation, VerboseQuadStrategy.TYPE_SUBJECT,
             VerboseQuadStrategy.TYPE_MIDDLE );
         AbstractRelationship middleToObject = findAbstractRelationship(
             representation, VerboseQuadStrategy.TYPE_MIDDLE,
             VerboseQuadStrategy.TYPE_OBJECT );
-        Node middleNode = findMiddleAndObjectNode( subjectNode, subjectToMiddle,
-            middleToObject, abstractObjectNode, objectNode )[ 0 ];
+        
+        Node middleNode = null;
+        if ( !subjectNode.wasCreated() && !objectNode.wasCreated() )
+        {
+        	middleNode = findMiddleAndObjectNode( subjectNode.getNode(),
+        		subjectToMiddle, middleToObject, abstractObjectNode,
+        		objectNode.getNode() )[ 0 ];
+        }
 
         if ( middleNode == null )
         {
             middleNode = createNode( abstractMiddleNode, null );
-            createRelationship( subjectNode, subjectToMiddle, middleNode );
-            createRelationship( middleNode, middleToObject, objectNode );
+            createRelationship( subjectNode.getNode(), subjectToMiddle,
+            	middleNode );
+            createRelationship( middleNode, middleToObject,
+            	objectNode.getNode() );
         }
         ensureContextsAreAdded( representation, middleNode );
     }
@@ -175,7 +200,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
                     anObjectNode.equals( objectNodeToLookFor ) ) ||
                     ( objectNodeToLookFor == null && containsProperties(
                         anObjectNode, abstractObjectNode.properties(),
-                        LITERAL_DATATYPE_KEY, LITERAL_LANGUAGE_KEY ) ) )
+                        EXCLUDED_LITERAL_KEYS ) ) )
                 {
                     middleNode = aMiddleNode;
                     objectNode = anObjectNode;

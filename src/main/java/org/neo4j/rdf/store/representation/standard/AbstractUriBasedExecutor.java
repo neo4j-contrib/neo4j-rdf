@@ -2,9 +2,7 @@ package org.neo4j.rdf.store.representation.standard;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.neo4j.api.core.Direction;
 import org.neo4j.api.core.NeoService;
@@ -79,37 +77,37 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     private void debugRelationship( Relationship relationship,
         boolean create )
     {
-        String sign = create ? "+" : "-";
-        debug( "\t" + sign + "Relationship (" + relationship + ") " +
-            relationship.getStartNode() + " --[" +
-            relationship.getType().name() + "]--> " +
-            relationship.getEndNode() );
+//        String sign = create ? "+" : "-";
+//        debug( "\t" + sign + "Relationship (" + relationship + ") " +
+//            relationship.getStartNode() + " --[" +
+//            relationship.getType().name() + "]--> " +
+//            relationship.getEndNode() );
     }
 
     protected void debugCreateRelationship( Relationship relationship )
     {
-        debugRelationship( relationship, true );
+//        debugRelationship( relationship, true );
     }
 
     protected void debugDeleteRelationship( Relationship relationship )
     {
-        debugRelationship( relationship, false );
+//        debugRelationship( relationship, false );
     }
 
     protected void debugCreateNode( Node node, String uri )
     {
-        debug( "\t+Node (" + node.getId() + ") " + ( uri == null ? "" : uri ) );
+//        debug( "\t+Node (" + node.getId() + ") " + ( uri == null ? "" : uri ) );
     }
 
     protected void debugDeleteNode( Node node, String uri )
     {
-        debug( "\t-Node (" + node.getId() + ") " + ( uri == null ? "" : uri ) );
+//        debug( "\t-Node (" + node.getId() + ") " + ( uri == null ? "" : uri ) );
     }
 
     protected String getNodeUri( AbstractNode node )
     {
         Uri uri = node.getUriOrNull();
-        return uri == null ? "null" : uri.getUriAsString();
+        return uri == null ? null : uri.getUriAsString();
     }
 
     public Node lookupNode( AbstractNode abstractNode )
@@ -128,15 +126,17 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         return result;
     }
 
-    protected Node lookupOrCreateNode( AbstractNode abstractNode,
+    protected NodeContext lookupOrCreateNode( AbstractNode abstractNode,
     	Map<AbstractNode, Node> nodeMapping )
     {
         Node node = lookupNode( abstractNode );
+        boolean created = false;
         if ( node == null )
         {
             node = createNode( abstractNode, nodeMapping );
+            created = true;
         }
-        return node;
+        return new NodeContext( node, created );
     }
 
     protected void deleteNode( Node node, Uri uriOrNull )
@@ -252,19 +252,13 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
 
     protected boolean containsProperties( PropertyContainer container,
         Map<String, Collection<Object>> containingProperties,
-        String... excludeThese )
+        Collection<String> excludeThese )
     {
-        Set<String> excludeSet = new HashSet<String>();
-        for ( String e : excludeThese )
-        {
-            excludeSet.add( e );
-        }
-
         for ( Map.Entry<String, Collection<Object>> entry :
             containingProperties.entrySet() )
         {
             String key = entry.getKey();
-            if ( excludeSet.contains( key ) )
+            if ( excludeThese.contains( key ) )
             {
                 continue;
             }
@@ -351,9 +345,10 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         {
             return false;
         }
+        String legalKey = getNodeUriPropertyKey( abstractNode );
         for ( String key : node.getPropertyKeys() )
         {
-            if ( !key.equals( getNodeUriPropertyKey( abstractNode ) ) )
+            if ( !key.equals( legalKey ) )
             {
                 return false;
             }
@@ -451,5 +446,27 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     {
         debugDeleteRelationship( relationship );
         relationship.delete();
+    }
+    
+    protected static class NodeContext
+    {
+    	private Node node;
+    	private boolean created;
+    	
+    	protected NodeContext( Node node, boolean created )
+    	{
+    		this.node = node;
+    		this.created = created;
+    	}
+    	
+    	protected Node getNode()
+    	{
+    		return this.node;
+    	}
+    	
+    	protected boolean wasCreated()
+    	{
+    		return this.created;
+    	}
     }
 }
