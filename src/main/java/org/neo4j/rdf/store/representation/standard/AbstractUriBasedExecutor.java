@@ -129,18 +129,12 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     }
 
     protected Node lookupOrCreateNode( AbstractNode abstractNode,
-        Map<AbstractNode, Node> abstractNodeToNodeMap )
+    	Map<AbstractNode, Node> nodeMapping )
     {
         Node node = lookupNode( abstractNode );
         if ( node == null )
         {
-            String uri = getNodeUri( abstractNode );
-            node = createNode( abstractNode );
-            index.index( node, URI_PROPERTY_KEY, uri );
-        }
-        if ( abstractNodeToNodeMap != null )
-        {
-            abstractNodeToNodeMap.put( abstractNode, node );
+            node = createNode( abstractNode, nodeMapping );
         }
         return node;
     }
@@ -236,7 +230,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
             startNode, relType, endNode, Direction.OUTGOING );
         if ( relationship == null )
         {
-            createRelationship( startNode, endNode, abstractRelationship );
+            createRelationship( startNode, abstractRelationship, endNode );
         }
         return relationship;
     }
@@ -423,8 +417,8 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         return index().getNodes( LITERAL_VALUE_KEY, value );
     }
 
-    protected Relationship createRelationship( Node from, Node to,
-        AbstractRelationship abstractRelationship )
+    protected Relationship createRelationship( Node from,
+        AbstractRelationship abstractRelationship, Node to )
     {
         Relationship relationship = from.createRelationshipTo( to,
             relationshipType( abstractRelationship.
@@ -434,16 +428,22 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         return relationship;
     }
 
-    protected Node createNode( AbstractNode abstractNode )
+    protected Node createNode( AbstractNode abstractNode,
+    	Map<AbstractNode, Node> nodeMapping )
     {
         Node node = neo.createNode();
         Uri uri = abstractNode.getUriOrNull();
         if ( uri != null )
         {
             node.setProperty( URI_PROPERTY_KEY, uri.getUriAsString() );
+            index().index( node, URI_PROPERTY_KEY, uri.getUriAsString() );
         }
         applyRepresentation( abstractNode, node );
         debugCreateNode( node, uri == null ? null : uri.toString() );
+        if ( nodeMapping != null )
+        {
+        	nodeMapping.put( abstractNode, node );
+        }
         return node;
     }
 

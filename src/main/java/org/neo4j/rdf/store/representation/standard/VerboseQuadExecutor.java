@@ -2,8 +2,6 @@ package org.neo4j.rdf.store.representation.standard;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.neo4j.api.core.Direction;
 import org.neo4j.api.core.NeoService;
@@ -61,13 +59,11 @@ public class VerboseQuadExecutor extends UriBasedExecutor
     private void handleAddLiteralRepresentation(
         AbstractRepresentation representation )
     {
-        Map<AbstractNode, Node> nodeMapping = new HashMap<AbstractNode, Node>();
         AbstractNode abstractSubjectNode = getNodeByType( representation,
             VerboseQuadStrategy.TYPE_SUBJECT );
         AbstractNode abstractMiddleNode = getNodeByType( representation,
             VerboseQuadStrategy.TYPE_MIDDLE );
-        Node subjectNode = lookupOrCreateNode( abstractSubjectNode,
-            nodeMapping );
+        Node subjectNode = lookupOrCreateNode( abstractSubjectNode, null );
         AbstractRelationship subjectToMiddle = findAbstractRelationship(
             representation, VerboseQuadStrategy.TYPE_SUBJECT,
             VerboseQuadStrategy.TYPE_MIDDLE );
@@ -84,17 +80,17 @@ public class VerboseQuadExecutor extends UriBasedExecutor
 
         if ( literalNode == null )
         {
-            middleNode = createNode( abstractMiddleNode );
-            createRelationship( subjectNode, middleNode, subjectToMiddle );
+            middleNode = createNode( abstractMiddleNode, null );
+            createRelationship( subjectNode, subjectToMiddle, middleNode );
             literalNode = createLiteralNode( abstractLiteralNode );
-            createRelationship( middleNode, literalNode, middleToLiteral );
+            createRelationship( middleNode, middleToLiteral, literalNode );
         }
-        ensureContextsAreAdded( representation, middleNode, nodeMapping );
+        ensureContextsAreAdded( representation, middleNode );
     }
 
     private Relationship findContextRelationship(
         AbstractRelationship abstractRelationship, Node middleNode,
-        boolean allowCreate, Map<AbstractNode, Node> nodeMapping )
+        boolean allowCreate )
     {
         AbstractNode abstractContextNode = abstractRelationship.getEndNode();
         Node contextNode = lookupNode( abstractContextNode );
@@ -104,35 +100,36 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         }
         
         boolean willCreate = contextNode == null;
-        contextNode = lookupOrCreateNode( abstractContextNode, nodeMapping );
+        contextNode = contextNode != null ? contextNode :
+        	createNode( abstractContextNode, null );
+        Relationship relationship = null;
         if ( willCreate )
         {
 	        Node contextRefNode = getContextsReferenceNode();
 	        contextRefNode.createRelationshipTo( contextNode,
 	        	RelTypes.IS_A_CONTEXT );
+	        relationship = createRelationship( middleNode,
+	        	abstractRelationship, contextNode );
         }
-        
-        Relationship relationship = findDirectRelationship( middleNode,
-            relationshipType(  abstractRelationship.getRelationshipTypeName() ),
-            contextNode, Direction.OUTGOING );
-        return relationship != null ? relationship :
-            createRelationship( middleNode, contextNode, abstractRelationship );
+        else
+        {
+            relationship = ensureDirectlyConnected( middleNode,
+            	abstractRelationship, contextNode );
+        }
+        return relationship;
     }
 
     private void handleAddObjectRepresentation(
         AbstractRepresentation representation )
     {
-        Map<AbstractNode, Node> nodeMapping = new HashMap<AbstractNode, Node>();
         AbstractNode abstractSubjectNode = getNodeByType( representation,
             VerboseQuadStrategy.TYPE_SUBJECT );
         AbstractNode abstractMiddleNode = getNodeByType( representation,
             VerboseQuadStrategy.TYPE_MIDDLE );
         AbstractNode abstractObjectNode = getNodeByType( representation,
             VerboseQuadStrategy.TYPE_OBJECT );
-        Node subjectNode = lookupOrCreateNode( abstractSubjectNode,
-            nodeMapping );
-        Node objectNode = lookupOrCreateNode( abstractObjectNode,
-            nodeMapping );
+        Node subjectNode = lookupOrCreateNode( abstractSubjectNode, null );
+        Node objectNode = lookupOrCreateNode( abstractObjectNode, null );
         AbstractRelationship subjectToMiddle = findAbstractRelationship(
             representation, VerboseQuadStrategy.TYPE_SUBJECT,
             VerboseQuadStrategy.TYPE_MIDDLE );
@@ -144,11 +141,11 @@ public class VerboseQuadExecutor extends UriBasedExecutor
 
         if ( middleNode == null )
         {
-            middleNode = createNode( abstractMiddleNode );
-            createRelationship( subjectNode, middleNode, subjectToMiddle );
-            createRelationship( middleNode, objectNode, middleToObject );
+            middleNode = createNode( abstractMiddleNode, null );
+            createRelationship( subjectNode, subjectToMiddle, middleNode );
+            createRelationship( middleNode, middleToObject, objectNode );
         }
-        ensureContextsAreAdded( representation, middleNode, nodeMapping );
+        ensureContextsAreAdded( representation, middleNode );
     }
 
     private Node[] findMiddleAndObjectNode( Node subjectNode,
@@ -161,10 +158,6 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         if ( abstractObjectNode.getUriOrNull() != null )
         {
             objectNodeToLookFor = objectNodeIfResource;
-//            if ( objectNodeToLookFor == null )
-//            {
-//                return new Node[] { null, null };
-//            }
         }
 
         Node objectNode = null;
@@ -194,19 +187,18 @@ public class VerboseQuadExecutor extends UriBasedExecutor
     }
 
     private void ensureContextsAreAdded(
-        AbstractRepresentation representation, Node middleNode,
-        Map<AbstractNode, Node> nodeMapping )
+        AbstractRepresentation representation, Node middleNode )
     {
         for ( AbstractRelationship abstractRelationship :
-            getContextRelationships( representation, middleNode ) )
+            getContextRelationships( representation ) )
         {
             findContextRelationship( abstractRelationship,
-                middleNode, true, nodeMapping );
+                middleNode, true );
         }
     }
 
     private Collection<AbstractRelationship> getContextRelationships(
-        AbstractRepresentation representation, Node middleNode )
+        AbstractRepresentation representation )
     {
         Collection<AbstractRelationship> list =
             new ArrayList<AbstractRelationship>();
@@ -382,7 +374,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         AbstractRepresentation representation, Node middleNode )
     {
         Collection<AbstractRelationship> contextRelationships =
-            getContextRelationships( representation, middleNode );
+            getContextRelationships( representation );
         if ( contextRelationships.isEmpty() )
         {
             removeAllContextRelationships( middleNode );
