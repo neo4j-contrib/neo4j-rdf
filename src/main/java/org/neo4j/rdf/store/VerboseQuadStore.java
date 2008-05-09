@@ -61,12 +61,27 @@ public class VerboseQuadStore extends RdfStoreImpl
         return ( VerboseQuadStrategy ) super.getRepresentationStrategy();
     }
     
+//    private String getStatementType( Statement statement )
+//    {
+//    	StringBuffer buffer = new StringBuffer();
+//    	buffer.append( statement.getSubject().isWildcard() ? "?S" : "S" );
+//    	buffer.append( " " );
+//    	buffer.append( statement.getPredicate().isWildcard() ? "?P" : "P" );
+//    	buffer.append( " " );
+//    	buffer.append( statement.getObject().isWildcard() ? "?O" : "O" );
+//    	buffer.append( " " );
+//    	buffer.append( statement.getContext().isWildcard() ? "?C" : "C" );
+//    	return buffer.toString();
+//    }
+    
     @Override
     public Iterable<CompleteStatement> getStatements(
         WildcardStatement statement,
         boolean includeInferredStatements )
     {
-        debug( "getStatements( " + statement + " )" );
+//        debug( "getStatements( " + statement + " )" );
+//        Sampler s = P.s( "getStatements " + getStatementType( statement ),
+//        	statement.toString() );
         Transaction tx = neo().beginTx();
         try
         {
@@ -156,14 +171,20 @@ public class VerboseQuadStore extends RdfStoreImpl
         }
         else
         {
-            Object value = objectNode.getProperty( predicate );
-            String datatype = ( String ) objectNode.getProperty(
-                VerboseQuadExecutor.LITERAL_DATATYPE_KEY, null );
-            String language = ( String ) objectNode.getProperty(
-                VerboseQuadExecutor.LITERAL_LANGUAGE_KEY, null );
-            return new Literal( value, datatype == null ? null :
-                new Uri( datatype ), language );
+        	return getLiteralValueForObjectNode( predicate, objectNode );
         }
+    }
+    
+    private Value getLiteralValueForObjectNode( String predicate,
+    	Node literalNode )
+    {
+        Object value = literalNode.getProperty( predicate );
+        String datatype = ( String ) literalNode.getProperty(
+            VerboseQuadExecutor.LITERAL_DATATYPE_KEY, null );
+        String language = ( String ) literalNode.getProperty(
+            VerboseQuadExecutor.LITERAL_LANGUAGE_KEY, null );
+        return new Literal( value, datatype == null ? null :
+            new Uri( datatype ), language );
     }
     
     private RelationshipType relType( final String name )
@@ -243,10 +264,32 @@ public class VerboseQuadStore extends RdfStoreImpl
     	{
     		return null;
     	}
-    	Iterable<Relationship> relationships =
-    		subjectNode.getRelationships( Direction.OUTGOING );
-    	relationships = new ObjectFilteredRelationships( statement,
-    		relationships );
+    	
+    	Iterable<Relationship> relationships = null;
+    	if ( statement.getObject() instanceof Resource )
+    	{
+    		final Node objectNode = lookupNode( statement.getObject() );
+        	relationships =
+        		subjectNode.getRelationships( Direction.OUTGOING );
+        	relationships = new FilteringIterable<Relationship>( relationships )
+        	{
+				@Override
+                protected boolean passes( Relationship subjectToMiddleRel )
+                {
+					Node middleNode = subjectToMiddleRel.getEndNode();
+					Node anObjectNode = middleNode.getSingleRelationship(
+						subjectToMiddleRel.getType(), Direction.OUTGOING ).
+						getEndNode();
+					return anObjectNode.equals( objectNode );
+                }
+        	};
+    	}
+    	else
+    	{
+        	relationships = subjectNode.getRelationships( Direction.OUTGOING );
+        	relationships = new LiteralFilteredRelationships(
+        		statement, relationships );
+    	}
     	Iterable<Node> middleNodes = new RelationshipToNodeIterable(
     		subjectNode, relationships );
     	return new MiddleNodeToStatementIterable( statement, middleNodes );
@@ -262,7 +305,7 @@ public class VerboseQuadStore extends RdfStoreImpl
     	}
     	Iterable<Relationship> relationships = subjectNode.getRelationships(
     		relType( statement ), Direction.OUTGOING );
-    	relationships = new ObjectFilteredRelationships( statement,
+    	relationships = new LiteralFilteredRelationships( statement,
     		relationships );
     	Iterable<Node> middleNodes = new RelationshipToNodeIterable(
     		subjectNode, relationships );
@@ -501,12 +544,12 @@ public class VerboseQuadStore extends RdfStoreImpl
         }
     }
     
-    private class ObjectFilteredRelationships
+    private class LiteralFilteredRelationships
     	extends FilteringIterable<Relationship>
     {
     	private Statement statement;
     	
-    	ObjectFilteredRelationships( Statement statement,
+    	LiteralFilteredRelationships( Statement statement,
     		Iterable<Relationship> source )
     	{
     		super( source );
@@ -517,10 +560,10 @@ public class VerboseQuadStore extends RdfStoreImpl
         protected boolean passes( Relationship subjectToMiddleRel )
         {
 			Node middleNode = subjectToMiddleRel.getEndNode();
-			Node objectNode = middleNode.getSingleRelationship(
+			Node literalNode = middleNode.getSingleRelationship(
 				subjectToMiddleRel.getType(), Direction.OUTGOING ).getEndNode();
-			Value objectValue = getValueForObjectNode(
-				subjectToMiddleRel.getType().name(), objectNode );
+			Value objectValue = getLiteralValueForObjectNode(
+				subjectToMiddleRel.getType().name(), literalNode );
 			return objectValue.equals( statement.getObject() );
         }
     }
