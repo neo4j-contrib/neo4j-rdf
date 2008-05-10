@@ -91,11 +91,11 @@ public class PureQuadRepresentationExecutor extends AbstractUriBasedExecutor
         if ( relationship == null )
         {
             literalNode = neo().createNode();
-            debug( "\t+Node (literal) " + literalNode + " " +
-                relationshipType.name() );
+//            debug( "\t+Node (literal) " + literalNode + " " +
+//                relationshipType.name() );
             relationship = startNode.createRelationshipTo( literalNode,
                 relationshipType );
-            debugCreateRelationship( relationship );
+//            debugCreateRelationship( relationship );
         }
         else
         {
@@ -228,7 +228,7 @@ public class PureQuadRepresentationExecutor extends AbstractUriBasedExecutor
         if ( !triedToRemoveSomeContext || contextRelationshipIsEmpty(
             abstractRelationship, relationship ) )
         {
-            debugDeleteRelationship( relationship );
+//            debugDeleteRelationship( relationship );
             relationship.delete();
             if ( endNode.getUriOrNull() == null )
             {

@@ -66,7 +66,7 @@ public class VerboseQuadStore extends RdfStoreImpl
         WildcardStatement statement,
         boolean includeInferredStatements )
     {
-        debug( "getStatements( " + statement + " )" );
+//        debug( "getStatements( " + statement + " )" );
         Transaction tx = neo().beginTx();
         try
         {

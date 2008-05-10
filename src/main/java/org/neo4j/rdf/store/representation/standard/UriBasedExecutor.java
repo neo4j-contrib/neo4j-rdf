@@ -179,7 +179,7 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
             removeFromRelationship( abstractRelationship, relationship );
             if ( relationshipIsEmpty( abstractRelationship, relationship ) )
             {
-                debugDeleteRelationship( relationship );
+//                debugDeleteRelationship( relationship );
                 relationship.delete();
             }
         }
@@ -264,8 +264,8 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
         if ( relationship == null )
         {
             relationship = startNode.createRelationshipTo( endNode, relType );
-            debug( "\t+Relationship " + startNode + " ---["
-                + relType.name() + "]--> " + endNode );
+//            debug( "\t+Relationship " + startNode + " ---["
+//                + relType.name() + "]--> " + endNode );
         }
         return relationship;
     }
@@ -294,8 +294,8 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
                 boolean added = neoValues.add( value );
                 if ( added )
                 {
-                    debug( "\t+Property" + " (" + container + ") "
-                        + entry.getKey() + " " + "[" + value + "]" );
+//                    debug( "\t+Property" + " (" + container + ") "
+//                        + entry.getKey() + " " + "[" + value + "]" );
                 }
             }
         }
@@ -330,8 +330,8 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
             if ( removed )
             {
                 someRemoved = true;
-                debug( "\t-" + debugText + " (" + container + ") "
-                    + key + " " + "[" + value + "]" );
+//                debug( "\t-" + debugText + " (" + container + ") "
+//                    + key + " " + "[" + value + "]" );
             }
         }
         return someRemoved;
@@ -383,8 +383,8 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
                         boolean removed = neoValues.remove( value );
                         if ( removed )
                         {
-                            debug( "\t-Property"  + " (" + node + ") "
-                                + key + " " + "[" + value + "]" );
+//                            debug( "\t-Property"  + " (" + node + ") "
+//                                + key + " " + "[" + value + "]" );
                         }
                     }
                 }
@@ -398,14 +398,14 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
                     if ( node.removeProperty( formContextPropertyKey(
                         key, value ) ) != null )
                     {
-                        debug( "\t-" + "Contexts" + " (" + node + ") "
-                            + key + " " + "[" + value + "]" );
+//                        debug( "\t-" + "Contexts" + " (" + node + ") "
+//                            + key + " " + "[" + value + "]" );
                     }
                     boolean removed = neoValues.remove( value );
                     if ( removed )
                     {
-                        debug( "\t-Property"  + " (" + node + ") "
-                            + key + " " + "[" + value + "]" );
+//                        debug( "\t-Property"  + " (" + node + ") "
+//                            + key + " " + "[" + value + "]" );
                     }
                 }
             }
@@ -469,8 +469,8 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
     {
         Node node = neo().createNode();
         Relationship relationship = null;
-        debug( "\tNo match, creating node (" + node.getId()
-            + ") and connecting" );
+//        debug( "\tNo match, creating node (" + node.getId()
+//            + ") and connecting" );
         RelationshipType relationshipType = new ARelationshipType(
             abstractRelationship.getRelationshipTypeName() );
         if ( abstractRelationship.getStartNode().getUriOrNull() == null )
@@ -478,18 +478,18 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
             relationship = node.createRelationshipTo(
                 nodeMapping.get( abstractRelationship.getEndNode() ),
                     relationshipType );
-            debug( "\t+Relationship " + node + " ---["
-                + relationshipType.name() + "]--> "
-                + nodeMapping.get( abstractRelationship.getEndNode() ) );
+//            debug( "\t+Relationship " + node + " ---["
+//                + relationshipType.name() + "]--> "
+//                + nodeMapping.get( abstractRelationship.getEndNode() ) );
         }
         else
         {
             relationship = nodeMapping.get(
                 abstractRelationship.getStartNode() ).createRelationshipTo(
                     node, relationshipType );
-            debug( "\t+Relationship "
-                + nodeMapping.get( abstractRelationship.getStartNode() )
-                + " ---[" + relationshipType.name() + "]--> " + node );
+//            debug( "\t+Relationship "
+//                + nodeMapping.get( abstractRelationship.getStartNode() )
+//                + " ---[" + relationshipType.name() + "]--> " + node );
         }
         return new NodeAndRelationship( null, node, relationship );
     }

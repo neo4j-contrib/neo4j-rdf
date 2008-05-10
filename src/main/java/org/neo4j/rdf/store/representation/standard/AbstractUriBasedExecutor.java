@@ -69,40 +69,40 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         return this.meta;
     }
 
-    protected void debug( String message )
-    {
+//    protected void debug( String message )
+//    {
 //        System.out.println( message );
-    }
+//    }
 
-    private void debugRelationship( Relationship relationship,
-        boolean create )
-    {
+//    private void debugRelationship( Relationship relationship,
+//        boolean create )
+//    {
 //        String sign = create ? "+" : "-";
 //        debug( "\t" + sign + "Relationship (" + relationship + ") " +
 //            relationship.getStartNode() + " --[" +
 //            relationship.getType().name() + "]--> " +
 //            relationship.getEndNode() );
-    }
+//    }
 
-    protected void debugCreateRelationship( Relationship relationship )
-    {
+//    protected void debugCreateRelationship( Relationship relationship )
+//    {
 //        debugRelationship( relationship, true );
-    }
+//    }
 
-    protected void debugDeleteRelationship( Relationship relationship )
-    {
+//    protected void debugDeleteRelationship( Relationship relationship )
+//    {
 //        debugRelationship( relationship, false );
-    }
+//    }
 
-    protected void debugCreateNode( Node node, String uri )
-    {
+//    protected void debugCreateNode( Node node, String uri )
+//    {
 //        debug( "\t+Node (" + node.getId() + ") " + ( uri == null ? "" : uri ) );
-    }
+//    }
 
-    protected void debugDeleteNode( Node node, String uri )
-    {
+//    protected void debugDeleteNode( Node node, String uri )
+//    {
 //        debug( "\t-Node (" + node.getId() + ") " + ( uri == null ? "" : uri ) );
-    }
+//    }
 
     protected String getNodeUri( AbstractNode node )
     {
@@ -141,8 +141,8 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
 
     protected void deleteNode( Node node, Uri uriOrNull )
     {
-        debugDeleteNode( node, uriOrNull == null ? null :
-            uriOrNull.getUriAsString() );
+//        debugDeleteNode( node, uriOrNull == null ? null :
+//            uriOrNull.getUriAsString() );
         node.delete();
         if ( uriOrNull != null )
         {
@@ -307,8 +307,8 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
                 if ( added )
                 {
                     changed = true;
-                    debug( "\t+Property" + " (" + container + ") "
-                        + entry.getKey() + " " + "[" + value + "]" );
+//                    debug( "\t+Property" + " (" + container + ") "
+//                        + entry.getKey() + " " + "[" + value + "]" );
                 }
             }
         }
@@ -330,8 +330,8 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
                 if ( removed )
                 {
                     changed = true;
-                    debug( "\t-Property" + " (" + container + ") "
-                        + entry.getKey() + " " + "[" + value + "]" );
+//                    debug( "\t-Property" + " (" + container + ") "
+//                        + entry.getKey() + " " + "[" + value + "]" );
                 }
             }
         }
@@ -375,8 +375,8 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
             if ( removed )
             {
                 someRemoved = true;
-                debug( "\t-Property (" + container + ") "
-                    + key + " " + "[" + value + "]" );
+//                debug( "\t-Property (" + container + ") "
+//                    + key + " " + "[" + value + "]" );
             }
         }
         return someRemoved;
@@ -396,7 +396,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
             VerboseQuadStrategy.EXECUTOR_INFO_PREDICATE );
         Object value =
             abstractNode.properties().get( predicate ).iterator().next();
-        debugCreateNode( node, "(literal)" );
+//        debugCreateNode( node, "(literal)" );
         index().index( node, LITERAL_VALUE_KEY, value );
         return node;
     }
@@ -420,7 +420,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
             relationshipType( abstractRelationship.
                 getRelationshipTypeName() ) );
         applyRepresentation( abstractRelationship, relationship );
-        debugCreateRelationship( relationship );
+//        debugCreateRelationship( relationship );
         return relationship;
     }
 
@@ -435,7 +435,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
             index().index( node, URI_PROPERTY_KEY, uri.getUriAsString() );
         }
         applyRepresentation( abstractNode, node );
-        debugCreateNode( node, uri == null ? null : uri.toString() );
+//        debugCreateNode( node, uri == null ? null : uri.toString() );
         if ( nodeMapping != null )
         {
         	nodeMapping.put( abstractNode, node );
@@ -445,7 +445,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
 
     protected void deleteRelationship( Relationship relationship )
     {
-        debugDeleteRelationship( relationship );
+//        debugDeleteRelationship( relationship );
         relationship.delete();
     }
     
