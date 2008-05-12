@@ -55,12 +55,6 @@ public class VerboseQuadStrategy
         Statement statement )
     {
         AbstractRepresentation representation = null;
-//            super.getAbstractRepresentation( statement );
-//        if ( representation != null )
-//        {
-//            return representation;
-//        }
-
         if ( isObjectType( statement.getObject() ) )
         {
             representation = getObjectTypeRepresentation( statement );
