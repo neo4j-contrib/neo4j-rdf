@@ -40,7 +40,7 @@ public interface Statement
      * graph")
      * <li>a {@link Wildcard} for any context
      * </ol>
-     * Please not that this method must NOT return <code>null</code>.
+     * Please note that this method must NOT return <code>null</code>.
      * @return the context for this statement
      */    
     Value getContext();
