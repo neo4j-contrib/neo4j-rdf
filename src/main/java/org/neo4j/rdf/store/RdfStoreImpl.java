@@ -179,6 +179,29 @@ public class RdfStoreImpl implements RdfStore
             tx.finish();
         }
     }
+    
+    protected static class InferenceOptions
+    {
+    	private boolean includeSubClassOf;
+    	private boolean includeSubPropertyOf;
+    	
+    	protected InferenceOptions( boolean includeSubClassOf,
+    		boolean includeSubPropertyOf )
+    	{
+    		this.includeSubClassOf = includeSubClassOf;
+    		this.includeSubPropertyOf = includeSubPropertyOf;
+    	}
+
+		public boolean isIncludeSubClassOf()
+        {
+        	return includeSubClassOf;
+        }
+
+		public boolean isIncludeSubPropertyOf()
+        {
+        	return includeSubPropertyOf;
+        }
+    }
 
 //    private static interface GraphMatchingFacade
 //    {
