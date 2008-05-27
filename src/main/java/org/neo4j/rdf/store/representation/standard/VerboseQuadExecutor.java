@@ -2,7 +2,9 @@ package org.neo4j.rdf.store.representation.standard;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import org.neo4j.api.core.Direction;
 import org.neo4j.api.core.NeoService;
@@ -51,13 +53,15 @@ public class VerboseQuadExecutor extends UriBasedExecutor
     @Override
     public void addToNodeSpace( AbstractRepresentation representation )
     {
-        if ( isLiteralRepresentation( representation ) )
+    	Map<String, AbstractNode> typeToNode =
+    		getTypeToNodeMap( representation );
+        if ( isLiteralRepresentation( typeToNode ) )
         {
-            handleAddLiteralRepresentation( representation );
+            handleAddLiteralRepresentation( representation, typeToNode );
         }
-        else if ( isObjectTypeRepresentation( representation ) )
+        else if ( isObjectTypeRepresentation( typeToNode ) )
         {
-            handleAddObjectRepresentation( representation );
+            handleAddObjectRepresentation( representation, typeToNode );
         }
         else
         {
@@ -66,11 +70,12 @@ public class VerboseQuadExecutor extends UriBasedExecutor
     }
 
     private void handleAddLiteralRepresentation(
-        AbstractRepresentation representation )
+        AbstractRepresentation representation,
+        Map<String, AbstractNode> typeToNode )
     {
-        AbstractNode abstractSubjectNode = getNodeByType( representation,
+        AbstractNode abstractSubjectNode = typeToNode.get(
             VerboseQuadStrategy.TYPE_SUBJECT );
-        AbstractNode abstractMiddleNode = getNodeByType( representation,
+        AbstractNode abstractMiddleNode = typeToNode.get(
             VerboseQuadStrategy.TYPE_MIDDLE );
         NodeContext subjectNode =
         	lookupOrCreateNode( abstractSubjectNode, null );
@@ -80,7 +85,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         AbstractRelationship middleToLiteral = findAbstractRelationship(
             representation, VerboseQuadStrategy.TYPE_MIDDLE,
             VerboseQuadStrategy.TYPE_LITERAL );
-        AbstractNode abstractLiteralNode = getNodeByType( representation,
+        AbstractNode abstractLiteralNode = typeToNode.get(
             VerboseQuadStrategy.TYPE_LITERAL );
 
         Node middleNode = null;
@@ -103,6 +108,21 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         }
         ensureContextsAreAdded( representation, middleNode );
     }
+    
+    private Map<String, AbstractNode> getTypeToNodeMap(
+    	AbstractRepresentation representation )
+	{
+    	Map<String, AbstractNode> map = new HashMap<String, AbstractNode>();
+        for ( AbstractNode node : representation.nodes() )
+        {
+        	String nodeType = getNodeType( node );
+            if ( nodeType != null )
+            {
+            	map.put( nodeType, node );
+            }
+        }
+        return map;
+	}
 
     private Relationship findContextRelationship(
         AbstractRelationship abstractRelationship, Node middleNode,
@@ -136,13 +156,14 @@ public class VerboseQuadExecutor extends UriBasedExecutor
     }
 
     private void handleAddObjectRepresentation(
-        AbstractRepresentation representation )
+        AbstractRepresentation representation,
+        Map<String, AbstractNode> typeToNode )
     {
-        AbstractNode abstractSubjectNode = getNodeByType( representation,
+        AbstractNode abstractSubjectNode = typeToNode.get(
             VerboseQuadStrategy.TYPE_SUBJECT );
-        AbstractNode abstractMiddleNode = getNodeByType( representation,
+        AbstractNode abstractMiddleNode = typeToNode.get(
             VerboseQuadStrategy.TYPE_MIDDLE );
-        AbstractNode abstractObjectNode = getNodeByType( representation,
+        AbstractNode abstractObjectNode = typeToNode.get(
             VerboseQuadStrategy.TYPE_OBJECT );
         NodeContext subjectNode =
         	lookupOrCreateNode( abstractSubjectNode, null );
@@ -241,36 +262,26 @@ public class VerboseQuadExecutor extends UriBasedExecutor
     }
 
     private boolean isLiteralRepresentation(
-        AbstractRepresentation representation )
+        Map<String, AbstractNode> typeToNode )
     {
-        return getNodeByType( representation,
-            VerboseQuadStrategy.TYPE_LITERAL ) != null;
+        return typeToNode.get( VerboseQuadStrategy.TYPE_LITERAL ) != null;
     }
 
     private boolean isObjectTypeRepresentation(
-        AbstractRepresentation representation )
+        Map<String, AbstractNode> typeToNode )
     {
-        return getNodeByType( representation,
-            VerboseQuadStrategy.TYPE_OBJECT ) != null;
+        return typeToNode.get( VerboseQuadStrategy.TYPE_OBJECT ) != null;
     }
 
-    private AbstractNode getNodeByType(
-        AbstractRepresentation representation, String type )
+    private String getNodeType( AbstractNode node )
     {
-        for ( AbstractNode node : representation.nodes() )
-        {
-            if ( nodeIsType( node, type ) )
-            {
-                return node;
-            }
-        }
-        return null;
+    	return ( String ) node.getExecutorInfo(
+            VerboseQuadStrategy.EXECUTOR_INFO_NODE_TYPE );
     }
 
     private boolean nodeIsType( AbstractNode node, String type )
     {
-        String value = ( String ) node.getExecutorInfo(
-            VerboseQuadStrategy.EXECUTOR_INFO_NODE_TYPE );
+        String value = getNodeType( node );
         return value != null && value.equals( type );
     }
 
@@ -299,13 +310,15 @@ public class VerboseQuadExecutor extends UriBasedExecutor
     @Override
     public void removeFromNodeSpace( AbstractRepresentation representation )
     {
-        if ( isLiteralRepresentation( representation ) )
+        Map<String, AbstractNode> typeToNode =
+        	getTypeToNodeMap( representation );
+        if ( isLiteralRepresentation( typeToNode ) )
         {
-            handleRemoveLiteralRepresentation( representation );
+            handleRemoveLiteralRepresentation( representation, typeToNode );
         }
-        else if ( isObjectTypeRepresentation( representation ) )
+        else if ( isObjectTypeRepresentation( typeToNode ) )
         {
-            handleRemoveObjectRepresentation( representation );
+            handleRemoveObjectRepresentation( representation, typeToNode );
         }
         else
         {
@@ -314,12 +327,13 @@ public class VerboseQuadExecutor extends UriBasedExecutor
     }
 
     private void handleRemoveObjectRepresentation(
-        AbstractRepresentation representation )
+        AbstractRepresentation representation,
+        Map<String, AbstractNode> typeToNode )
     {
-        AbstractNode abstractSubjectNode = getNodeByType( representation,
+        AbstractNode abstractSubjectNode = typeToNode.get(
             VerboseQuadStrategy.TYPE_SUBJECT );
         Node subjectNode = lookupNode( abstractSubjectNode );
-        AbstractNode abstractObjectNode = getNodeByType( representation,
+        AbstractNode abstractObjectNode = typeToNode.get(
             VerboseQuadStrategy.TYPE_OBJECT );
         Node objectNode = lookupNode( abstractObjectNode );
         if ( subjectNode == null || objectNode == null )
@@ -412,9 +426,10 @@ public class VerboseQuadExecutor extends UriBasedExecutor
     }
 
     private void handleRemoveLiteralRepresentation(
-        AbstractRepresentation representation )
+        AbstractRepresentation representation,
+        Map<String, AbstractNode> typeToNode )
     {
-        AbstractNode abstractSubjectNode = getNodeByType( representation,
+        AbstractNode abstractSubjectNode = typeToNode.get(
             VerboseQuadStrategy.TYPE_SUBJECT );
         Node subjectNode = lookupNode( abstractSubjectNode );
         if ( subjectNode == null )
@@ -428,7 +443,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         AbstractRelationship middleToLiteral = findAbstractRelationship(
             representation, VerboseQuadStrategy.TYPE_MIDDLE,
             VerboseQuadStrategy.TYPE_LITERAL );
-        AbstractNode abstractLiteralNode = getNodeByType( representation,
+        AbstractNode abstractLiteralNode = typeToNode.get(
             VerboseQuadStrategy.TYPE_LITERAL );
 
         Node[] nodes = findMiddleAndObjectNode( subjectNode, subjectToMiddle,
