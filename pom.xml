@@ -10,7 +10,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.neo4j</groupId>
 	<artifactId>neo-rdf</artifactId>
-	<version>0.2-SNAPSHOT</version>
+	<version>0.3-SNAPSHOT</version>
 	<name>Neo RDF</name>
 	<description>Neo-backed RDF store</description>
 	
@@ -18,40 +18,34 @@
 		<dependency>
 			<groupId>org.neo4j</groupId>
 			<artifactId>neo</artifactId>
-			<version>1.0-rc1-SNAPSHOT</version>
+			<version>1.0-b7-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.neo4j</groupId>
 			<artifactId>shell</artifactId>
-			<version>1.0-rc1-SNAPSHOT</version>
+			<version>1.0-b7-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>        
 		<dependency>
 			<groupId>org.neo4j</groupId>
 			<artifactId>neo-meta</artifactId>
-			<version>0.3-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>org.neo4j</groupId>
-			<artifactId>neo-utils</artifactId>
-			<version>1.0-rc1-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>org.neo4j</groupId>
-			<artifactId>index-util</artifactId>
 			<version>0.4-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.neo4j</groupId>
-			<artifactId>graph-matching</artifactId>
-			<version>0.3-SNAPSHOT</version>
+			<artifactId>neo-utils</artifactId>
+			<version>1.0-b7-SNAPSHOT</version>
 		</dependency>
-<!--
 		<dependency>
 			<groupId>org.neo4j</groupId>
-			<artifactId>sparql-engine-neo</artifactId>
-			<version>0.3-SNAPSHOT</version>
-		</dependency> -->
+			<artifactId>index-util</artifactId>
+			<version>0.5-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.neo4j</groupId>
+			<artifactId>graph-matching</artifactId>
+			<version>0.4-SNAPSHOT</version>
+		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
