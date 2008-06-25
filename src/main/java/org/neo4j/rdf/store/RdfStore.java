@@ -1,6 +1,7 @@
 package org.neo4j.rdf.store;
 
 import org.neo4j.rdf.model.CompleteStatement;
+import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.WildcardStatement;
 
@@ -31,4 +32,12 @@ public interface RdfStore
      * @param statement a {@link Statement} with optional wildcard members
      */
     void removeStatements( WildcardStatement statement );
+    
+    /**
+     * Returns the number of statements in a some given contexts.
+     * If no contexts are supplied then all contexts are calculated.
+     * @param contexts the contexts to include in the calculation.
+     * @return the number of statements found.
+     */
+    int size( Context... contexts );
 }

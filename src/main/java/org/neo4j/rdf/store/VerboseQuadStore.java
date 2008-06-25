@@ -27,6 +27,8 @@ import org.neo4j.rdf.store.representation.standard.VerboseQuadStrategy;
 import org.neo4j.util.FilteringIterable;
 import org.neo4j.util.FilteringIterator;
 import org.neo4j.util.IterableWrapper;
+import org.neo4j.util.NestingIterable;
+import org.neo4j.util.NestingIterator;
 import org.neo4j.util.OneOfRelTypesReturnableEvaluator;
 import org.neo4j.util.PrefetchingIterator;
 import org.neo4j.util.RelationshipToNodeIterable;
@@ -128,6 +130,32 @@ public class VerboseQuadStore extends RdfStoreImpl
             tx.finish();
         }
     }
+    
+    @Override
+    public int size( Context... contexts )
+    {
+    	Transaction tx = neo().beginTx();
+    	try
+    	{
+    		int size = 0;
+    		Node contextRefNode = getRepresentationStrategy().getExecutor().
+				getContextsReferenceNode();
+    		for ( Relationship rel : contextRefNode.getRelationships(
+    			VerboseQuadExecutor.RelTypes.IS_A_CONTEXT,
+    			Direction.OUTGOING ) )
+    		{
+    			Node contextNode = rel.getOtherNode( contextRefNode );
+    			size += ( Integer ) contextNode.getProperty(
+    				VerboseQuadExecutor.STATEMENT_COUNT, 0 );
+    		}
+    		tx.success();
+    		return size;
+    	}
+    	finally
+    	{
+    		tx.finish();
+    	}
+    }
 
     private void debug( String message )
     {
@@ -217,7 +245,7 @@ public class VerboseQuadStore extends RdfStoreImpl
     	Iterable<Node> middleNodes = new RelationshipToNodeIterable(
     		subjectNode, subjectNode.getRelationships( relType( statement ),
     			Direction.OUTGOING ) );
-    	return new MiddleNodeToStatementIterable( statement, middleNodes );
+    	return statementIterator( statement, middleNodes );
 	}
     
     private Iterable<CompleteStatement> handleSubjectWildcardWildcard(
@@ -230,7 +258,7 @@ public class VerboseQuadStore extends RdfStoreImpl
     	}
     	Iterable<Node> middleNodes = new RelationshipToNodeIterable(
     		subjectNode, subjectNode.getRelationships( Direction.OUTGOING ) );
-    	return new MiddleNodeToStatementIterable( statement, middleNodes );
+    	return statementIterator( statement, middleNodes );
 	}
     
     private Iterable<CompleteStatement> handleSubjectWildcardObject(
@@ -243,13 +271,41 @@ public class VerboseQuadStore extends RdfStoreImpl
     	{
     		return null;
     	}
-    	Iterable<Relationship> relationships =
-    		subjectNode.getRelationships( Direction.OUTGOING );
-    	relationships = new ObjectFilteredRelationships( statement,
-    		relationships );
-    	Iterable<Node> middleNodes = new RelationshipToNodeIterable(
-    		subjectNode, relationships );
-    	return new MiddleNodeToStatementIterable( statement, middleNodes );
+//    	int subjectEnergy = ( Integer ) subjectNode.getProperty(
+//    		VerboseQuadExecutor.SUBJECT_ENERGY, 0 );
+//    	int objectEnergy = 0;
+//    	Node objectNode = null;
+//    	if ( statement.getObject() instanceof Uri )
+//    	{
+//        	objectNode = lookupNode( statement.getObject() );
+//        	if ( objectNode == null )
+//        	{
+//        		return null;
+//        	}
+//        	objectEnergy = ( Integer ) objectNode.getProperty(
+//        		VerboseQuadExecutor.OBJECT_ENERGY, 0 );
+//    	}
+//    	
+//    	if ( objectNode == null || subjectEnergy > objectEnergy )
+//    	{
+	    	Iterable<Relationship> relationships =
+	    		subjectNode.getRelationships( Direction.OUTGOING );
+	    	relationships = new ObjectFilteredRelationships( statement,
+	    		relationships );
+	    	Iterable<Node> middleNodes = new RelationshipToNodeIterable(
+	    		subjectNode, relationships );
+	    	return statementIterator( statement, middleNodes );
+//    	}
+//    	else
+//    	{
+//	    	Iterable<Relationship> relationships =
+//	    		objectNode.getRelationships( Direction.INCOMING );
+//	    	relationships = new SubjectFilteredRelationships( subjectNode,
+//	    		relationships );
+//	    	Iterable<Node> middleNodes = new RelationshipToNodeIterable(
+//	    		subjectNode, relationships );
+//	    	return statementIterator( statement, middleNodes );
+//    	}
 	}
     
     private Iterable<CompleteStatement> handleSubjectPredicateObject(
@@ -266,7 +322,7 @@ public class VerboseQuadStore extends RdfStoreImpl
     		relationships );
     	Iterable<Node> middleNodes = new RelationshipToNodeIterable(
     		subjectNode, relationships );
-    	return new MiddleNodeToStatementIterable( statement, middleNodes );
+    	return statementIterator( statement, middleNodes );
 	}
     
     private Iterable<CompleteStatement> handleWildcardWildcardObject(
@@ -287,7 +343,7 @@ public class VerboseQuadStore extends RdfStoreImpl
         	middleNodes = new RelationshipToNodeIterable(
         		objectNode, objectNode.getRelationships( Direction.INCOMING ) );
     	}
-    	return new MiddleNodeToStatementIterable( statement, middleNodes );
+    	return statementIterator( statement, middleNodes );
 	}
     
     private Iterable<CompleteStatement> handleWildcardPredicateWildcard(
@@ -312,7 +368,7 @@ public class VerboseQuadStore extends RdfStoreImpl
         			Direction.INCOMING ) );
     	}
     	middleNodes = new PredicateFilteredNodes( statement, middleNodes );
-    	return new MiddleNodeToStatementIterable( statement, middleNodes );
+    	return statementIterator( statement, middleNodes );
 	}
     
     private Iterable<CompleteStatement> handleWildcardPredicateObject(
@@ -335,7 +391,7 @@ public class VerboseQuadStore extends RdfStoreImpl
     			objectNode, objectNode.getRelationships( relType( statement ),
     			Direction.INCOMING ) );
     	}
-    	return new MiddleNodeToStatementIterable( statement, middleNodes );
+    	return statementIterator( statement, middleNodes );
 	}
     
     private Iterable<CompleteStatement> handleWildcardWildcardWildcard(
@@ -359,81 +415,141 @@ public class VerboseQuadStore extends RdfStoreImpl
 	    			VerboseQuadStrategy.RelTypes.IN_CONTEXT,
 	    			Direction.INCOMING ) );
     	}
-    	return new MiddleNodeToStatementIterable( statement, middleNodes );
+    	return statementIterator( statement, middleNodes );
 	}
     
-    private class MiddleNodeToStatementIterable
-    	implements Iterable<CompleteStatement>
+    private Iterable<CompleteStatement> statementIterator(
+    	Statement statement, Iterable<Node> middleNodes )
+	{
+    	return new QuadToStatementIterable( new MiddleNodeToQuadIterable(
+    		statement, middleNodes ) );
+    	
+    	// Enable this when we implement inferencing.
+//    	return new QuadToStatementIterable(
+//    		new QuadWithInferencingIterable(
+//    		new MiddleNodeToQuadIterable( statement, middleNodes ) ) );
+	}
+    
+    private class QuadToStatementIterable
+    	extends IterableWrapper<CompleteStatement, Object[]>
+    {
+    	QuadToStatementIterable( Iterable<Object[]> source )
+    	{
+    		super( source );
+    	}
+    	
+		@Override
+        protected CompleteStatement underlyingObjectToObject( Object[] quad )
+        {
+			Node subjectNode = ( Node ) quad[ 0 ];
+			Uri subject = new Uri( getNodeUriOrNull( subjectNode ) );
+			Uri predicate = new Uri( ( String ) quad[ 1 ] );
+			Node objectNode = ( Node ) quad[ 2 ];
+			Value object = getValueForObjectNode( predicate.getUriAsString(),
+				objectNode );
+			Node contextNode = ( Node ) quad[ 3 ];
+			Context context = new Context( getNodeUriOrNull( contextNode ) );
+			return object instanceof Literal ?
+				new CompleteStatement( subject, predicate, ( Literal ) object,
+					context ) :
+				new CompleteStatement( subject, predicate, ( Resource ) object,
+					context );
+        }
+    }
+    
+    private class QuadWithInferencingIterable
+    	extends NestingIterable<Object[]>
+    {
+    	QuadWithInferencingIterable(
+    		Iterable<Object[]> quads )
+		{
+    		super( quads );
+		}
+    	
+		@Override
+        protected Iterator<Object[]> createNestedIterator( Object[] item )
+        {
+        	return new SingleIterator<Object[]>( item );
+        }
+    }
+    
+    private class SingleIterator<T> extends PrefetchingIterator<T>
+    {
+    	private T item;
+    	
+    	SingleIterator( T item )
+    	{
+    		this.item = item;
+    	}
+    	
+		@Override
+        protected T fetchNextOrNull()
+        {
+			T result = item;
+			item = null;
+			return result;
+        }
+    }
+    
+    /**
+     * The Object[] will contain
+     * {
+     * 		Node subject
+     * 		String predicate
+     * 		Node object
+     * 		Node context
+     * }
+     */
+    private class MiddleNodeToQuadIterable implements Iterable<Object[]>
     {
     	private Statement statement;
     	private Iterable<Node> middleNodes;
     	
-    	MiddleNodeToStatementIterable( Statement statement,
+    	MiddleNodeToQuadIterable( Statement statement,
     		Iterable<Node> middleNodes )
 		{
     		this.statement = statement;
     		this.middleNodes = middleNodes;
 		}
     	
-		public Iterator<CompleteStatement> iterator()
+		public Iterator<Object[]> iterator()
         {
-			return new MiddleNodeToStatementIterator( statement,
+			return new MiddleNodeToQuadIterator( statement,
 				middleNodes.iterator() );
         }
     }
     
-    private class MiddleNodeToStatementIterator
-    	extends PrefetchingIterator<CompleteStatement>
+    private class MiddleNodeToQuadIterator
+    	extends PrefetchingIterator<Object[]>
     {
     	private Statement statement;
-    	private Iterator<Node> middleNodes;
+    	private NestingIterator<Node> middleNodesWithContexts;
     	
-    	// They are both null or both non-null synced.
-    	private Node currentMiddleNode;
-    	private Iterator<Node> currentMiddleNodeContexts;
-    	
-    	MiddleNodeToStatementIterator( Statement statement,
+    	MiddleNodeToQuadIterator( Statement statement,
     		Iterator<Node> middleNodes )
     	{
     		this.statement = statement;
-    		this.middleNodes = middleNodes;
+    		this.middleNodesWithContexts =
+    			new NestingIterator<Node>( middleNodes )
+    		{
+				@Override
+                protected Iterator<Node> createNestedIterator( Node item )
+                {
+					return newContextIterator( item );
+                }
+    		};
     	}
     	
 		@Override
-        protected CompleteStatement fetchNextOrNull()
+        protected Object[] fetchNextOrNull()
         {
-			if ( currentMiddleNodeContexts == null ||
-				!currentMiddleNodeContexts.hasNext() )
-			{
-				while ( middleNodes.hasNext() )
-				{
-					currentMiddleNode = middleNodes.next();
-					currentMiddleNodeContexts =
-						newContextIterator( currentMiddleNode );
-					if ( currentMiddleNodeContexts.hasNext() )
-					{
-						break;
-					}
-				}
-			}
-
-			if ( currentMiddleNodeContexts != null &&
-				currentMiddleNodeContexts.hasNext() )
-			{
-				return newStatement();
-			}
-			return null;
+			return middleNodesWithContexts.hasNext() ? nextQuad() : null;
         }
 		
 		private Iterator<Node> newContextIterator( Node middleNode )
 		{
-			// TODO With the traverser it's... somewhat like
+			// TODO With a traverser it's... somewhat like
 			// 1000 times slower, why Johan why?
-//			currentMiddleNodeContexts = currentMiddleNode.traverse(
-//				Order.BREADTH_FIRST, StopEvaluator.END_OF_NETWORK,
-//				contextMatcher, VerboseQuadStrategy.RelTypes.IN_CONTEXT,
-//				Direction.OUTGOING ).iterator();
-			
 			Iterator<Node> iterator = new RelationshipToNodeIterable( 
 				middleNode, middleNode.getRelationships(
 					VerboseQuadStrategy.RelTypes.IN_CONTEXT,
@@ -454,29 +570,19 @@ public class VerboseQuadStore extends RdfStoreImpl
 			return iterator;
 		}
 		
-		private CompleteStatement newStatement()
+		private Object[] nextQuad()
 		{
-			Node middleNode = currentMiddleNode;
+			Node contextNode = middleNodesWithContexts.next();
+			Node middleNode = middleNodesWithContexts.getCurrentSurfaceItem();
 			Relationship subjectRelationship = middleNode.getRelationships(
 				Direction.INCOMING ).iterator().next();
+			String predicate = subjectRelationship.getType().name();
 			Node subjectNode = subjectRelationship.getOtherNode( middleNode );
-			Uri subject = new Uri( getNodeUriOrNull( subjectNode ) );
-			Uri predicate = new Uri( subjectRelationship.getType().name() );
-			
 			Node objectNode = middleNode.getSingleRelationship(
 				subjectRelationship.getType(),
 					Direction.OUTGOING ).getEndNode();
-			Value object = getValueForObjectNode( predicate.getUriAsString(),
-				objectNode );
-			
-			Node contextNode = currentMiddleNodeContexts.next();
-			Context context = new Context( getNodeUriOrNull( contextNode ) );
-			
-			return object instanceof Literal ?
-				new CompleteStatement( subject, predicate, ( Literal ) object,
-					context ) :
-				new CompleteStatement( subject, predicate, ( Resource ) object,
-					context );
+			return new Object[] { subjectNode, predicate,
+				objectNode, contextNode };
 		}
     }
     
@@ -523,6 +629,28 @@ public class VerboseQuadStore extends RdfStoreImpl
 				subjectToMiddleRel.getType().name(), objectNode );
 			return objectValue.equals( statement.getObject() );
         }
+    }
+    
+    private class SubjectFilteredRelationships
+    	extends FilteringIterable<Relationship>
+    {
+    	private Node subjectNode;
+    	
+    	SubjectFilteredRelationships( Node subjectNode,
+    		Iterable<Relationship> source )
+    	{
+    		super( source );
+    		this.subjectNode = subjectNode;
+    	}
+    	
+    	@Override
+    	protected boolean passes( Relationship middleToObjectRel )
+    	{
+    		Node thisSubjectNode = middleToObjectRel.getStartNode().
+    			getSingleRelationship( middleToObjectRel.getType(),
+    				Direction.INCOMING ).getStartNode();
+    		return thisSubjectNode.equals( this.subjectNode );
+    	}
     }
     
     private class LiteralToMiddleNodeIterable

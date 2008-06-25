@@ -23,6 +23,9 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         START_OF_ILLEGAL_URI + "datatype";
     public static final String LITERAL_LANGUAGE_KEY =
         START_OF_ILLEGAL_URI + "language";
+    public static final String STATEMENT_COUNT = "context_statement_count";
+//    public static final String SUBJECT_ENERGY = "subject_energy";
+//    public static final String OBJECT_ENERGY = "object_energy";
     
     private static final Collection<String> EXCLUDED_LITERAL_KEYS =
     	new HashSet<String>();
@@ -109,6 +112,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
             middleNode = createNode( abstractMiddleNode, null );
             createRelationship( subjectNode.getNode(),
             	subjectToMiddle, middleNode );
+            incrementSubjectEnergy( subjectNode.getNode() );
             literalNode = createLiteralNode( abstractLiteralNode );
             createRelationship( middleNode, middleToLiteral, literalNode );
         }
@@ -152,22 +156,60 @@ public class VerboseQuadExecutor extends UriBasedExecutor
 	        	RelTypes.IS_A_CONTEXT );
 	        relationship = createRelationship( middleNode,
 	        	abstractRelationship, contextNode );
+	        incrementContextCounter( contextNode );
         }
         else
         {
             relationship = ensureDirectlyConnected( middleNode,
             	abstractRelationship, contextNode );
+            if ( relationship == null )
+            {
+            	// It means that it was created.
+            	incrementContextCounter( contextNode );
+            }
+            
             if ( !contextNode.hasRelationship( RelTypes.IS_A_CONTEXT,
             	Direction.INCOMING ) )
             {
                 Node contextRefNode = getContextsReferenceNode();
             	contextRefNode.createRelationshipTo( contextNode,
             		RelTypes.IS_A_CONTEXT );
+            	incrementContextCounter( contextNode );
             }
         }
         return relationship;
     }
+    
+    private void incrementSubjectEnergy( Node node )
+    {
+//    	neoUtil().incrementAndGetCounter( node, SUBJECT_ENERGY );
+    }
 
+    private void decrementSubjectEnergy( Node node )
+    {
+//    	neoUtil().decrementAndGetCounter( node, SUBJECT_ENERGY, 0 );
+    }
+    
+    private void incrementObjectEnergy( Node node )
+    {
+//    	neoUtil().incrementAndGetCounter( node, OBJECT_ENERGY );
+    }
+
+    private void decrementObjectEnergy( Node node )
+    {
+//    	neoUtil().decrementAndGetCounter( node, OBJECT_ENERGY, 0 );
+    }
+    
+    private void incrementContextCounter( Node node )
+    {
+    	neoUtil().incrementAndGetCounter( node, STATEMENT_COUNT );
+    }
+
+    private void decrementContextCounter( Node contextNode )
+    {
+    	neoUtil().decrementAndGetCounter( contextNode, STATEMENT_COUNT, 0 );
+    }
+    
     private void handleAddObjectRepresentation(
         AbstractRepresentation representation,
         Map<String, AbstractNode> typeToNode )
@@ -201,8 +243,10 @@ public class VerboseQuadExecutor extends UriBasedExecutor
             middleNode = createNode( abstractMiddleNode, null );
             createRelationship( subjectNode.getNode(), subjectToMiddle,
             	middleNode );
+            incrementSubjectEnergy( subjectNode.getNode() );
             createRelationship( middleNode, middleToObject,
             	objectNode.getNode() );
+            incrementObjectEnergy( objectNode.getNode() );
         }
         ensureContextsAreAdded( representation, middleNode );
     }
@@ -373,6 +417,8 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         {
             disconnectMiddle( middleNode, middleToObject, objectNode,
                 subjectNode, subjectToMiddle );
+            decrementSubjectEnergy( subjectNode );
+            decrementObjectEnergy( objectNode );
         }
 
         deleteNodeIfEmpty( abstractSubjectNode, subjectNode );
@@ -396,6 +442,10 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         for ( Relationship relationship :
             getExistingContextRelationships( middleNode ) )
         {
+        	Node contextNode = middleNode.getSingleRelationship(
+        		VerboseQuadStrategy.RelTypes.IN_CONTEXT,
+        		Direction.OUTGOING ).getEndNode();
+        	decrementContextCounter( contextNode );
             deleteRelationship( relationship );
         }
     }
@@ -416,6 +466,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
                     contextNode, Direction.OUTGOING );
                 if ( relationship != null )
                 {
+                	decrementContextCounter( contextNode );
                     deleteRelationship( relationship );
                 }
             }
@@ -473,6 +524,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         {
             deleteMiddleAndLiteral( middleNode, middleToLiteral,
                 literalNode, subjectNode, subjectToMiddle );
+            decrementSubjectEnergy( subjectNode );
         }
         deleteNodeIfEmpty( abstractSubjectNode, subjectNode );
     }

@@ -3,6 +3,7 @@ package org.neo4j.rdf.store;
 import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Transaction;
 import org.neo4j.rdf.model.CompleteStatement;
+import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Value;
 import org.neo4j.rdf.model.Wildcard;
@@ -93,6 +94,11 @@ public class RdfStoreImpl implements RdfStore
 //    {
 //        return false;
 //    }
+    
+    public int size( Context... contexts )
+    {
+    	throw new UnsupportedOperationException();
+    }
 
     protected boolean wildcardPattern( WildcardStatement statement,
         boolean subjectWildcard, boolean predicateWildcard,
