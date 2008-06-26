@@ -1,5 +1,6 @@
 package org.neo4j.rdf.store;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -137,15 +138,35 @@ public class VerboseQuadStore extends RdfStoreImpl
     	Transaction tx = neo().beginTx();
     	try
     	{
-    		int size = 0;
-    		Node contextRefNode = getRepresentationStrategy().getExecutor().
-				getContextsReferenceNode();
-    		for ( Relationship rel : contextRefNode.getRelationships(
-    			VerboseQuadExecutor.RelTypes.IS_A_CONTEXT,
-    			Direction.OUTGOING ) )
+    		Iterable<Node> contextNodes = null;
+    		if ( contexts.length == 0 )
     		{
-    			Node contextNode = rel.getOtherNode( contextRefNode );
-    			size += ( Integer ) contextNode.getProperty(
+        		Node contextRefNode = getRepresentationStrategy().getExecutor().
+        			getContextsReferenceNode();
+    			contextNodes = new RelationshipToNodeIterable( contextRefNode,
+    				contextRefNode.getRelationships(
+    					VerboseQuadExecutor.RelTypes.IS_A_CONTEXT,
+    					Direction.OUTGOING ) );
+    		}
+    		else
+    		{
+    			ArrayList<Node> nodes = new ArrayList<Node>();
+    			for ( Context context : contexts )
+    			{
+    				Node node = getRepresentationStrategy().getExecutor().
+    					lookupNode( new AbstractNode( context ) );
+    				if ( node != null )
+    				{
+    					nodes.add( node );
+    				}
+    			}
+    			contextNodes = nodes;
+    		}
+    		
+    		int size = 0;
+    		for ( Node node : contextNodes )
+    		{
+    			size += ( Integer ) node.getProperty(
     				VerboseQuadExecutor.STATEMENT_COUNT, 0 );
     		}
     		tx.success();
