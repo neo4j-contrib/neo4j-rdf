@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-
 import org.neo4j.api.core.Direction;
 import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
@@ -106,9 +105,10 @@ public class VerboseQuadExecutor extends UriBasedExecutor
 	        middleNode = nodes[ 0 ];
 	        literalNode = nodes[ 1 ];
         }
-
+        boolean justAddContext = false;
         if ( literalNode == null )
         {
+            justAddContext = true;
             middleNode = createNode( abstractMiddleNode, null );
             createRelationship( subjectNode.getNode(),
             	subjectToMiddle, middleNode );
@@ -116,7 +116,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
             literalNode = createLiteralNode( abstractLiteralNode );
             createRelationship( middleNode, middleToLiteral, literalNode );
         }
-        ensureContextsAreAdded( representation, middleNode );
+        ensureContextsAreAdded( representation, middleNode, justAddContext );
     }
     
     private Map<String, AbstractNode> getTypeToNodeMap(
@@ -136,7 +136,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
 
     private Relationship findContextRelationship(
         AbstractRelationship abstractRelationship, Node middleNode,
-        boolean allowCreate )
+        boolean allowCreate, boolean justAddContext )
     {
         AbstractNode abstractContextNode = abstractRelationship.getEndNode();
         Node contextNode = lookupNode( abstractContextNode );
@@ -160,8 +160,16 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         }
         else
         {
-            relationship = ensureDirectlyConnected( middleNode,
-            	abstractRelationship, contextNode );
+            if ( !justAddContext )
+            {
+                relationship = ensureDirectlyConnected( middleNode,
+                	abstractRelationship, contextNode );
+            }
+            else
+            {
+                createRelationship( middleNode, abstractRelationship, 
+                    contextNode );
+            }
             if ( relationship == null )
             {
             	// It means that it was created.
@@ -229,7 +237,6 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         AbstractRelationship middleToObject = findAbstractRelationship(
             representation, VerboseQuadStrategy.TYPE_MIDDLE,
             VerboseQuadStrategy.TYPE_OBJECT );
-        
         Node middleNode = null;
         if ( !subjectNode.wasCreated() && !objectNode.wasCreated() )
         {
@@ -237,9 +244,10 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         		subjectToMiddle, middleToObject, abstractObjectNode,
         		objectNode.getNode() )[ 0 ];
         }
-
+        boolean justAddContext = false;
         if ( middleNode == null )
         {
+            justAddContext = true;
             middleNode = createNode( abstractMiddleNode, null );
             createRelationship( subjectNode.getNode(), subjectToMiddle,
             	middleNode );
@@ -248,7 +256,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
             	objectNode.getNode() );
             incrementObjectEnergy( objectNode.getNode() );
         }
-        ensureContextsAreAdded( representation, middleNode );
+        ensureContextsAreAdded( representation, middleNode, justAddContext );
     }
 
     private Node[] findMiddleAndObjectNode( Node subjectNode,
@@ -290,13 +298,14 @@ public class VerboseQuadExecutor extends UriBasedExecutor
     }
 
     private void ensureContextsAreAdded(
-        AbstractRepresentation representation, Node middleNode )
+        AbstractRepresentation representation, Node middleNode, 
+        boolean justAddContext )
     {
         for ( AbstractRelationship abstractRelationship :
             getContextRelationships( representation ) )
         {
             findContextRelationship( abstractRelationship,
-                middleNode, true );
+                middleNode, true, justAddContext );
         }
     }
 
