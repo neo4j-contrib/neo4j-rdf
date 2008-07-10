@@ -258,20 +258,18 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         }
         ensureContextsAreAdded( representation, middleNode, justAddContext );
     }
-
+    
     private Node[] findMiddleAndObjectNode( Node subjectNode,
         AbstractRelationship subjectToMiddle,
         AbstractRelationship middleToObject,
         AbstractNode abstractObjectNode, Node objectNodeIfResource )
     {
-        Node middleNode = null;
         Node objectNodeToLookFor = null;
         if ( abstractObjectNode.getUriOrNull() != null )
         {
             objectNodeToLookFor = objectNodeIfResource;
         }
 
-        Node objectNode = null;
         for ( Relationship relationship : subjectNode.getRelationships(
             relationshipType( subjectToMiddle.getRelationshipTypeName() ),
             Direction.OUTGOING ) )
@@ -288,13 +286,11 @@ public class VerboseQuadExecutor extends UriBasedExecutor
                         anObjectNode, abstractObjectNode.properties(),
                         EXCLUDED_LITERAL_KEYS ) ) )
                 {
-                    middleNode = aMiddleNode;
-                    objectNode = anObjectNode;
-                    break;
+                    return new Node[] { aMiddleNode, anObjectNode };
                 }
             }
         }
-        return new Node[] { middleNode, objectNode };
+        return new Node[] { null, null };
     }
 
     private void ensureContextsAreAdded(
