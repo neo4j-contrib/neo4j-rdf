@@ -176,13 +176,19 @@ public class VerboseQuadExecutor extends UriBasedExecutor
             	incrementContextCounter( contextNode );
             }
             
-            if ( !contextNode.hasRelationship( RelTypes.IS_A_CONTEXT,
-            	Direction.INCOMING ) )
+            // use property optimization here to avoid load of all relationships
+            // on a heavily connected context node
+            if ( !contextNode.hasProperty( "is_context" ) )
             {
-                Node contextRefNode = getContextsReferenceNode();
-            	contextRefNode.createRelationshipTo( contextNode,
-            		RelTypes.IS_A_CONTEXT );
-            	incrementContextCounter( contextNode );
+                if ( contextNode.hasRelationship( RelTypes.IS_A_CONTEXT,
+                	Direction.INCOMING ) )
+                {
+                    Node contextRefNode = getContextsReferenceNode();
+                	contextRefNode.createRelationshipTo( contextNode,
+                		RelTypes.IS_A_CONTEXT );
+                	incrementContextCounter( contextNode );
+                }
+                contextNode.setProperty( "is_context", true );
             }
         }
         return relationship;
