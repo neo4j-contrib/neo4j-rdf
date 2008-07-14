@@ -25,6 +25,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
     public static final String STATEMENT_COUNT = "context_statement_count";
 //    public static final String SUBJECT_ENERGY = "subject_energy";
 //    public static final String OBJECT_ENERGY = "object_energy";
+    public static final String IS_CONTEXT_KEY = "is_context";
     
     private static final Collection<String> EXCLUDED_LITERAL_KEYS =
     	new HashSet<String>();
@@ -157,6 +158,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
 	        relationship = createRelationship( middleNode,
 	        	abstractRelationship, contextNode );
 	        incrementContextCounter( contextNode );
+	        contextNode.setProperty( IS_CONTEXT_KEY, true );
         }
         else
         {
@@ -178,17 +180,16 @@ public class VerboseQuadExecutor extends UriBasedExecutor
             
             // use property optimization here to avoid load of all relationships
             // on a heavily connected context node
-            if ( !contextNode.hasProperty( "is_context" ) )
+            if ( !contextNode.hasProperty( IS_CONTEXT_KEY ) )
             {
-                if ( contextNode.hasRelationship( RelTypes.IS_A_CONTEXT,
+                if ( !contextNode.hasRelationship( RelTypes.IS_A_CONTEXT,
                 	Direction.INCOMING ) )
                 {
                     Node contextRefNode = getContextsReferenceNode();
                 	contextRefNode.createRelationshipTo( contextNode,
                 		RelTypes.IS_A_CONTEXT );
-                	incrementContextCounter( contextNode );
+                    contextNode.setProperty( IS_CONTEXT_KEY, true );
                 }
-                contextNode.setProperty( "is_context", true );
             }
         }
         return relationship;
