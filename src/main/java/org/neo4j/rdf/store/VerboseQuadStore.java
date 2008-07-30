@@ -621,8 +621,13 @@ public class VerboseQuadStore extends RdfStoreImpl
 		@Override
         protected boolean passes( Node middleNode )
         {
-			Relationship relationship = middleNode.getRelationships(
-				Direction.INCOMING ).iterator().next();
+			Iterator<Relationship> rels = middleNode.getRelationships(
+				Direction.INCOMING ).iterator();
+			if ( !rels.hasNext() )
+			{
+				return false;
+			}
+			Relationship relationship = rels.next();
 			return relationship.getType().name().equals( ( ( Uri )
 				statement.getPredicate() ).getUriAsString() );
         }
