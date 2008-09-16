@@ -103,6 +103,6 @@ public abstract class AbstractValidatable implements Validatable
 
     public Collection<MetaStructureClass> getClasses()
     {
-        return new InstanceOfCollection( meta, node );
+        return new InstanceOfCollection( neoUtil().neo(), meta, node );
     }
 }
