@@ -26,12 +26,6 @@ public class TestLiteralQuadContract extends QuadStoreAbstractTestCase
             TestUri.EMIL_PRIVATE_GRAPH );
 
     @Override
-    protected RdfStore instantiateStore()
-    {
-        return new VerboseQuadStore( neo(), indexService(), null );
-    }
-
-    @Override
     protected void setUp() throws Exception
     {
         super.setUp();

@@ -2,6 +2,8 @@ package org.neo4j.rdf.store;
 
 import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Transaction;
+import org.neo4j.rdf.fulltext.FulltextIndex;
+import org.neo4j.rdf.fulltext.QueryResult;
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Statement;
@@ -11,6 +13,7 @@ import org.neo4j.rdf.model.WildcardStatement;
 import org.neo4j.rdf.store.representation.AbstractRepresentation;
 import org.neo4j.rdf.store.representation.RepresentationExecutor;
 import org.neo4j.rdf.store.representation.RepresentationStrategy;
+import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
 
 /**
  * Default implementation of an {@link RdfStore}.
@@ -94,6 +97,11 @@ public class RdfStoreImpl implements RdfStore
 //    {
 //        return false;
 //    }
+    
+    public Iterable<QueryResult> searchFulltext( String query )
+    {
+    	throw new UnsupportedOperationException( "No implementation here" );
+    }
     
     public int size( Context... contexts )
     {
@@ -184,6 +192,34 @@ public class RdfStoreImpl implements RdfStore
         {
             tx.finish();
         }
+    }
+    
+    public void shutDown()
+    {
+    	FulltextIndex index = getFulltextIndex();
+    	if ( index != null )
+    	{
+    		index.shutDown();
+    	}
+    }
+    
+    /**
+     * @return the {@link FulltextIndex} instance on the executor, or
+     * <code>null</code> if no fulltext index is used.
+     */
+    public FulltextIndex getFulltextIndex()
+    {
+    	return ( ( AbstractUriBasedExecutor )
+    		getRepresentationStrategy().getExecutor() ).getFulltextIndex();
+    }
+    
+    /**
+     * Performs a reindex of the entire fulltext index. Please call
+     * {@link FulltextIndex#clear()} before using this.
+     */
+    public void reindexFulltextIndex()
+    {
+    	throw new UnsupportedOperationException();
     }
     
     protected static class InferenceOptions

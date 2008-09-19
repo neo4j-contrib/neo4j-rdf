@@ -11,6 +11,7 @@ import org.neo4j.api.core.Node;
 import org.neo4j.api.core.Relationship;
 import org.neo4j.api.core.RelationshipType;
 import org.neo4j.neometa.structure.MetaStructure;
+import org.neo4j.rdf.fulltext.FulltextIndex;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractRepresentation;
@@ -23,9 +24,9 @@ public class PureQuadRepresentationExecutor extends AbstractUriBasedExecutor
     public static final String LITERAL_VALUE_KEY = "value";
 
     public PureQuadRepresentationExecutor( NeoService neo, IndexService index,
-        MetaStructure meta )
+        MetaStructure meta, FulltextIndex fulltextIndex )
     {
-        super( neo, index, meta );
+        super( neo, index, meta, fulltextIndex );
     }
 
     public void addToNodeSpace( AbstractRepresentation representation )

@@ -13,6 +13,7 @@ import org.neo4j.api.core.RelationshipType;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.neometa.structure.MetaStructureObject;
 import org.neo4j.neometa.structure.MetaStructureThing;
+import org.neo4j.rdf.fulltext.FulltextIndex;
 import org.neo4j.rdf.model.Literal;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.store.representation.AbstractElement;
@@ -39,16 +40,23 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     private final NeoUtil neoUtil;
     private final IndexService index;
     private final MetaStructure meta;
-
+    private FulltextIndex fulltextIndex;
+    
     public AbstractUriBasedExecutor( NeoService neo, IndexService index,
-        MetaStructure optionalMeta )
+        MetaStructure optionalMeta, FulltextIndex optionalFulltextIndex )
     {
         this.neo = neo;
         this.index = index;
         this.neoUtil = new NeoUtil( neo );
         this.meta = optionalMeta;
+        this.fulltextIndex = optionalFulltextIndex;
     }
-
+    
+    public FulltextIndex getFulltextIndex()
+    {
+    	return this.fulltextIndex;
+    }
+    
     protected NeoService neo()
     {
         return this.neo;
@@ -398,6 +406,10 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
             abstractNode.properties().get( predicate ).iterator().next();
 //        debugCreateNode( node, "(literal)" );
         index().index( node, LITERAL_VALUE_KEY, value );
+        if ( getFulltextIndex() != null )
+        {
+        	getFulltextIndex().index( node, new Uri( predicate ), value );
+        }
         return node;
     }
 
@@ -405,6 +417,10 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         String predicate, Object value )
     {
         index().removeIndex( node, LITERAL_VALUE_KEY, value );
+        if ( getFulltextIndex() != null )
+        {
+        	getFulltextIndex().removeIndex( node, new Uri( predicate ), value );
+        }
         deleteNode( node, null );
     }
 

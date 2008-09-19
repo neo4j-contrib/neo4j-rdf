@@ -1,5 +1,6 @@
 package org.neo4j.rdf.store;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -13,6 +14,7 @@ import org.neo4j.api.core.Node;
 import org.neo4j.api.core.Relationship;
 import org.neo4j.api.core.Transaction;
 import org.neo4j.util.EntireGraphDeletor;
+import org.neo4j.util.NeoUtil;
 import org.neo4j.util.index.IndexService;
 
 /**
@@ -20,7 +22,9 @@ import org.neo4j.util.index.IndexService;
  */
 public abstract class NeoTestCase extends TestCase
 {
+	private static File basePath = new File( "var/test" );
     private static NeoService neo;
+    private static NeoUtil neoUtil;
     private IndexService indexService = null;
 
     private Transaction tx;
@@ -31,7 +35,8 @@ public abstract class NeoTestCase extends TestCase
         super.setUp();
         if ( neo == null )
         {
-            neo = new EmbeddedNeo( "var/test/neo" );
+            neo = new EmbeddedNeo(
+            	new File( basePath, "neo" ).getAbsolutePath() );
             Runtime.getRuntime().addShutdownHook( new Thread()
             {
                 @Override
@@ -40,9 +45,15 @@ public abstract class NeoTestCase extends TestCase
                     neo.shutdown();
                 }
             } );
+            neoUtil = new NeoUtil( neo );
         }
         tx = neo().beginTx();
         createIndexServiceIfNeeded();
+    }
+    
+    protected File getBasePath()
+    {
+    	return basePath;
     }
 
     protected void restartTx()
@@ -98,6 +109,11 @@ public abstract class NeoTestCase extends TestCase
     {
         return neo;
     }
+    
+    protected NeoUtil neoUtil()
+    {
+    	return neoUtil;
+    }
 
     protected void deleteEntireNodeSpace()
     {
@@ -108,7 +124,7 @@ public abstract class NeoTestCase extends TestCase
             new EntireGraphDeletor().delete( node );
         }
     }
-
+    
     protected <T> void assertCollection( Collection<T> collection, T... items )
     {
         String collectionString = join( ", ", collection.toArray() );

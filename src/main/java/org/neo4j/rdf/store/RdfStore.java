@@ -1,5 +1,7 @@
 package org.neo4j.rdf.store;
 
+import org.neo4j.rdf.fulltext.FulltextIndex;
+import org.neo4j.rdf.fulltext.QueryResult;
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Statement;
@@ -26,6 +28,14 @@ public interface RdfStore
      */
     Iterable<CompleteStatement> getStatements( WildcardStatement statement,
         boolean includeInferredStatements );
+    
+    /**
+     * Temporary name, search fulltext (literals). The arguments are sure
+     * to change over time.
+     * @param query the query, basically just a string with a word or two.
+     * @return statements matching the query.
+     */
+    Iterable<QueryResult> searchFulltext( String query );
 
     /**
      * Removes any matching statement from the store.
@@ -40,4 +50,10 @@ public interface RdfStore
      * @return the number of statements found.
      */
     int size( Context... contexts );
+    
+    /**
+     * Stops thread a.s.o. If a {@link FulltextIndex} is present then the
+     * shutDown method is called on that too.
+     */
+    void shutDown();
 }

@@ -1,20 +1,16 @@
 package org.neo4j.rdf.store;
 
+import org.neo4j.rdf.fulltext.QueryResult;
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Literal;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Wildcard;
+import org.neo4j.rdf.model.WildcardStatement;
 import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
 
 public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
 {
-    @Override
-    protected RdfStore instantiateStore()
-    {
-        return new VerboseQuadStore( neo(), indexService(), null );
-    }
-
     public void testIt()
     {
         CompleteStatement mattiasKnowsEmilPublic =
@@ -27,14 +23,14 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
             completeStatement(
                 TestUri.MATTIAS,
                 TestUri.FOAF_NICK,
-                new Literal( "Mattias",
+                new Literal( "Mattias Persson",
             new Uri( "http://www.w3.org/2001/XMLSchema#string" ), "sv" ),
                 TestUri.MATTIAS_PUBLIC_GRAPH );
         CompleteStatement mattiasNamePrivate =
             completeStatement(
                 TestUri.MATTIAS,
                 TestUri.FOAF_NICK,
-                new Literal( "Mattias",
+                new Literal( "Mattias Persson",
             new Uri( "http://www.w3.org/2001/XMLSchema#string" ), "en" ),
                 TestUri.MATTIAS_PRIVATE_GRAPH );
         CompleteStatement mattiasKnowsEmilPrivate =
@@ -129,20 +125,152 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
             completeStatement(
                 TestUri.MATTIAS,
                 TestUri.FOAF_NICK,
-                "Mattias",
+                "Mattias Persson",
                 TestUri.MATTIAS_PUBLIC_GRAPH );
 
         addStatements( mattiasTypePerson, mattiasNamePublic );
+        
         restartTx();
 
         assertResult(
             wildcardStatement(
                 new Wildcard( "s" ),
                 new Wildcard( "p" ),
-                new Literal( "Mattias" ),
+                new Literal( "Mattias Persson" ),
                 new Wildcard( "g" ) ),
 
             mattiasNamePublic );
         deleteEntireNodeSpace();
+    }
+
+    public void testFulltextSearch() throws Exception
+    {
+        CompleteStatement mattiasTypePerson =
+            completeStatement(
+                TestUri.MATTIAS,
+                TestUri.RDF_TYPE,
+                TestUri.PERSON,
+                TestUri.MATTIAS_PUBLIC_GRAPH );
+        CompleteStatement mattiasNamePublic =
+            completeStatement(
+                TestUri.MATTIAS,
+                TestUri.FOAF_NICK,
+                "Mattias Persson",
+                TestUri.MATTIAS_PUBLIC_GRAPH );
+
+        addStatements( mattiasTypePerson, mattiasNamePublic );
+        
+        restartTx();
+
+        long time = System.currentTimeMillis();
+        while ( System.currentTimeMillis() - time < 3000 &&
+        	!store().searchFulltext( "Mattias Persson" ).iterator().hasNext() )
+        {
+        	Thread.sleep( 100 );
+        }
+        
+        Iterable<QueryResult> queryResult =
+        	this.store().searchFulltext( "Mattias Persson" );
+        int counter = 0;
+        for ( QueryResult oneResult : queryResult )
+        {
+        	counter++;
+        	assertEquals( "Mattias Persson", ( ( Literal )
+        		oneResult.getStatement().getObject() ).getValue() );
+        	assertTrue( oneResult.getSnippet().contains( "Mattias" ) );
+        	assertTrue( oneResult.getSnippet().contains( "Persson" ) );
+        }
+        assertEquals( 1, counter );
+        
+        queryResult = this.store().searchFulltext( "Persson" );
+        counter = 0;
+        for ( QueryResult oneResult : queryResult )
+        {
+        	counter++;
+        	assertEquals( "Mattias Persson", ( ( Literal )
+        		oneResult.getStatement().getObject() ).getValue() );
+        	assertTrue( oneResult.getSnippet().contains( "Persson" ) );
+        }
+        assertEquals( 1, counter );
+        
+        removeStatements( new WildcardStatement( mattiasNamePublic ) );
+        restartTx();
+        
+        Thread.sleep( 500 );
+        assertFalse( store().searchFulltext( "Persson" ).iterator().hasNext() );
+        
+        deleteEntireNodeSpace();
+    }
+
+    public void testReindexFulltextIndex() throws Exception
+    {
+        CompleteStatement mattiasTypePerson =
+            completeStatement(
+                TestUri.MATTIAS,
+                TestUri.RDF_TYPE,
+                TestUri.PERSON,
+                TestUri.MATTIAS_PUBLIC_GRAPH );
+        CompleteStatement mattiasNickPublic =
+            completeStatement(
+                TestUri.MATTIAS,
+                TestUri.FOAF_NICK,
+                "Matte",
+                TestUri.MATTIAS_PUBLIC_GRAPH );
+        CompleteStatement mattiasNamePublic =
+            completeStatement(
+                TestUri.MATTIAS,
+                TestUri.FOAF_NAME,
+                "Mattias Persson",
+                TestUri.MATTIAS_PUBLIC_GRAPH );
+        CompleteStatement emilNamePublic =
+            completeStatement(
+                TestUri.EMIL,
+                TestUri.FOAF_NAME,
+                "Emil Eifrém",
+                TestUri.EMIL_PUBLIC_GRAPH );
+
+        addStatements( mattiasTypePerson, mattiasNickPublic,
+        	mattiasNamePublic, emilNamePublic );
+        restartTx();
+        long time = System.currentTimeMillis();
+        while ( System.currentTimeMillis() - time < 3000 &&
+        	!store().searchFulltext( "Emil" ).iterator().hasNext() )
+        {
+        	Thread.sleep( 100 );
+        }
+        
+        ( ( RdfStoreImpl ) store() ).getFulltextIndex().clear();
+        assertFalse( store().searchFulltext( "Persson" ).iterator().hasNext() );
+        ( ( RdfStoreImpl ) store() ).reindexFulltextIndex();
+        
+        time = System.currentTimeMillis();
+        while ( System.currentTimeMillis() - time < 3000 &&
+        	( !store().searchFulltext( "Emil" ).iterator().hasNext() ||
+        	!store().searchFulltext( "Mattias" ).iterator().hasNext() ||
+        	!store().searchFulltext( "Matte" ).iterator().hasNext() ) )
+        {
+        	Thread.sleep( 100 );
+        }
+        
+        Iterable<QueryResult> queryResult =
+        	this.store().searchFulltext( "Persson" );
+        int counter = 0;
+        for ( QueryResult oneResult : queryResult )
+        {
+        	counter++;
+        	assertEquals( "Mattias Persson", ( ( Literal )
+        		oneResult.getStatement().getObject() ).getValue() );
+        }
+        assertEquals( 1, counter );
+
+        queryResult = this.store().searchFulltext( "Emil" );
+        counter = 0;
+        for ( QueryResult oneResult : queryResult )
+        {
+        	counter++;
+        	assertEquals( "Emil Eifrém", ( ( Literal )
+        		oneResult.getStatement().getObject() ).getValue() );
+        }
+        assertEquals( 1, counter );
     }
 }

@@ -13,6 +13,9 @@ import org.neo4j.api.core.StopEvaluator;
 import org.neo4j.api.core.Transaction;
 import org.neo4j.api.core.Traverser.Order;
 import org.neo4j.neometa.structure.MetaStructure;
+import org.neo4j.rdf.fulltext.FulltextIndex;
+import org.neo4j.rdf.fulltext.QueryResult;
+import org.neo4j.rdf.fulltext.RawQueryResult;
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Literal;
@@ -20,6 +23,7 @@ import org.neo4j.rdf.model.Resource;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Value;
+import org.neo4j.rdf.model.Wildcard;
 import org.neo4j.rdf.model.WildcardStatement;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
@@ -41,14 +45,14 @@ public class VerboseQuadStore extends RdfStoreImpl
 
     public VerboseQuadStore( NeoService neo, IndexService indexer )
     {
-        this( neo, indexer, null );
+        this( neo, indexer, null, null );
     }
 
     public VerboseQuadStore( NeoService neo, IndexService indexer,
-        MetaStructure meta )
+        MetaStructure meta, FulltextIndex fulltextIndex )
     {
-        super( neo, new VerboseQuadStrategy(
-            new VerboseQuadExecutor( neo, indexer, meta ), meta ) );
+        super( neo, new VerboseQuadStrategy( new VerboseQuadExecutor( neo,
+        	indexer, meta, fulltextIndex ), meta ) );
         this.meta = meta;
         debug( "I'm initialized!" );
     }
@@ -130,6 +134,76 @@ public class VerboseQuadStore extends RdfStoreImpl
         {
             tx.finish();
         }
+    }
+    
+    @Override
+    public void reindexFulltextIndex()
+    {
+    	Iterable<Node> allMiddleNodes = getMiddleNodesFromAllContexts();
+    	Iterable<Object[]> allQuads = new MiddleNodeToQuadIterable(
+    		new WildcardStatement( new Wildcard(), new Wildcard(),
+    			new Wildcard(), new Wildcard() ), allMiddleNodes );
+    	int counter = 0;
+    	FulltextIndex fulltextIndex = getFulltextIndex();
+    	for ( Object[] quad : allQuads )
+    	{
+    		String predicate = ( String ) quad[ 1 ];
+    		Node objectNode = ( Node ) quad[ 2 ];
+    		Value objectValue = getValueForObjectNode( predicate, objectNode );
+    		if ( objectValue instanceof Literal )
+    		{
+    			fulltextIndex.index( objectNode, new Uri( predicate ),
+    				( ( Literal ) objectValue ).getValue() );
+    			if ( ++counter % 5000 == 0 )
+    			{
+    				fulltextIndex.end( true );
+    			}
+    		}
+    	}
+    	fulltextIndex.end( true );
+    }
+    
+    @Override
+    public Iterable<QueryResult> searchFulltext( String query )
+    {
+    	FulltextIndex fulltextIndex = getFulltextIndex();
+    	if ( fulltextIndex == null )
+    	{
+    		throw new RuntimeException( "No fulltext index instantiated, " +
+    			"please supply a FulltextIndex instance at construction time " +
+    			"to get this feature" );
+    	}
+    	
+    	Iterable<RawQueryResult> rawResult = fulltextIndex.search( query );
+    	final RawQueryResult[] latestQueryResult = new RawQueryResult[ 1 ];
+    	Iterable<Node> middleNodes = new LiteralToMiddleNodeIterable(
+    		new IterableWrapper<Node, RawQueryResult>( rawResult )
+    		{
+				@Override
+                protected Node underlyingObjectToObject( RawQueryResult object )
+                {
+					latestQueryResult[ 0 ] = object;
+					return object.getNode();
+                }
+    		} );
+    	
+    	Statement fakeWildcardStatement = new WildcardStatement(
+    		new Wildcard( "S" ), new Wildcard( "P" ),
+    		new Wildcard( "O" ), new Wildcard( "C" ) );
+    	Iterable<CompleteStatement> statementIterator = statementIterator(
+    		fakeWildcardStatement, middleNodes );
+    	return new IterableWrapper<QueryResult, CompleteStatement>(
+    		statementIterator )
+    		{
+				@Override
+                protected QueryResult underlyingObjectToObject(
+                    CompleteStatement object )
+                {
+	                return new QueryResult( object,
+	                	latestQueryResult[ 0 ].getScore(),
+	                	latestQueryResult[ 0 ].getSnippet() );
+                }
+    		};
     }
     
     @Override

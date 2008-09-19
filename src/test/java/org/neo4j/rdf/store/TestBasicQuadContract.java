@@ -1,5 +1,8 @@
 package org.neo4j.rdf.store;
 
+import java.io.File;
+
+import org.neo4j.rdf.fulltext.SimpleFulltextIndex;
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
 
@@ -29,7 +32,9 @@ public class TestBasicQuadContract extends QuadStoreAbstractTestCase
     @Override
     protected RdfStore instantiateStore()
     {
-        return new VerboseQuadStore( neo(), indexService(), null );
+        return new VerboseQuadStore( neo(), indexService(), null,
+        	new SimpleFulltextIndex( neo(), new File( getBasePath(),
+        		"fulltext" ) ) );
     }
 
     @Override

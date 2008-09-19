@@ -11,6 +11,7 @@ import org.neo4j.api.core.Node;
 import org.neo4j.api.core.Relationship;
 import org.neo4j.api.core.RelationshipType;
 import org.neo4j.neometa.structure.MetaStructure;
+import org.neo4j.rdf.fulltext.FulltextIndex;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractRepresentation;
@@ -44,9 +45,9 @@ public class VerboseQuadExecutor extends UriBasedExecutor
     private Node contextRefNodeCache;
 
     public VerboseQuadExecutor( NeoService neo, IndexService index,
-        MetaStructure meta )
+        MetaStructure meta, FulltextIndex fulltextIndex )
     {
-        super( neo, index, meta );
+        super( neo, index, meta, fulltextIndex );
     }
     
     public Node getContextsReferenceNode()

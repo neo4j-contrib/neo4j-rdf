@@ -2,6 +2,7 @@ package org.neo4j.rdf.store.representation.standard;
 
 import org.neo4j.api.core.NeoService;
 import org.neo4j.neometa.structure.MetaStructure;
+import org.neo4j.rdf.fulltext.FulltextIndex;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Wildcard;
@@ -12,9 +13,10 @@ public class PureQuadRepresentationStrategy
     extends StandardAbstractRepresentationStrategy
 {
     public PureQuadRepresentationStrategy( NeoService neo, IndexService index,
-        MetaStructure meta )
+        MetaStructure meta, FulltextIndex fulltextIndex )
     {
-        super( new PureQuadRepresentationExecutor( neo, index, meta ), meta );
+        super( new PureQuadRepresentationExecutor(
+        	neo, index, meta, fulltextIndex ), meta );
     }
 
     @Override

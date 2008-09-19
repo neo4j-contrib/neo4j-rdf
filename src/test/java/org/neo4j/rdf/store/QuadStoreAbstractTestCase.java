@@ -1,10 +1,15 @@
 package org.neo4j.rdf.store;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
+import javax.transaction.SystemException;
+
+import org.neo4j.rdf.fulltext.FulltextIndex;
+import org.neo4j.rdf.fulltext.SimpleFulltextIndex;
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Literal;
@@ -25,7 +30,6 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
         "predicate" );
     public static final Wildcard WILDCARD_OBJECT = new Wildcard( "object" );
     public static final Wildcard WILDCARD_CONTEXT = new Wildcard( "context" );
-
 
     private RdfStore store = null;
 
@@ -55,8 +59,39 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
     {
         if ( store() != null )
         {
+        	// TODO, not really nice
+        	FulltextIndex fulltextIndex =
+        		( ( RdfStoreImpl ) this.store ).getFulltextIndex();
+        	if ( fulltextIndex != null )
+        	{
+        		fulltextIndex.clear();
+        	}
+        	this.store.shutDown();
             this.store = null;
         }
+    }
+    
+    @Override
+    protected void restartTx()
+    {
+    	try
+    	{
+            // Temporary solution
+    		int txId =
+    			neoUtil().getTransactionManager().getTransaction().hashCode();
+        	super.restartTx();
+        	
+        	FulltextIndex fulltextIndex = 
+        		( ( RdfStoreImpl ) store ).getFulltextIndex();
+        	if ( fulltextIndex != null )
+        	{
+        		fulltextIndex.end( txId, true );
+        	}
+    	}
+    	catch ( SystemException e )
+    	{
+    		throw new RuntimeException( e );
+    	}
     }
 
     protected RdfStore store()
@@ -70,7 +105,12 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
         return new NeoIndexService( neo() );
     }
 
-    protected abstract RdfStore instantiateStore();
+    protected RdfStore instantiateStore()
+    {
+        return new VerboseQuadStore( neo(), indexService(), null,
+        	new SimpleFulltextIndex( neo(), new File( getBasePath(),
+        		"fulltext" ) ) );
+    }
 
     protected void debug( String text )
     {
@@ -137,6 +177,11 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
     protected void addStatements( CompleteStatement... statements )
     {
         store().addStatements( statements );
+    }
+    
+    protected void removeStatements( WildcardStatement statement )
+    {
+    	store.removeStatements( statement );
     }
 
     static CompleteStatement completeStatement( TestUri subject,
@@ -209,6 +254,7 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
         MATTIAS( "person/mattias" ),
         FOAF_KNOWS( "foaf:knows" ),
         FOAF_NICK( "foaf:nick" ),
+        FOAF_NAME( "foaf:name" ),
         EMIL_PUBLIC_GRAPH( "context/emil-public" ),
         EMIL_PRIVATE_GRAPH( "context/emil-private" ),
         MATTIAS_PUBLIC_GRAPH( "context/mattias-public" ),
