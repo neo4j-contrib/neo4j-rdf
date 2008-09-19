@@ -81,10 +81,26 @@ public class SimpleFulltextIndex implements FulltextIndex
 			new HashMap<Integer, Collection<Object[]>>() );
 	private PersistentQueue indexingQueue;
 	private IndexingThread indexingThread;
-	private Formatter highlightFormatter = new SimpleHTMLFormatter();
+	private Formatter highlightFormatter;
 	
 	public SimpleFulltextIndex( NeoService neo, File storagePath )
 	{
+		this( neo, storagePath, null, null );
+	}
+	
+	public SimpleFulltextIndex( NeoService neo, File storagePath,
+		String highlightPreTag, String highlightPostTag )
+	{
+		if ( highlightPreTag == null || highlightPostTag == null )
+		{
+			this.highlightFormatter = new SimpleHTMLFormatter();
+		}
+		else
+		{
+			this.highlightFormatter = new SimpleHTMLFormatter(
+				highlightPreTag, highlightPostTag );
+		}
+		
 		this.directoryPath = storagePath.getAbsolutePath();
 		this.queuePath = this.directoryPath + "-queue";
 		this.neo = neo;
