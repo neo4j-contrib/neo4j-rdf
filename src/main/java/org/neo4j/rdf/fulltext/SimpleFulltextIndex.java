@@ -8,8 +8,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.transaction.SystemException;
 
@@ -82,14 +84,22 @@ public class SimpleFulltextIndex implements FulltextIndex
 	private PersistentQueue indexingQueue;
 	private IndexingThread indexingThread;
 	private Formatter highlightFormatter;
+	private Set<String> predicateFilter;
 	
 	public SimpleFulltextIndex( NeoService neo, File storagePath )
 	{
-		this( neo, storagePath, null, null );
+		this( neo, storagePath, null );
 	}
 	
 	public SimpleFulltextIndex( NeoService neo, File storagePath,
-		String highlightPreTag, String highlightPostTag )
+		Collection<String> predicateFilter )
+	{
+		this( neo, storagePath, null, null, predicateFilter );
+	}
+	
+	public SimpleFulltextIndex( NeoService neo, File storagePath,
+		String highlightPreTag, String highlightPostTag,
+		Collection<String> predicateFilter )
 	{
 		if ( highlightPreTag == null || highlightPostTag == null )
 		{
@@ -101,6 +111,8 @@ public class SimpleFulltextIndex implements FulltextIndex
 				highlightPreTag, highlightPostTag );
 		}
 		
+		this.predicateFilter = predicateFilter == null ? null :
+			new HashSet<String>( predicateFilter );
 		this.directoryPath = storagePath.getAbsolutePath();
 		this.queuePath = this.directoryPath + "-queue";
 		this.neo = neo;
@@ -171,6 +183,12 @@ public class SimpleFulltextIndex implements FulltextIndex
 	private void enqueueCommand( boolean trueForIndex,
 		Node node, Uri predicate, Object literal )
 	{
+		if ( predicateFilter != null &&
+			!predicateFilter.contains( predicate.getUriAsString() ) )
+		{
+			return;
+		}
+		
 		try
 		{
 			int key =
