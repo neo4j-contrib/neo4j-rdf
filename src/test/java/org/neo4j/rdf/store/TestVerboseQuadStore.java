@@ -96,7 +96,7 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
                 TestUri.MATTIAS.toUri(),
                 rdfType,
                 TestUri.PERSON.toUri(),
-                Context.NULL );
+                Context.NULL, null );
         addStatements(
             mattiasTypePerson,
             mattiasKnowsEmilPublic );
@@ -272,5 +272,42 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
         		oneResult.getStatement().getObject() ).getValue() );
         }
         assertEquals( 1, counter );
+        
+        deleteEntireNodeSpace();
+    }
+    
+    public void testMetadata() throws Exception
+    {
+        CompleteStatement mattiasTypePerson =
+            completeStatement(
+                TestUri.MATTIAS,
+                TestUri.RDF_TYPE,
+                TestUri.PERSON,
+                TestUri.MATTIAS_PUBLIC_GRAPH );
+        CompleteStatement mattiasNickPublic =
+            completeStatement(
+                TestUri.MATTIAS,
+                TestUri.FOAF_NICK,
+                "Matte",
+                TestUri.MATTIAS_PUBLIC_GRAPH );
+        
+        addStatements( mattiasTypePerson, mattiasNickPublic );
+        CompleteStatement addedNick = store().getStatements(
+            new WildcardStatement( mattiasNickPublic ),
+            false ).iterator().next();
+        String key1 = "testKey1";
+        String key2 = "testKey2";
+        Object value1 = 101;
+        Object value2 = "hello";
+        assertFalse( addedNick.getMetadata().has( key1 ) );
+        assertFalse( addedNick.getMetadata().has( key2 ) );
+        addedNick.getMetadata().set( key1, value1 );
+        assertEquals( value1, addedNick.getMetadata().get( key1 ) );
+        assertFalse( addedNick.getMetadata().has( key2 ) );
+        addedNick.getMetadata().set( key2, value2 );
+        assertEquals( value2, addedNick.getMetadata().get( key2 ) );
+        addedNick.getMetadata().remove( key1 );
+        assertFalse( addedNick.getMetadata().has( key1 ) );
+        deleteEntireNodeSpace();
     }
 }

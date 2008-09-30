@@ -1,5 +1,8 @@
 package org.neo4j.rdf.model;
 
+import org.neo4j.rdf.store.RdfStore;
+import org.neo4j.rdf.store.representation.RepresentationStrategy;
+
 /**
  * A complete statement, i.e. a statement which has a non-null subject,
  * predicate, object and a context. It is guaranteed that all values are
@@ -11,28 +14,49 @@ public class CompleteStatement implements Statement
     private final Uri predicate;
     private final Value object;
     private final Context context;
+    private final StatementMetadata metadata;
 
     public CompleteStatement( Resource subject, Uri predicate, Resource
         objectResource, Context context )
     {
-        this( subject, predicate, ( Value ) objectResource, context );
+        this( subject, predicate, objectResource, context, null );
+    }
+    
+    public CompleteStatement( Resource subject, Uri predicate, Resource
+        objectResource, Context context, StatementMetadata metadata )
+    {
+        this( subject, predicate, ( Value ) objectResource, context, metadata );
     }
 
     public CompleteStatement( Resource subject, Uri predicate, Literal
         objectLiteral, Context context )
     {
-        this( subject, predicate, ( Value ) objectLiteral, context );
+        this( subject, predicate, objectLiteral, context, null );
+    }
+    
+    public CompleteStatement( Resource subject, Uri predicate, Literal
+        objectLiteral, Context context, StatementMetadata metadata )
+    {
+        this( subject, predicate, ( Value ) objectLiteral, context, metadata );
+    }
+    
+    public CompleteStatement( Resource subject, Uri predicate, Value object,
+        Context context )
+    {
+        this( subject, predicate, object, context, null );
     }
 
     private CompleteStatement( Resource subject, Uri predicate, Value object,
-        Context context )
+        Context context, StatementMetadata metadata )
     {
-        // s, p, o can't be null, context can be null
+        // metadata can be null, this is wether or not the RdfStore instance
+        // supports metadata on statments or not.
         assertNotNull( subject, predicate, object, context );
         this.subject = subject;
         this.predicate = predicate;
         this.object = object;
         this.context = context;
+        this.metadata = metadata;
     }
     
     private void assertNotNull( Object... args )
@@ -46,11 +70,17 @@ public class CompleteStatement implements Statement
         }
     }
 
+    /**
+     * Returns the subject of this statement, guaranteed not to be a wildcard.
+     */
     public Resource getSubject()
     {
         return this.subject;
     }
 
+    /**
+     * Returns the predicate of this statement, guaranteed not to be a wildcard.
+     */
     public Uri getPredicate()
     {
         return this.predicate;
@@ -84,6 +114,27 @@ public class CompleteStatement implements Statement
     public WildcardStatement asWildcardStatement()
     {
         return new WildcardStatement( this );
+    }
+    
+    /**
+     * Returns a hook for reading and editing metadata for this statement.
+     * This hook is supplied in the constructor, typically by an
+     * {@link RdfStore} instance. The {@link RdfStore} can also supply null,
+     * meaning that the particular store instance (or more correctly the
+     * {@link RepresentationStrategy} it uses) doesn't support metadata for
+     * statements.
+     * @return a metadata hook for this statement.
+     */
+    public StatementMetadata getMetadata()
+    {
+        if ( this.metadata == null )
+        {
+            throw new RuntimeException( "You can't associate metadata to " +
+                "this statement. Normally you can only associate metadata to " +
+                "statements reached via getStatements method from an " +
+                RdfStore.class.getSimpleName() );
+        }
+        return this.metadata;
     }
 
     @Override

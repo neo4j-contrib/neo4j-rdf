@@ -21,6 +21,7 @@ import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Literal;
 import org.neo4j.rdf.model.Resource;
 import org.neo4j.rdf.model.Statement;
+import org.neo4j.rdf.model.StatementMetadata;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Value;
 import org.neo4j.rdf.model.Wildcard;
@@ -32,7 +33,6 @@ import org.neo4j.rdf.store.representation.standard.VerboseQuadStrategy;
 import org.neo4j.util.FilteringIterable;
 import org.neo4j.util.FilteringIterator;
 import org.neo4j.util.IterableWrapper;
-import org.neo4j.util.NestingIterable;
 import org.neo4j.util.NestingIterator;
 import org.neo4j.util.OneOfRelTypesReturnableEvaluator;
 import org.neo4j.util.PrefetchingIterator;
@@ -322,7 +322,7 @@ public class VerboseQuadStore extends RdfStoreImpl
 	{
 		return getRepresentationStrategy().getExecutor().
 			getContextsReferenceNode().traverse( Order.DEPTH_FIRST,
-				StopEvaluator.END_OF_NETWORK,
+				StopEvaluator.END_OF_GRAPH,
 				new OneOfRelTypesReturnableEvaluator(
 					VerboseQuadStrategy.RelTypes.IN_CONTEXT ),
 				VerboseQuadExecutor.RelTypes.IS_A_CONTEXT, Direction.OUTGOING,
@@ -447,7 +447,6 @@ public class VerboseQuadStore extends RdfStoreImpl
     	Iterable<Node> middleNodes = null;
     	if ( statement.getContext().isWildcard() )
     	{
-    		// TODO Slow
     		middleNodes = getMiddleNodesFromAllContexts();
     	}
     	else
@@ -495,7 +494,6 @@ public class VerboseQuadStore extends RdfStoreImpl
     	Iterable<Node> middleNodes = null;
     	if ( statement.getContext().isWildcard() )
     	{
-    		// TODO Slow
     		middleNodes = getMiddleNodesFromAllContexts();
     	}
     	else
@@ -544,55 +542,59 @@ public class VerboseQuadStore extends RdfStoreImpl
 				objectNode );
 			Node contextNode = ( Node ) quad[ 3 ];
 			Context context = new Context( getNodeUriOrNull( contextNode ) );
+            Relationship contextRelationship = ( Relationship ) quad[ 5 ];
+			StatementMetadata metadata = new VerboseQuadStatementMetadata(
+			    contextRelationship );
 			return object instanceof Literal ?
 				new CompleteStatement( subject, predicate, ( Literal ) object,
-					context ) :
+					context, metadata ) :
 				new CompleteStatement( subject, predicate, ( Resource ) object,
-					context );
+					context, metadata );
         }
     }
     
-    private class QuadWithInferencingIterable
-    	extends NestingIterable<Object[]>
-    {
-    	QuadWithInferencingIterable(
-    		Iterable<Object[]> quads )
-		{
-    		super( quads );
-		}
-    	
-		@Override
-        protected Iterator<Object[]> createNestedIterator( Object[] item )
-        {
-        	return new SingleIterator<Object[]>( item );
-        }
-    }
+//    private class QuadWithInferencingIterable
+//        extends NestingIterable<Object[]>
+//    {
+//        QuadWithInferencingIterable( Iterable<Object[]> quads )
+//        {
+//            super( quads );
+//        }
+//        
+//        @Override
+//        protected Iterator<Object[]> createNestedIterator( Object[] item )
+//        {
+//            return new SingleIterator<Object[]>( item );
+//        }
+//    }
     
-    private class SingleIterator<T> extends PrefetchingIterator<T>
-    {
-    	private T item;
-    	
-    	SingleIterator( T item )
-    	{
-    		this.item = item;
-    	}
-    	
-		@Override
-        protected T fetchNextOrNull()
-        {
-			T result = item;
-			item = null;
-			return result;
-        }
-    }
+//    private class SingleIterator<T> extends PrefetchingIterator<T>
+//    {
+//        private T item;
+//    	
+//        SingleIterator( T item )
+//        {
+//            this.item = item;
+//        }
+//    	
+//        @Override
+//        protected T fetchNextOrNull()
+//        {
+//            T result = item;
+//            item = null;
+//            return result;
+//        }
+//    }
     
     /**
      * The Object[] will contain
      * {
-     * 		Node subject
-     * 		String predicate
-     * 		Node object
-     * 		Node context
+     *     Node subject
+     *     String predicate
+     *     Node object
+     *     Node context
+     *     Node middleNode
+     *     Relationship middleNodeToContextRelationship
      * }
      */
     private class MiddleNodeToQuadIterable implements Iterable<Object[]>
@@ -619,6 +621,7 @@ public class VerboseQuadStore extends RdfStoreImpl
     {
     	private Statement statement;
     	private NestingIterator<Node> middleNodesWithContexts;
+    	private Relationship lastContextRelationship;
     	
     	MiddleNodeToQuadIterator( Statement statement,
     		Iterator<Node> middleNodes )
@@ -648,7 +651,17 @@ public class VerboseQuadStore extends RdfStoreImpl
 			Iterator<Node> iterator = new RelationshipToNodeIterable( 
 				middleNode, middleNode.getRelationships(
 					VerboseQuadStrategy.RelTypes.IN_CONTEXT,
-					Direction.OUTGOING ) ).iterator();
+					Direction.OUTGOING ) )
+			{
+                @Override
+                protected Node underlyingObjectToObject(
+                    Relationship relationship )
+                {
+                    lastContextRelationship = relationship;
+                    return super.underlyingObjectToObject( relationship );
+                }
+			}.iterator();
+			
 			if ( !statement.getContext().isWildcard() )
 			{
 				iterator = new FilteringIterator<Node>( iterator )
@@ -677,7 +690,7 @@ public class VerboseQuadStore extends RdfStoreImpl
 				subjectRelationship.getType(),
 					Direction.OUTGOING ).getEndNode();
 			return new Object[] { subjectNode, predicate,
-				objectNode, contextNode };
+				objectNode, contextNode, middleNode, lastContextRelationship };
 		}
     }
     
@@ -731,27 +744,27 @@ public class VerboseQuadStore extends RdfStoreImpl
         }
     }
     
-    private class SubjectFilteredRelationships
-    	extends FilteringIterable<Relationship>
-    {
-    	private Node subjectNode;
-    	
-    	SubjectFilteredRelationships( Node subjectNode,
-    		Iterable<Relationship> source )
-    	{
-    		super( source );
-    		this.subjectNode = subjectNode;
-    	}
-    	
-    	@Override
-    	protected boolean passes( Relationship middleToObjectRel )
-    	{
-    		Node thisSubjectNode = middleToObjectRel.getStartNode().
-    			getSingleRelationship( middleToObjectRel.getType(),
-    				Direction.INCOMING ).getStartNode();
-    		return thisSubjectNode.equals( this.subjectNode );
-    	}
-    }
+//    private class SubjectFilteredRelationships
+//        extends FilteringIterable<Relationship>
+//    {
+//        private Node subjectNode;
+//        
+//        SubjectFilteredRelationships( Node subjectNode,
+//            Iterable<Relationship> source )
+//        {
+//            super( source );
+//            this.subjectNode = subjectNode;
+//        }
+//        
+//        @Override
+//        protected boolean passes( Relationship middleToObjectRel )
+//        {
+//            Node thisSubjectNode = middleToObjectRel.getStartNode().
+//            getSingleRelationship( middleToObjectRel.getType(),
+//                Direction.INCOMING ).getStartNode();
+//            return thisSubjectNode.equals( this.subjectNode );
+//        }
+//    }
     
     private class LiteralToMiddleNodeIterable
     	extends IterableWrapper<Node, Node>
@@ -766,6 +779,42 @@ public class VerboseQuadStore extends RdfStoreImpl
         {
 	        return literalNode.getRelationships(
 	        	Direction.INCOMING ).iterator().next().getStartNode();
+        }
+    }
+    
+    private class VerboseQuadStatementMetadata implements StatementMetadata
+    {
+        private Relationship relationship;
+        
+        private VerboseQuadStatementMetadata(
+            Relationship relationshipBetweenMiddleNodeAndContext )
+        {
+            this.relationship = relationshipBetweenMiddleNodeAndContext;
+        }
+        
+        public Object get( String key )
+        {
+            return relationship.getProperty( key );
+        }
+
+        public boolean has( String key )
+        {
+            return relationship.hasProperty( key );
+        }
+
+        public Object remove( String key )
+        {
+            return relationship.removeProperty( key );
+        }
+
+        public void set( String key, Object value )
+        {
+            relationship.setProperty( key, value );
+        }
+        
+        public Iterable<String> getKeys()
+        {
+            return relationship.getPropertyKeys();
         }
     }
 }

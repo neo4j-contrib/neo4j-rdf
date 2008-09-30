@@ -207,7 +207,7 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
             new Uri( subjectUri ),
             new Uri( predicateUri ),
             new Uri( objectUri ),
-            new Context( contextUri ) );
+            new Context( contextUri ), null );
     }
 
     static CompleteStatement completeStatement( TestUri subject,
@@ -217,7 +217,7 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
             new Uri( subject.uriAsString() ),
             new Uri( predicate.uriAsString() ),
             objectLiteral,
-            new Context( context.uriAsString() ) );
+            new Context( context.uriAsString() ), null );
     }
 
     static CompleteStatement completeStatement( TestUri subject,

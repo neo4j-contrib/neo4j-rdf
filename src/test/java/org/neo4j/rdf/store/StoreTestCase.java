@@ -61,14 +61,14 @@ public abstract class StoreTestCase extends NeoTestCase
         Resource object, Context context )
     {
         return new CompleteStatement( new Uri( subject ), new Uri( predicate ),
-            object, context );
+            object, context, null );
     }
 
     protected Statement statement( String subject, String predicate,
         Object object, Context context )
     {
         return new CompleteStatement( new Uri( subject ), new Uri( predicate ),
-            new Literal( object ), context );
+            new Literal( object ), context, null );
     }
 
     protected void removeStatements( RdfStore store,

@@ -18,7 +18,7 @@ import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
 /**
  * Default implementation of an {@link RdfStore}.
  */
-public class RdfStoreImpl implements RdfStore
+public abstract class RdfStoreImpl implements RdfStore
 {
     private final NeoService neo;
     private final RepresentationStrategy representationStrategy;
@@ -70,8 +70,8 @@ public class RdfStoreImpl implements RdfStore
     protected void addStatement( Statement statement )
     {
         AbstractRepresentation fragment = representationStrategy
-	        .getAbstractRepresentation( statement );
-	    getExecutor().addToNodeSpace( fragment );
+            .getAbstractRepresentation( statement );
+        getExecutor().addToNodeSpace( fragment );
     }
 
     private RepresentationExecutor getExecutor()
