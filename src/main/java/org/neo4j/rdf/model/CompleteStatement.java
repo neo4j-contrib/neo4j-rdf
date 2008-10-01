@@ -39,12 +39,6 @@ public class CompleteStatement implements Statement
     {
         this( subject, predicate, ( Value ) objectLiteral, context, metadata );
     }
-    
-    public CompleteStatement( Resource subject, Uri predicate, Value object,
-        Context context )
-    {
-        this( subject, predicate, object, context, null );
-    }
 
     private CompleteStatement( Resource subject, Uri predicate, Value object,
         Context context, StatementMetadata metadata )
