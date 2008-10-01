@@ -21,29 +21,29 @@ public interface StatementMetadata
     boolean has( String key );
     
     /**
-     * Returns the metadata value for a certain key. Throws a runtime exception
-     * if the specific metadata doesn't exist.
+     * Returns the metadata value (as a {@link Literal}) for a certain key.
+     * Throws a runtime exception if the specific metadata doesn't exist.
      * @param key the metadata key, typically a URI.
      * @return the metadata value for the given key, or throws exception
      * if if doesn't exist.
      */
-    Object get( String key );
+    Literal get( String key );
     
     /**
      * Sets a metadata value for a certain key. Accepted values are those
      * that a neo {@link PropertyContainer} accepts.
      * @param key the metadata key, typically a URI.
-     * @param value the value which will be associated with the key.
+     * @param value the {@link Literal} value which will be associated with
+     * the key.
      */
-    void set( String key, Object value );
+    void set( String key, Literal value );
     
     /**
      * Removes the metadata value for a certain key. Throws a runtime exception
      * if the specific metadata doesn't exist.
      * @param key the metadata key, typically a URI.
-     * @return the removed value.
      */
-    Object remove( String key );
+    void remove( String key );
     
     /**
      * @return all metadata keys for this statement.

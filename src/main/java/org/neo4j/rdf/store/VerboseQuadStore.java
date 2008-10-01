@@ -1,6 +1,7 @@
 package org.neo4j.rdf.store;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -782,8 +783,13 @@ public class VerboseQuadStore extends RdfStoreImpl
         }
     }
     
-    private class VerboseQuadStatementMetadata implements StatementMetadata
+    private static class VerboseQuadStatementMetadata
+        implements StatementMetadata
     {
+        private static final String PREFIX_VALUE = "value.";
+        private static final String PREFIX_DATATYPE = "datatype.";
+        private static final String PREFIX_LANGUAGE = "language.";
+        
         private Relationship relationship;
         
         private VerboseQuadStatementMetadata(
@@ -792,29 +798,74 @@ public class VerboseQuadStore extends RdfStoreImpl
             this.relationship = relationshipBetweenMiddleNodeAndContext;
         }
         
-        public Object get( String key )
+        public Literal get( String key )
         {
-            return relationship.getProperty( key );
+            Object value = relationship.getProperty( PREFIX_VALUE + key );
+            String datatype = ( String )
+                relationship.getProperty( PREFIX_DATATYPE + key, null );
+            String language = ( String )
+                relationship.getProperty( PREFIX_LANGUAGE + key, null );
+            Literal literal = null;
+            if ( datatype != null )
+            {
+                Uri datatypeUri = new Uri( datatype );
+                literal = language != null ?
+                    new Literal( value, datatypeUri, language ) :
+                    new Literal( value, datatypeUri );
+            }
+            else
+            {
+                literal = new Literal( value );
+            }
+            return literal;
         }
 
         public boolean has( String key )
         {
-            return relationship.hasProperty( key );
+            return relationship.hasProperty( PREFIX_VALUE + key );
         }
 
-        public Object remove( String key )
+        public void remove( String key )
         {
-            return relationship.removeProperty( key );
+            relationship.removeProperty( PREFIX_VALUE + key );
+            setOrRemoveIfExists( PREFIX_DATATYPE + key, null );
+            setOrRemoveIfExists( PREFIX_LANGUAGE + key, null );
         }
 
-        public void set( String key, Object value )
+        public void set( String key, Literal value )
         {
-            relationship.setProperty( key, value );
+            Object literalValue = value.getValue();
+            Uri datatypeUri = value.getDatatype();
+            String language = value.getLanguage();
+            relationship.setProperty( PREFIX_VALUE + key, literalValue );
+            setOrRemoveIfExists( PREFIX_DATATYPE + key,
+                datatypeUri != null ? datatypeUri.getUriAsString() : null );
+            setOrRemoveIfExists( PREFIX_LANGUAGE + key, language );
+        }
+        
+        private void setOrRemoveIfExists( String key, Object value )
+        {
+            if ( value != null )
+            {
+                relationship.setProperty( key, value );
+            }
+            else if ( relationship.hasProperty( key ) )
+            {
+                relationship.removeProperty( key );
+            }
         }
         
         public Iterable<String> getKeys()
         {
-            return relationship.getPropertyKeys();
+            Collection<String> keys = new ArrayList<String>();
+            for ( String key : relationship.getPropertyKeys() )
+            {
+                if ( key.startsWith( PREFIX_VALUE ) )
+                {
+                    keys.add( key.substring( PREFIX_VALUE.length() ) );
+                }
+            }
+            return keys;
         }
     }
 }

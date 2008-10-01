@@ -297,15 +297,20 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
             false ).iterator().next();
         String key1 = "testKey1";
         String key2 = "testKey2";
-        Object value1 = 101;
-        Object value2 = "hello";
+        Literal literal1 = new Literal( "A test value" );
+        Uri literal2Uri = new Uri( "http://a-date.com" );
+        Literal literal2 = new Literal( "2008-10-10", literal2Uri, "en" );
         assertFalse( addedNick.getMetadata().has( key1 ) );
         assertFalse( addedNick.getMetadata().has( key2 ) );
-        addedNick.getMetadata().set( key1, value1 );
-        assertEquals( value1, addedNick.getMetadata().get( key1 ) );
+        addedNick.getMetadata().set( key1, literal1 );
+        assertEquals( literal1, addedNick.getMetadata().get( key1 ) );
         assertFalse( addedNick.getMetadata().has( key2 ) );
-        addedNick.getMetadata().set( key2, value2 );
-        assertEquals( value2, addedNick.getMetadata().get( key2 ) );
+        addedNick.getMetadata().set( key2, literal2 );
+        assertEquals( literal2, addedNick.getMetadata().get( key2 ) );
+        assertEquals( literal2.getDatatype(),
+            addedNick.getMetadata().get( key2 ).getDatatype() );
+        assertEquals( literal2.getLanguage(),
+            addedNick.getMetadata().get( key2 ).getLanguage() );
         addedNick.getMetadata().remove( key1 );
         assertFalse( addedNick.getMetadata().has( key1 ) );
         deleteEntireNodeSpace();
