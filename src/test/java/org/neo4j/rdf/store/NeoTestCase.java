@@ -53,7 +53,7 @@ public abstract class NeoTestCase extends TestCase
     
     protected File getBasePath()
     {
-    	return basePath;
+        return basePath;
     }
 
     protected void restartTx()
@@ -112,7 +112,7 @@ public abstract class NeoTestCase extends TestCase
     
     protected NeoUtil neoUtil()
     {
-    	return neoUtil;
+        return neoUtil;
     }
 
     protected void deleteEntireNodeSpace()

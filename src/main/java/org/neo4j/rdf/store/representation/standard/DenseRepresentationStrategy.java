@@ -39,7 +39,7 @@ public class DenseRepresentationStrategy
         if ( statement.getPredicate() instanceof Wildcard )
         {
             throw new RuntimeException( "We don't (yet?) support " +
-            	"wildcard predicates" );
+                "wildcard predicates" );
         }
 
         if ( isObjectType( statement.getObject() ) ||

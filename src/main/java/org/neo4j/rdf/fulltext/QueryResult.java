@@ -7,30 +7,30 @@ import org.neo4j.rdf.model.CompleteStatement;
  */
 public class QueryResult
 {
-	private CompleteStatement statement;
-	private double score;
-	private String snippet;
-	
-	public QueryResult( CompleteStatement statement, double score,
-		String snippet )
-	{
-		this.statement = statement;
-		this.score = score;
-		this.snippet = snippet;
-	}
-	
-	public CompleteStatement getStatement()
-	{
-		return this.statement;
-	}
-	
-	public double getScore()
-	{
-		return this.score;
-	}
-	
-	public String getSnippet()
-	{
-		return this.snippet;
-	}
+    private CompleteStatement statement;
+    private double score;
+    private String snippet;
+    
+    public QueryResult( CompleteStatement statement, double score,
+        String snippet )
+    {
+        this.statement = statement;
+        this.score = score;
+        this.snippet = snippet;
+    }
+    
+    public CompleteStatement getStatement()
+    {
+        return this.statement;
+    }
+    
+    public double getScore()
+    {
+        return this.score;
+    }
+    
+    public String getSnippet()
+    {
+        return this.snippet;
+    }
 }

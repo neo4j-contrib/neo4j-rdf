@@ -196,11 +196,11 @@ public abstract class RdfStoreImpl implements RdfStore
     
     public void shutDown()
     {
-    	FulltextIndex index = getFulltextIndex();
-    	if ( index != null )
-    	{
-    		index.shutDown();
-    	}
+        FulltextIndex index = getFulltextIndex();
+        if ( index != null )
+        {
+            index.shutDown();
+        }
     }
     
     /**
@@ -209,8 +209,8 @@ public abstract class RdfStoreImpl implements RdfStore
      */
     public FulltextIndex getFulltextIndex()
     {
-    	return ( ( AbstractUriBasedExecutor )
-    		getRepresentationStrategy().getExecutor() ).getFulltextIndex();
+        return ( ( AbstractUriBasedExecutor )
+            getRepresentationStrategy().getExecutor() ).getFulltextIndex();
     }
     
     /**
@@ -219,29 +219,29 @@ public abstract class RdfStoreImpl implements RdfStore
      */
     public void reindexFulltextIndex()
     {
-    	throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
     
     protected static class InferenceOptions
     {
-    	private boolean includeSubClassOf;
-    	private boolean includeSubPropertyOf;
-    	
-    	protected InferenceOptions( boolean includeSubClassOf,
-    		boolean includeSubPropertyOf )
-    	{
-    		this.includeSubClassOf = includeSubClassOf;
-    		this.includeSubPropertyOf = includeSubPropertyOf;
-    	}
-
-		public boolean isIncludeSubClassOf()
+        private boolean includeSubClassOf;
+        private boolean includeSubPropertyOf;
+        
+        protected InferenceOptions( boolean includeSubClassOf,
+            boolean includeSubPropertyOf )
         {
-        	return includeSubClassOf;
+            this.includeSubClassOf = includeSubClassOf;
+            this.includeSubPropertyOf = includeSubPropertyOf;
         }
-
-		public boolean isIncludeSubPropertyOf()
+        
+        public boolean isIncludeSubClassOf()
         {
-        	return includeSubPropertyOf;
+            return includeSubClassOf;
+        }
+        
+        public boolean isIncludeSubPropertyOf()
+        {
+            return includeSubPropertyOf;
         }
     }
 

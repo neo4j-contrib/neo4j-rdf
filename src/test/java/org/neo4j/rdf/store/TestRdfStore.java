@@ -1,6 +1,5 @@
 package org.neo4j.rdf.store;
 
-
 /**
  * Tests an {@link RdfStore}.
  */

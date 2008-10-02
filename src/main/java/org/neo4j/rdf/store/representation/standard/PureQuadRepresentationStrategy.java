@@ -16,7 +16,7 @@ public class PureQuadRepresentationStrategy
         MetaStructure meta, FulltextIndex fulltextIndex )
     {
         super( new PureQuadRepresentationExecutor(
-        	neo, index, meta, fulltextIndex ), meta );
+            neo, index, meta, fulltextIndex ), meta );
     }
 
     @Override

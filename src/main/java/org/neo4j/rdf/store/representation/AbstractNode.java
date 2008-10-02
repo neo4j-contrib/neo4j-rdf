@@ -38,9 +38,9 @@ public class AbstractNode extends AbstractElement
      */
     public Wildcard getWildcardOrNull()
     {
-    	return this.wildcardOruriOrNull == null ||
-    		!( this.wildcardOruriOrNull instanceof Wildcard ) ?
-    			null : ( Wildcard ) this.wildcardOruriOrNull;
+        return this.wildcardOruriOrNull == null ||
+            !( this.wildcardOruriOrNull instanceof Wildcard ) ?
+                null : ( Wildcard ) this.wildcardOruriOrNull;
     }
     
     /**

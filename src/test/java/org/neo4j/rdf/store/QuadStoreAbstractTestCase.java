@@ -59,14 +59,14 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
     {
         if ( store() != null )
         {
-        	// TODO, not really nice
-        	FulltextIndex fulltextIndex =
-        		( ( RdfStoreImpl ) this.store ).getFulltextIndex();
-        	if ( fulltextIndex != null )
-        	{
-        		fulltextIndex.clear();
-        	}
-        	this.store.shutDown();
+            // TODO, not really nice
+            FulltextIndex fulltextIndex =
+                ( ( RdfStoreImpl ) this.store ).getFulltextIndex();
+            if ( fulltextIndex != null )
+            {
+                fulltextIndex.clear();
+            }
+            this.store.shutDown();
             this.store = null;
         }
     }
@@ -74,24 +74,24 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
     @Override
     protected void restartTx()
     {
-    	try
-    	{
+        try
+        {
             // Temporary solution
-    		int txId =
-    			neoUtil().getTransactionManager().getTransaction().hashCode();
-        	super.restartTx();
-        	
-        	FulltextIndex fulltextIndex = 
-        		( ( RdfStoreImpl ) store ).getFulltextIndex();
-        	if ( fulltextIndex != null )
-        	{
-        		fulltextIndex.end( txId, true );
-        	}
-    	}
-    	catch ( SystemException e )
-    	{
-    		throw new RuntimeException( e );
-    	}
+            int txId =
+                neoUtil().getTransactionManager().getTransaction().hashCode();
+            super.restartTx();
+            
+            FulltextIndex fulltextIndex = 
+                ( ( RdfStoreImpl ) store ).getFulltextIndex();
+            if ( fulltextIndex != null )
+            {
+                fulltextIndex.end( txId, true );
+            }
+        }
+        catch ( SystemException e )
+        {
+            throw new RuntimeException( e );
+        }
     }
 
     protected RdfStore store()
@@ -108,8 +108,8 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
     protected RdfStore instantiateStore()
     {
         return new VerboseQuadStore( neo(), indexService(), null,
-        	new SimpleFulltextIndex( neo(), new File( getBasePath(),
-        		"fulltext" ) ) );
+            new SimpleFulltextIndex( neo(), new File( getBasePath(),
+                "fulltext" ) ) );
     }
 
     protected void debug( String text )

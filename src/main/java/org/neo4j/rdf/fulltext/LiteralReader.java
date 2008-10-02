@@ -6,9 +6,9 @@ package org.neo4j.rdf.fulltext;
  */
 public interface LiteralReader
 {
-	/**
-	 * @return what is to be indexed in the fulltext index for the given
-	 * literal value.
-	 */
-	String read( Object literal );
+    /**
+     * @return what is to be indexed in the fulltext index for the given
+     * literal value.
+     */
+    String read( Object literal );
 }

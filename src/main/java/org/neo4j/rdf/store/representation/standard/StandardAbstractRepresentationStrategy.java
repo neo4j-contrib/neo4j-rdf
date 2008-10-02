@@ -217,14 +217,14 @@ abstract class StandardAbstractRepresentationStrategy
 
     protected AbstractNode getObjectNode( Statement statement )
     {
-    	AbstractNode node = getNode( statement.getObject() );
-    	if ( ( ( Uri ) statement.getPredicate() ).getUriAsString().equals(
-    		AbstractUriBasedExecutor.RDF_TYPE_URI ) )
-    	{
-    		node.addExecutorInfo(
-    			AbstractUriBasedExecutor.META_EXECUTOR_INFO_KEY, "class" );
-    	}
-    	return node;
+        AbstractNode node = getNode( statement.getObject() );
+        if ( ( ( Uri ) statement.getPredicate() ).getUriAsString().equals(
+            AbstractUriBasedExecutor.RDF_TYPE_URI ) )
+        {
+            node.addExecutorInfo(
+                AbstractUriBasedExecutor.META_EXECUTOR_INFO_KEY, "class" );
+        }
+        return node;
     }
 
     protected AbstractNode getContextNode( Context context )

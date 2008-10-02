@@ -54,7 +54,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     
     public FulltextIndex getFulltextIndex()
     {
-    	return this.fulltextIndex;
+        return this.fulltextIndex;
     }
     
     protected NeoService neo()
@@ -408,7 +408,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         index().index( node, LITERAL_VALUE_KEY, value );
         if ( getFulltextIndex() != null )
         {
-        	getFulltextIndex().index( node, new Uri( predicate ), value );
+            getFulltextIndex().index( node, new Uri( predicate ), value );
         }
         return node;
     }
@@ -419,7 +419,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         index().removeIndex( node, LITERAL_VALUE_KEY, value );
         if ( getFulltextIndex() != null )
         {
-        	getFulltextIndex().removeIndex( node, new Uri( predicate ), value );
+            getFulltextIndex().removeIndex( node, new Uri( predicate ), value );
         }
         deleteNode( node, null );
     }
@@ -454,7 +454,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
 //        debugCreateNode( node, uri == null ? null : uri.toString() );
         if ( nodeMapping != null )
         {
-        	nodeMapping.put( abstractNode, node );
+            nodeMapping.put( abstractNode, node );
         }
         return node;
     }
@@ -467,23 +467,23 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     
     protected static class NodeContext
     {
-    	private Node node;
-    	private boolean created;
-    	
-    	protected NodeContext( Node node, boolean created )
-    	{
-    		this.node = node;
-    		this.created = created;
-    	}
-    	
-    	protected Node getNode()
-    	{
-    		return this.node;
-    	}
-    	
-    	protected boolean wasCreated()
-    	{
-    		return this.created;
-    	}
+        private Node node;
+        private boolean created;
+        
+        protected NodeContext( Node node, boolean created )
+        {
+            this.node = node;
+            this.created = created;
+        }
+        
+        protected Node getNode()
+        {
+            return this.node;
+        }
+        
+        protected boolean wasCreated()
+        {
+            return this.created;
+        }
     }
 }

@@ -31,7 +31,7 @@ public class BlankNode implements Resource
      * @return <code>false</code>
      */
     public boolean isWildcard()
-    {        
+    {
         return false;
     }
     

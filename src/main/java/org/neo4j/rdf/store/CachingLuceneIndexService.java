@@ -6,10 +6,10 @@ import org.neo4j.util.index.LuceneIndexService;
 
 public class CachingLuceneIndexService extends LuceneIndexService
 {
-	public CachingLuceneIndexService( NeoService neo )
+    public CachingLuceneIndexService( NeoService neo )
     {
-	    super( neo );
-	    enableCache( AbstractUriBasedExecutor.URI_PROPERTY_KEY,
-	    	100000 );
+        super( neo );
+        enableCache( AbstractUriBasedExecutor.URI_PROPERTY_KEY,
+            100000 );
     }
 }

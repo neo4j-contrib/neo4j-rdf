@@ -52,19 +52,19 @@ public class VerboseQuadExecutor extends UriBasedExecutor
     
     public Node getContextsReferenceNode()
     {
-    	if ( this.contextRefNodeCache == null )
-    	{
-    		this.contextRefNodeCache = this.neoUtil().
-    			getOrCreateSubReferenceNode( RelTypes.REF_CONTEXTS );
-    	}
-    	return this.contextRefNodeCache;
+        if ( this.contextRefNodeCache == null )
+        {
+            this.contextRefNodeCache = this.neoUtil().
+                getOrCreateSubReferenceNode( RelTypes.REF_CONTEXTS );
+        }
+        return this.contextRefNodeCache;
     }
 
     @Override
     public void addToNodeSpace( AbstractRepresentation representation )
     {
-    	Map<String, AbstractNode> typeToNode =
-    		getTypeToNodeMap( representation );
+        Map<String, AbstractNode> typeToNode =
+            getTypeToNodeMap( representation );
         if ( isLiteralRepresentation( typeToNode ) )
         {
             handleAddLiteralRepresentation( representation, typeToNode );
@@ -102,10 +102,10 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         Node literalNode = null;
         if ( !subjectNode.wasCreated() )
         {
-	        Node[] nodes = findMiddleAndObjectNode( subjectNode.getNode(),
-	        	subjectToMiddle, middleToLiteral, abstractLiteralNode, null );
-	        middleNode = nodes[ 0 ];
-	        literalNode = nodes[ 1 ];
+            Node[] nodes = findMiddleAndObjectNode( subjectNode.getNode(),
+                subjectToMiddle, middleToLiteral, abstractLiteralNode, null );
+            middleNode = nodes[ 0 ];
+            literalNode = nodes[ 1 ];
         }
         boolean justAddContext = false;
         if ( literalNode == null )
@@ -113,7 +113,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
             justAddContext = true;
             middleNode = createNode( abstractMiddleNode, null );
             createRelationship( subjectNode.getNode(),
-            	subjectToMiddle, middleNode );
+                subjectToMiddle, middleNode );
             incrementSubjectEnergy( subjectNode.getNode() );
             literalNode = createLiteralNode( abstractLiteralNode );
             createRelationship( middleNode, middleToLiteral, literalNode );
@@ -122,19 +122,19 @@ public class VerboseQuadExecutor extends UriBasedExecutor
     }
     
     private Map<String, AbstractNode> getTypeToNodeMap(
-    	AbstractRepresentation representation )
-	{
-    	Map<String, AbstractNode> map = new HashMap<String, AbstractNode>();
+        AbstractRepresentation representation )
+    {
+        Map<String, AbstractNode> map = new HashMap<String, AbstractNode>();
         for ( AbstractNode node : representation.nodes() )
         {
-        	String nodeType = getNodeType( node );
+            String nodeType = getNodeType( node );
             if ( nodeType != null )
             {
-            	map.put( nodeType, node );
+                map.put( nodeType, node );
             }
         }
         return map;
-	}
+    }
 
     private Relationship findContextRelationship(
         AbstractRelationship abstractRelationship, Node middleNode,
@@ -149,24 +149,24 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         
         boolean willCreate = contextNode == null;
         contextNode = contextNode != null ? contextNode :
-        	createNode( abstractContextNode, null );
+            createNode( abstractContextNode, null );
         Relationship relationship = null;
         if ( willCreate )
         {
             Node contextRefNode = getContextsReferenceNode();
-	        contextRefNode.createRelationshipTo( contextNode,
-	        	RelTypes.IS_A_CONTEXT );
-	        relationship = createRelationship( middleNode,
-	        	abstractRelationship, contextNode );
-	        incrementContextCounter( contextNode );
-	        contextNode.setProperty( IS_CONTEXT_KEY, true );
+            contextRefNode.createRelationshipTo( contextNode,
+                RelTypes.IS_A_CONTEXT );
+            relationship = createRelationship( middleNode,
+                abstractRelationship, contextNode );
+            incrementContextCounter( contextNode );
+            contextNode.setProperty( IS_CONTEXT_KEY, true );
         }
         else
         {
             if ( !justAddContext )
             {
                 relationship = ensureDirectlyConnected( middleNode,
-                	abstractRelationship, contextNode );
+                    abstractRelationship, contextNode );
             }
             else
             {
@@ -175,8 +175,8 @@ public class VerboseQuadExecutor extends UriBasedExecutor
             }
             if ( relationship == null )
             {
-            	// It means that it was created.
-            	incrementContextCounter( contextNode );
+                // It means that it was created.
+                incrementContextCounter( contextNode );
             }
             
             // use property optimization here to avoid load of all relationships
@@ -184,11 +184,11 @@ public class VerboseQuadExecutor extends UriBasedExecutor
             if ( !contextNode.hasProperty( IS_CONTEXT_KEY ) )
             {
                 if ( !contextNode.hasRelationship( RelTypes.IS_A_CONTEXT,
-                	Direction.INCOMING ) )
+                    Direction.INCOMING ) )
                 {
                     Node contextRefNode = getContextsReferenceNode();
-                	contextRefNode.createRelationshipTo( contextNode,
-                		RelTypes.IS_A_CONTEXT );
+                    contextRefNode.createRelationshipTo( contextNode,
+                        RelTypes.IS_A_CONTEXT );
                     contextNode.setProperty( IS_CONTEXT_KEY, true );
                 }
             }
@@ -237,7 +237,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         AbstractNode abstractObjectNode = typeToNode.get(
             VerboseQuadStrategy.TYPE_OBJECT );
         NodeContext subjectNode =
-        	lookupOrCreateNode( abstractSubjectNode, null );
+            lookupOrCreateNode( abstractSubjectNode, null );
         NodeContext objectNode = lookupOrCreateNode( abstractObjectNode, null );
         AbstractRelationship subjectToMiddle = findAbstractRelationship(
             representation, VerboseQuadStrategy.TYPE_SUBJECT,
@@ -248,9 +248,9 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         Node middleNode = null;
         if ( !subjectNode.wasCreated() && !objectNode.wasCreated() )
         {
-        	middleNode = findMiddleAndObjectNode( subjectNode.getNode(),
-        		subjectToMiddle, middleToObject, abstractObjectNode,
-        		objectNode.getNode() )[ 0 ];
+            middleNode = findMiddleAndObjectNode( subjectNode.getNode(),
+                subjectToMiddle, middleToObject, abstractObjectNode,
+                objectNode.getNode() )[ 0 ];
         }
         boolean justAddContext = false;
         if ( middleNode == null )
@@ -258,10 +258,10 @@ public class VerboseQuadExecutor extends UriBasedExecutor
             justAddContext = true;
             middleNode = createNode( abstractMiddleNode, null );
             createRelationship( subjectNode.getNode(), subjectToMiddle,
-            	middleNode );
+                middleNode );
             incrementSubjectEnergy( subjectNode.getNode() );
             createRelationship( middleNode, middleToObject,
-            	objectNode.getNode() );
+                objectNode.getNode() );
             incrementObjectEnergy( objectNode.getNode() );
         }
         ensureContextsAreAdded( representation, middleNode, justAddContext );
@@ -381,7 +381,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
     public void removeFromNodeSpace( AbstractRepresentation representation )
     {
         Map<String, AbstractNode> typeToNode =
-        	getTypeToNodeMap( representation );
+            getTypeToNodeMap( representation );
         if ( isLiteralRepresentation( typeToNode ) )
         {
             handleRemoveLiteralRepresentation( representation, typeToNode );
@@ -455,10 +455,10 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         for ( Relationship relationship :
             getExistingContextRelationships( middleNode ) )
         {
-        	Node contextNode = middleNode.getSingleRelationship(
-        		VerboseQuadStrategy.RelTypes.IN_CONTEXT,
-        		Direction.OUTGOING ).getEndNode();
-        	decrementContextCounter( contextNode );
+            Node contextNode = middleNode.getSingleRelationship(
+                VerboseQuadStrategy.RelTypes.IN_CONTEXT,
+                Direction.OUTGOING ).getEndNode();
+            decrementContextCounter( contextNode );
             deleteRelationship( relationship );
         }
     }
@@ -479,7 +479,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
                     contextNode, Direction.OUTGOING );
                 if ( relationship != null )
                 {
-                	decrementContextCounter( contextNode );
+                    decrementContextCounter( contextNode );
                     deleteRelationship( relationship );
                 }
             }

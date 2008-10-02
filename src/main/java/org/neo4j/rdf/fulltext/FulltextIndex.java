@@ -21,58 +21,58 @@ import org.neo4j.rdf.store.RdfStore;
  */
 public interface FulltextIndex
 {
-	/**
-	 * Indexes a literal, or rather places it in memory in wait for a call
-	 * to the end method.
-	 * @param node the {@link Node} which holds the literal value.
-	 * @param predicate the predicate for the statement.
-	 * @param literal the literal value.
-	 */
-	void index( Node node, Uri predicate, Object literal );
-	
-	/**
-	 * Removes a literal from the index, or rather places it in memory in wait
-	 * for a call to the end method.
-	 * @param node the {@link Node} which holds the literal value.
-	 * @param predicate the predicate for the statement.
-	 * @param literal the literal value to remove.
-	 */
-	void removeIndex( Node node, Uri predicate, Object literal );
-	
-	/**
-	 * Clears the index so that a reindex can be made if necessary.
-	 */
-	void clear();
-	
-	/**
-	 * Committs or rolls back the literals for the current transaction id
-	 * (the Transaction objects hashCode() value).
-	 * @param commit wether to actually commit.
-	 */
-	void end( boolean commit );
-	
-	/**
-	 * Committs or rolls back the literals for the given transaction id
-	 * @param txId the transaction id.
-	 * @param commit wether to actually commit.
-	 */
-	void end( int txId, boolean commit );
-	
-	/**
-	 * Searches the index for matches. See above for query format.
-	 * @param query the search query.
-	 * @return the matches sorted by relevance.
-	 */
-	Iterable<RawQueryResult> search( String query );
-	
-	/**
-	 * @return the {@link LiteralReader} instance used to get data from a
-	 * literal.
-	 */
-	LiteralReader getLiteralReader();
-	
-	/**
-	 * Shuts down the index and its indexing threads.
-	 */
-	void shutDown();
+    /**
+     * Indexes a literal, or rather places it in memory in wait for a call
+     * to the end method.
+     * @param node the {@link Node} which holds the literal value.
+     * @param predicate the predicate for the statement.
+     * @param literal the literal value.
+     */
+    void index( Node node, Uri predicate, Object literal );
+    
+    /**
+     * Removes a literal from the index, or rather places it in memory in wait
+     * for a call to the end method.
+     * @param node the {@link Node} which holds the literal value.
+     * @param predicate the predicate for the statement.
+     * @param literal the literal value to remove.
+     */
+    void removeIndex( Node node, Uri predicate, Object literal );
+    
+    /**
+     * Clears the index so that a reindex can be made if necessary.
+     */
+    void clear();
+    
+    /**
+     * Committs or rolls back the literals for the current transaction id
+     * (the Transaction objects hashCode() value).
+     * @param commit wether to actually commit.
+     */
+    void end( boolean commit );
+    
+    /**
+     * Committs or rolls back the literals for the given transaction id
+     * @param txId the transaction id.
+     * @param commit wether to actually commit.
+     */
+    void end( int txId, boolean commit );
+    
+    /**
+     * Searches the index for matches. See above for query format.
+     * @param query the search query.
+     * @return the matches sorted by relevance.
+     */
+    Iterable<RawQueryResult> search( String query );
+    
+    /**
+     * @return the {@link LiteralReader} instance used to get data from a
+     * literal.
+     */
+    LiteralReader getLiteralReader();
+    
+    /**
+     * Shuts down the index and its indexing threads.
+     */
+    void shutDown();
 }
