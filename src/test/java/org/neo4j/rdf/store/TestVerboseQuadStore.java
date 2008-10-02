@@ -161,13 +161,7 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
         addStatements( mattiasTypePerson, mattiasNamePublic );
         
         restartTx();
-        
-        long time = System.currentTimeMillis();
-        while ( System.currentTimeMillis() - time < 3000 &&
-            !store().searchFulltext( "Mattias Persson" ).iterator().hasNext() )
-        {
-            Thread.sleep( 100 );
-        }
+        waitForFulltextIndex();
         
         Iterable<QueryResult> queryResult =
             this.store().searchFulltext( "Mattias Persson" );
@@ -196,7 +190,7 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
         removeStatements( new WildcardStatement( mattiasNamePublic ) );
         restartTx();
         
-        Thread.sleep( 500 );
+        waitForFulltextIndex();
         assertFalse( store().searchFulltext( "Persson" ).iterator().hasNext() );
         
         deleteEntireNodeSpace();
@@ -232,26 +226,12 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
         addStatements( mattiasTypePerson, mattiasNickPublic,
             mattiasNamePublic, emilNamePublic );
         restartTx();
-        long time = System.currentTimeMillis();
-        while ( System.currentTimeMillis() - time < 3000 &&
-            !store().searchFulltext( "Emil" ).iterator().hasNext() )
-        {
-            Thread.sleep( 100 );
-        }
+        waitForFulltextIndex();
         
         ( ( RdfStoreImpl ) store() ).getFulltextIndex().clear();
         assertFalse( store().searchFulltext( "Persson" ).iterator().hasNext() );
         ( ( RdfStoreImpl ) store() ).reindexFulltextIndex();
-        
-        time = System.currentTimeMillis();
-        while ( System.currentTimeMillis() - time < 3000 &&
-            ( !store().searchFulltext( "Emil" ).iterator().hasNext() ||
-                !store().searchFulltext( "Mattias" ).iterator().hasNext() ||
-                !store().searchFulltext( "Matte" ).iterator().hasNext() ) )
-        {
-            Thread.sleep( 100 );
-        }
-        
+        waitForFulltextIndex();
         Iterable<QueryResult> queryResult =
             this.store().searchFulltext( "Persson" );
         int counter = 0;

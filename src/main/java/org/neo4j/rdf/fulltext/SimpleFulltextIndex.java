@@ -435,7 +435,13 @@ public class SimpleFulltextIndex implements FulltextIndex
         for ( Object[] command : commands )
         {
             this.indexingQueue.add( command );
+            this.indexingThread.hasItems = true;
         }
+    }
+    
+    public boolean queueIsEmpty()
+    {
+        return !this.indexingThread.hasItems;
     }
     
     public void shutDown()
@@ -464,6 +470,7 @@ public class SimpleFulltextIndex implements FulltextIndex
     private class IndexingThread extends Thread
     {
         private boolean halted;
+        private boolean hasItems;
         
         private void halt()
         {
@@ -477,7 +484,8 @@ public class SimpleFulltextIndex implements FulltextIndex
             {
                 try
                 {
-                    while ( !halted && indexingQueue.hasNext() )
+                    hasItems = indexingQueue.hasNext();
+                    while ( !halted && hasItems )
                     {
                         Entry entry = indexingQueue.next();
                         Object[] data = entry.data();
@@ -491,6 +499,7 @@ public class SimpleFulltextIndex implements FulltextIndex
                             doRemoveIndex( ( Long ) data[ 1 ],
                                 ( String ) data[ 2 ], data[ 3 ] );
                         }
+                        hasItems = indexingQueue.hasNext();
                     }
                     try
                     {
@@ -498,6 +507,7 @@ public class SimpleFulltextIndex implements FulltextIndex
                         while ( !halted &&
                             System.currentTimeMillis() - time < 100 )
                         {
+                            hasItems = indexingQueue.hasNext();
                             Thread.sleep( 5 );
                         }
                     }

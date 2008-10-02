@@ -72,6 +72,13 @@ public interface FulltextIndex
     LiteralReader getLiteralReader();
     
     /**
+     * @return <code>true</code> if this fulltext index features a queue and
+     * there's items in the queue waiting to be indexed, otherwise
+     * <code>false</code>.
+     */
+    boolean queueIsEmpty();
+    
+    /**
      * Shuts down the index and its indexing threads.
      */
     void shutDown();

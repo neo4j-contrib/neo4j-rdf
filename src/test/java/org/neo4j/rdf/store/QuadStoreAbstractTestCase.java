@@ -32,6 +32,7 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
     public static final Wildcard WILDCARD_CONTEXT = new Wildcard( "context" );
 
     private RdfStore store = null;
+    private FulltextIndex fulltextIndex;
 
     @Override
     protected void setUp() throws Exception
@@ -51,6 +52,7 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
     {
         if ( store() == null )
         {
+            this.fulltextIndex = instantiateFulltextIndex();
             this.store = instantiateStore();
         }
     }
@@ -98,18 +100,43 @@ public abstract class QuadStoreAbstractTestCase extends NeoTestCase
     {
         return this.store;
     }
+    
+    protected FulltextIndex fulltextIndex()
+    {
+        return this.fulltextIndex;
+    }
 
     @Override
     protected IndexService instantiateIndexService()
     {
         return new NeoIndexService( neo() );
     }
+    
+    protected FulltextIndex instantiateFulltextIndex()
+    {
+        return new SimpleFulltextIndex( neo(), new File( getBasePath(),
+            "fulltext" ) );
+    }
 
     protected RdfStore instantiateStore()
     {
         return new VerboseQuadStore( neo(), indexService(), null,
-            new SimpleFulltextIndex( neo(), new File( getBasePath(),
-                "fulltext" ) ) );
+            fulltextIndex() );
+    }
+    
+    protected void waitForFulltextIndex()
+    {
+        try
+        {
+//            Thread.sleep( 100 );
+            while ( !fulltextIndex().queueIsEmpty() )
+            {
+                Thread.sleep( 50 );
+            }
+        }
+        catch ( InterruptedException e )
+        {
+        }
     }
 
     protected void debug( String text )
