@@ -155,10 +155,17 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
             completeStatement(
                 TestUri.MATTIAS,
                 TestUri.FOAF_NICK,
+                "Persson",
+                TestUri.MATTIAS_PUBLIC_GRAPH );
+        CompleteStatement mattiasNickPublic =
+            completeStatement(
+                TestUri.MATTIAS,
+                TestUri.FOAF_NAME,
                 "Mattias Persson",
                 TestUri.MATTIAS_PUBLIC_GRAPH );
         
-        addStatements( mattiasTypePerson, mattiasNamePublic );
+        addStatements( mattiasTypePerson, mattiasNamePublic,
+            mattiasNickPublic );
         
         restartTx();
         waitForFulltextIndex();
@@ -169,25 +176,33 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
         for ( QueryResult oneResult : queryResult )
         {
             counter++;
-            assertEquals( "Mattias Persson", ( ( Literal )
-                oneResult.getStatement().getObject() ).getValue() );
-            assertTrue( oneResult.getSnippet().contains( "Mattias" ) );
             assertTrue( oneResult.getSnippet().contains( "Persson" ) );
         }
-        assertEquals( 1, counter );
+        assertEquals( 2, counter );
         
-        queryResult = this.store().searchFulltext( "Persson" );
+        queryResult = this.store().searchFulltext( "Mattias AND Persson" );
         counter = 0;
         for ( QueryResult oneResult : queryResult )
         {
             counter++;
             assertEquals( "Mattias Persson", ( ( Literal )
                 oneResult.getStatement().getObject() ).getValue() );
+            assertTrue( oneResult.getSnippet().contains( "Mattias" ) );
             assertTrue( oneResult.getSnippet().contains( "Persson" ) );
         }
         assertEquals( 1, counter );
+
+        queryResult = this.store().searchFulltext( "persson" );
+        counter = 0;
+        for ( QueryResult oneResult : queryResult )
+        {
+            counter++;
+            assertTrue( oneResult.getSnippet().contains( "Persson" ) );
+        }
+        assertEquals( 2, counter );
         
         removeStatements( new WildcardStatement( mattiasNamePublic ) );
+        removeStatements( new WildcardStatement( mattiasNickPublic ) );
         restartTx();
         
         waitForFulltextIndex();

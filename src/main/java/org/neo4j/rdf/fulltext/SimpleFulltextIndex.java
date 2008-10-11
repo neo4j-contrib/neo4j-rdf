@@ -63,6 +63,7 @@ public class SimpleFulltextIndex implements FulltextIndex
     private static final String KEY_PREDICATE = "predicate";
     private static final String KEY_INDEX_SOURCE = "index_source";
     private static final String SNIPPET_DELIMITER = "...";
+    private static final String DEFAULT_COMBINE_MODE = "OR";
     
     private LiteralReader literalReader = new SimpleLiteralReader();
     private String directoryPath;
@@ -350,26 +351,33 @@ public class SimpleFulltextIndex implements FulltextIndex
     {
         // Here's the deal, slip in a '&&' between all the words since the
         // default search mode is AND.
-        query = query.toLowerCase();
+//        query = query.toLowerCase();
         String[] words = query.split( " " );
         StringBuffer buffer = new StringBuffer();
-        for ( String word : words )
+        if ( words.length == 0 )
         {
-            if ( word == null )
+            return "";
+        }
+        
+        buffer.append( words[ 0 ].toLowerCase() );
+        for ( int i = 1; i < words.length; i++ )
+        {
+            String word = words[ i ];
+            if ( word.equals( "OR" ) || word.equals( "AND" ) )
             {
-                continue;
+                i++;
+                if ( words.length >= i )
+                {
+                    buffer.append( " " + word );
+                    word = words[ i ];
+                    buffer.append( " " + word.toLowerCase() );
+                }
             }
-            word = word.trim();
-            if ( word.length() == 0 )
+            else
             {
-                continue;
+                buffer.append( " " + DEFAULT_COMBINE_MODE + " " +
+                    word.toLowerCase() );
             }
-            
-            if ( buffer.length() > 0 )
-            {
-                buffer.append( " && " );
-            }
-            buffer.append( word );
         }
         return buffer.toString();
     }
