@@ -317,8 +317,7 @@ public class SimpleFulltextIndex implements FulltextIndex
             searcher = new IndexSearcher( getDir() );
             List<RawQueryResult> result =
                 new ArrayList<RawQueryResult>();
-            Query q = new QueryParser( KEY_INDEX, analyzer ).parse(
-                convertIncomingQueryToLuceneFormat( query ) );
+            Query q = new QueryParser( KEY_INDEX, analyzer ).parse( query );
             Hits hits = searcher.search( q, Sort.RELEVANCE );
             Highlighter highlighter = new Highlighter( highlightFormatter,
                 new QueryScorer( q ) );
@@ -345,41 +344,6 @@ public class SimpleFulltextIndex implements FulltextIndex
         {
             safeClose( searcher );
         }
-    }
-    
-    private String convertIncomingQueryToLuceneFormat( String query )
-    {
-        // Here's the deal, slip in a '&&' between all the words since the
-        // default search mode is AND.
-//        query = query.toLowerCase();
-        String[] words = query.split( " " );
-        StringBuffer buffer = new StringBuffer();
-        if ( words.length == 0 )
-        {
-            return "";
-        }
-        
-        buffer.append( words[ 0 ].toLowerCase() );
-        for ( int i = 1; i < words.length; i++ )
-        {
-            String word = words[ i ];
-            if ( word.equals( "OR" ) || word.equals( "AND" ) )
-            {
-                i++;
-                if ( words.length >= i )
-                {
-                    buffer.append( " " + word );
-                    word = words[ i ];
-                    buffer.append( " " + word.toLowerCase() );
-                }
-            }
-            else
-            {
-                buffer.append( " " + DEFAULT_COMBINE_MODE + " " +
-                    word.toLowerCase() );
-            }
-        }
-        return buffer.toString();
     }
     
     private String generateSnippet( Document doc, Highlighter highlighter )
