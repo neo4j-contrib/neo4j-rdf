@@ -63,7 +63,6 @@ public class SimpleFulltextIndex implements FulltextIndex
     private static final String KEY_PREDICATE = "predicate";
     private static final String KEY_INDEX_SOURCE = "index_source";
     private static final String SNIPPET_DELIMITER = "...";
-    private static final String DEFAULT_COMBINE_MODE = "OR";
     
     private LiteralReader literalReader = new SimpleLiteralReader();
     private String directoryPath;
@@ -320,7 +319,7 @@ public class SimpleFulltextIndex implements FulltextIndex
             Query q = new QueryParser( KEY_INDEX, analyzer ).parse( query );
             Hits hits = searcher.search( q, Sort.RELEVANCE );
             Highlighter highlighter = new Highlighter( highlightFormatter,
-                new QueryScorer( q ) );
+                new QueryScorer( searcher.rewrite( q ) ) );
             for ( int i = 0; i < hits.length(); i++ )
             {
                 Document doc = hits.doc( i );

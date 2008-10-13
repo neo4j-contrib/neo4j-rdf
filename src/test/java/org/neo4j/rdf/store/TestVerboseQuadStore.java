@@ -202,6 +202,15 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
         }
         assertEquals( 2, counter );
         
+        queryResult = this.store().searchFulltext( "\tpers*  " );
+        counter = 0;
+        for ( QueryResult oneResult : queryResult )
+        {
+            counter++;
+            assertTrue( oneResult.getSnippet().contains( "Persson" ) );
+        }
+        assertEquals( 2, counter );
+        
         removeStatements( new WildcardStatement( mattiasNamePublic ) );
         removeStatements( new WildcardStatement( mattiasNickPublic ) );
         restartTx();
