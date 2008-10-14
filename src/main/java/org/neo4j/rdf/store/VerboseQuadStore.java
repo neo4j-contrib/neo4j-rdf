@@ -140,28 +140,38 @@ public class VerboseQuadStore extends RdfStoreImpl
     @Override
     public void reindexFulltextIndex()
     {
-        Iterable<Node> allMiddleNodes = getMiddleNodesFromAllContexts();
-        Iterable<Object[]> allQuads = new MiddleNodeToQuadIterable(
-            new WildcardStatement( new Wildcard(), new Wildcard(),
-                new Wildcard(), new Wildcard() ), allMiddleNodes );
-        int counter = 0;
-        FulltextIndex fulltextIndex = getFulltextIndex();
-        for ( Object[] quad : allQuads )
+        Transaction tx = neo().beginTx();
+        try
         {
-            String predicate = ( String ) quad[ 1 ];
-            Node objectNode = ( Node ) quad[ 2 ];
-            Value objectValue = getValueForObjectNode( predicate, objectNode );
-            if ( objectValue instanceof Literal )
+            Iterable<Node> allMiddleNodes = getMiddleNodesFromAllContexts();
+            Iterable<Object[]> allQuads = new MiddleNodeToQuadIterable(
+                new WildcardStatement( new Wildcard(), new Wildcard(),
+                    new Wildcard(), new Wildcard() ), allMiddleNodes );
+            int counter = 0;
+            FulltextIndex fulltextIndex = getFulltextIndex();
+            for ( Object[] quad : allQuads )
             {
-                fulltextIndex.index( objectNode, new Uri( predicate ),
-                    ( ( Literal ) objectValue ).getValue() );
-                if ( ++counter % 5000 == 0 )
+                String predicate = ( String ) quad[ 1 ];
+                Node objectNode = ( Node ) quad[ 2 ];
+                Value objectValue =
+                    getValueForObjectNode( predicate, objectNode );
+                if ( objectValue instanceof Literal )
                 {
-                    fulltextIndex.end( true );
+                    fulltextIndex.index( objectNode, new Uri( predicate ),
+                        ( ( Literal ) objectValue ).getValue() );
+                    if ( ++counter % 5000 == 0 )
+                    {
+                        fulltextIndex.end( true );
+                    }
                 }
             }
+            fulltextIndex.end( true );
+            tx.success();
         }
-        fulltextIndex.end( true );
+        finally
+        {
+            tx.finish();
+        }
     }
     
     @Override
