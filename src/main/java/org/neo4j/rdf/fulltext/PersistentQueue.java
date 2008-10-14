@@ -212,26 +212,30 @@ public class PersistentQueue implements Iterator<PersistentQueue.Entry>
         return buffer;
     }
     
-    public synchronized void markAsCompleted( Entry entry )
+    public synchronized void markAsCompleted( Entry... entries )
     {
         try
         {
             long position = channel.position();
             try
             {
-                channel.position( entry.position() );
-                if ( readNextEntryHeader( true ).state == COMPLETED )
+                for ( Entry entry : entries )
                 {
-                    return;
+                    channel.position( entry.position() );
+                    if ( readNextEntryHeader( true ).state == COMPLETED )
+                    {
+                        continue;
+                    }
+                    
+                    ByteBuffer buffer = getBuffer( HEADER_SIZE );
+                    buffer.clear();
+                    buffer.limit( 1 );
+                    buffer.put( COMPLETED );
+                    buffer.flip();
+                    channel.write( buffer );
+                    numberOfEntriesReadButNotYetCompleted.decrementAndGet();
                 }
-                
-                ByteBuffer buffer = getBuffer( HEADER_SIZE );
-                buffer.clear();
-                buffer.limit( 1 );
-                buffer.put( COMPLETED );
-                buffer.flip();
-                channel.write( buffer );
-                numberOfEntriesReadButNotYetCompleted.decrementAndGet();
+                channel.force( false );
             }
             finally
             {
@@ -277,7 +281,7 @@ public class PersistentQueue implements Iterator<PersistentQueue.Entry>
     
     private synchronized EntryHeader readNextEntryHeader(
         boolean restorePositionAfterRead ) throws IOException
-        {
+    {
         long positionBeforeRead = channel.position();
         try
         {
@@ -302,7 +306,7 @@ public class PersistentQueue implements Iterator<PersistentQueue.Entry>
                 channel.position( positionBeforeRead );
             }
         }
-        }
+    }
     
     private synchronized Entry tryToFindNext() throws IOException
     {

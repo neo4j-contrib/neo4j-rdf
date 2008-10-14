@@ -118,6 +118,7 @@ public class SimpleFulltextIndex implements FulltextIndex
         this.neo = neo;
         this.neoUtil = new NeoUtil( neo );
         this.indexingQueue = new PersistentQueue( new File( queuePath ) );
+        this.indexingQueue.setAutoCompleteEntries( false );
         
         try
         {
@@ -239,12 +240,11 @@ public class SimpleFulltextIndex implements FulltextIndex
         }
     }
     
-    private void doIndex( long nodeId, String predicate, Object literal )
+    private void doIndex( IndexWriter writer, long nodeId, String predicate,
+        Object literal )
     {
-        IndexWriter writer = null;
         try
         {
-            writer = getWriter( false );
             Document doc = new Document();
             doc.add( new Field( KEY_ID, String.valueOf( nodeId ), Store.YES,
                 Index.UN_TOKENIZED ) );
@@ -259,10 +259,6 @@ public class SimpleFulltextIndex implements FulltextIndex
         catch ( IOException e )
         {
             throw new RuntimeException( e );
-        }
-        finally
-        {
-            safeClose( writer );
         }
     }
     
@@ -440,8 +436,12 @@ public class SimpleFulltextIndex implements FulltextIndex
     
     private class IndexingThread extends Thread
     {
+        private static final int COUNT_BEFORE_WRITE = 100;
+        
         private boolean halted;
         private boolean hasItems;
+        private IndexWriter writer;
+        private Collection<Entry> entriesToComplete = new ArrayList<Entry>();
         
         private void halt()
         {
@@ -462,16 +462,26 @@ public class SimpleFulltextIndex implements FulltextIndex
                         Object[] data = entry.data();
                         if ( ( Boolean ) data[ 0 ] )
                         {
-                            doIndex( ( Long ) data[ 1 ],
+                            ensureWriter();
+                            doIndex( writer, ( Long ) data[ 1 ],
                                 ( String ) data[ 2 ], data[ 3 ] );
+                            entriesToComplete.add( entry );
                         }
                         else
                         {
                             doRemoveIndex( ( Long ) data[ 1 ],
                                 ( String ) data[ 2 ], data[ 3 ] );
                         }
-                        hasItems = indexingQueue.hasNext();
+                        
+                        boolean preHasItems = indexingQueue.hasNext();
+                        if ( entriesToComplete.size() >= COUNT_BEFORE_WRITE ||
+                            !preHasItems )
+                        {
+                            flushEntries();
+                        }
+                        hasItems = preHasItems;
                     }
+                    
                     try
                     {
                         long time = System.currentTimeMillis();
@@ -492,6 +502,23 @@ public class SimpleFulltextIndex implements FulltextIndex
                     t.printStackTrace();
                 }
             }
+        }
+        
+        private void ensureWriter() throws Exception
+        {
+            if ( writer == null )
+            {
+                writer = getWriter( false );
+            }
+        }
+        
+        private void flushEntries()
+        {
+            safeClose( writer );
+            writer = null;
+            indexingQueue.markAsCompleted( entriesToComplete.toArray(
+                new Entry[ entriesToComplete.size() ] ) );
+            entriesToComplete.clear();
         }
     }
     
