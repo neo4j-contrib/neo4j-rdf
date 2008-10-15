@@ -473,13 +473,18 @@ public class SimpleFulltextIndex implements FulltextIndex
                                 ( String ) data[ 2 ], data[ 3 ] );
                         }
                         
-                        boolean preHasItems = indexingQueue.hasNext();
                         if ( entriesToComplete.size() >= COUNT_BEFORE_WRITE ||
-                            !preHasItems )
+                            !indexingQueue.hasNext() )
                         {
                             flushEntries();
                         }
-                        hasItems = preHasItems;
+                        hasItems = indexingQueue.hasNext();
+                    }
+                    
+                    // This is so that it flushes if the indexer gets halted.
+                    if ( entriesToComplete.size() > 0 )
+                    {
+                        flushEntries();
                     }
                     
                     try
