@@ -45,6 +45,7 @@ import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
 import org.neo4j.rdf.fulltext.PersistentQueue.Entry;
 import org.neo4j.rdf.model.Uri;
+import org.neo4j.rdf.util.TemporaryLogger;
 import org.neo4j.util.NeoUtil;
 
 /**
@@ -309,11 +310,13 @@ public class SimpleFulltextIndex implements FulltextIndex
         IndexSearcher searcher = null;
         try
         {
+            TemporaryLogger.Timer timer = new TemporaryLogger.Timer();
             searcher = new IndexSearcher( getDir() );
             List<RawQueryResult> result =
                 new ArrayList<RawQueryResult>();
             Query q = new QueryParser( KEY_INDEX, analyzer ).parse( query );
             Hits hits = searcher.search( q, Sort.RELEVANCE );
+            long searchTime = timer.lap();
             Highlighter highlighter = new Highlighter( highlightFormatter,
                 new QueryScorer( searcher.rewrite( q ) ) );
             for ( int i = 0; i < hits.length(); i++ )
@@ -325,6 +328,10 @@ public class SimpleFulltextIndex implements FulltextIndex
                 result.add( new RawQueryResult( neo.getNodeById( id ),
                     score, snippet ) );
             }
+            long sortTime = timer.lap();
+            TemporaryLogger.getLogger().info( "FulltextIndex.search: " +
+                "search{time:" + searchTime + " hits:" + hits.length() + "} " +
+                "sort and snippeting{time:" + sortTime + "}" );
             return result;
         }
         catch ( IOException e )
