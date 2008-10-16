@@ -330,7 +330,8 @@ public class SimpleFulltextIndex implements FulltextIndex
             }
             long sortTime = timer.lap();
             TemporaryLogger.getLogger().info( "FulltextIndex.search: " +
-                "search{time:" + searchTime + " hits:" + hits.length() + "} " +
+                "search{q:'" + query + "' time:" + searchTime +
+                " hits:" + hits.length() + "} " +
                 "sort and snippeting{time:" + sortTime + "}" );
             return result;
         }
