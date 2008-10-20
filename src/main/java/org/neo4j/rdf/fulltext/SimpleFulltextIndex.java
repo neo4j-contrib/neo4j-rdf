@@ -118,9 +118,13 @@ public class SimpleFulltextIndex implements FulltextIndex
         this.queuePath = this.directoryPath + "-queue";
         this.neo = neo;
         this.neoUtil = new NeoUtil( neo );
+        startUpDirectoryAndThread();
+    }
+    
+    private void startUpDirectoryAndThread()
+    {
         this.indexingQueue = new PersistentQueue( new File( queuePath ) );
         this.indexingQueue.setAutoCompleteEntries( false );
-        
         try
         {
             createLuceneDirectory();
@@ -138,17 +142,7 @@ public class SimpleFulltextIndex implements FulltextIndex
     {
         shutDown();
         delete();
-        try
-        {
-            createLuceneDirectory();
-        }
-        catch ( IOException e )
-        {
-            throw new RuntimeException( e );
-        }
-        this.indexingQueue = new PersistentQueue( new File( queuePath ) );
-        this.indexingThread = new IndexingThread();
-        this.indexingThread.start();
+        startUpDirectoryAndThread();
     }
     
     private void createLuceneDirectory() throws IOException
@@ -477,8 +471,10 @@ public class SimpleFulltextIndex implements FulltextIndex
                         }
                         else
                         {
+                            flushEntries();
                             doRemoveIndex( ( Long ) data[ 1 ],
                                 ( String ) data[ 2 ], data[ 3 ] );
+                            indexingQueue.markAsCompleted( entry );
                         }
                         
                         if ( entriesToComplete.size() >= COUNT_BEFORE_WRITE ||
@@ -490,10 +486,7 @@ public class SimpleFulltextIndex implements FulltextIndex
                     }
                     
                     // This is so that it flushes if the indexer gets halted.
-                    if ( entriesToComplete.size() > 0 )
-                    {
-                        flushEntries();
-                    }
+                    flushEntries();
                     
                     try
                     {
@@ -527,6 +520,11 @@ public class SimpleFulltextIndex implements FulltextIndex
         
         private void flushEntries()
         {
+            if ( writer == null )
+            {
+                return;
+            }
+            
             safeClose( writer );
             writer = null;
             indexingQueue.markAsCompleted( entriesToComplete.toArray(
