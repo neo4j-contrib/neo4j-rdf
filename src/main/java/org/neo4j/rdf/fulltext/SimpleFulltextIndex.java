@@ -127,6 +127,7 @@ public class SimpleFulltextIndex implements FulltextIndex
         this.indexingQueue.setAutoCompleteEntries( false );
         try
         {
+            cleanWriteLocks( new File( directoryPath ) );
             createLuceneDirectory();
         }
         catch ( IOException e )
@@ -136,6 +137,26 @@ public class SimpleFulltextIndex implements FulltextIndex
         
         this.indexingThread = new IndexingThread();
         this.indexingThread.start();
+    }
+    
+    private void cleanWriteLocks( File path )
+    {
+        if ( !path.isDirectory() )
+        {
+            return;
+        }
+        for ( File file : path.listFiles() )
+        {
+            if ( file.isDirectory() )
+            {
+                cleanWriteLocks( file );
+            }
+            else if ( file.getName().equals( "write.lock" ) )
+            {
+                boolean success = file.delete();
+                assert success;
+            }
+        }
     }
     
     public void clear()
