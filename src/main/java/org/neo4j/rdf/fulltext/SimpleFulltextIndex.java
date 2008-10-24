@@ -267,7 +267,7 @@ public class SimpleFulltextIndex implements FulltextIndex
             doc.add( new Field( KEY_INDEX, getLiteralReader().read( literal ),
                 Store.YES, Index.TOKENIZED ) );
             doc.add( new Field( KEY_PREDICATE, predicate,
-                Store.NO, Index.UN_TOKENIZED ) );
+                Store.YES, Index.UN_TOKENIZED ) );
             doc.add( new Field( KEY_INDEX_SOURCE, literal.toString(),
                 Store.YES, Index.UN_TOKENIZED ) );
             writer.addDocument( doc );
