@@ -22,7 +22,7 @@ import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
 import org.neo4j.util.index.IndexService;
 import org.neo4j.util.index.NeoIndexService;
 
-public abstract class QuadStoreAbstractTestCase extends NeoTestCase
+public abstract class QuadStoreAbstractTestCase extends NeoWithIndexTestCase
 {
     public static final String BASE_URI = "http://uri.neo4j.org/";
     public static final Wildcard WILDCARD_SUBJECT = new Wildcard( "subject" );

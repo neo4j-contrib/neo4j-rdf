@@ -14,7 +14,7 @@ import org.neo4j.rdf.model.WildcardStatement;
 import org.neo4j.util.index.IndexService;
 import org.neo4j.util.index.NeoIndexService;
 
-public abstract class StoreTestCase extends NeoTestCase
+public abstract class StoreTestCase extends NeoWithIndexTestCase
 {
     public static final Uri PERSON = new Uri( "http://person" );
     public static final Uri NAME = new Uri( "http://name" );

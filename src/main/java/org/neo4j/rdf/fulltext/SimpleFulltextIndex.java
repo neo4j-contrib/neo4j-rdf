@@ -53,6 +53,15 @@ import org.neo4j.util.NeoUtil;
  * The query format (see the search method) is a plain lucene query, but with
  * the addition that an AND operator is squeezed in between every word making
  * it and AND search by default, instead of OR.
+ * 
+ * When you call the index and removeIndex methods a temporary log is created
+ * and a call to the end method will write all those additions to the queue
+ * to be indexed in the near future. The "txId" i.e. transaction id is really
+ * just the javax.transaction.Transaction object's hashCode() value at the
+ * moment. That is what you'll have to pass in to the
+ * end( boolean commit, int txId ) method if you choose not to use the
+ * end( boolean commit ) method which figures it out itself, provided that
+ * you are in a transaction at the time of the call.
  */
 public class SimpleFulltextIndex implements FulltextIndex
 {
@@ -194,14 +203,19 @@ public class SimpleFulltextIndex implements FulltextIndex
     
     public void index( Node node, Uri predicate, Object literal )
     {
-        enqueueCommand( true, node, predicate, literal );
+        index( node.getId(), predicate.getUriAsString(), literal );
+    }
+    
+    private void index( long nodeId, String predicate, Object literal )
+    {
+        enqueueCommand( true, nodeId, predicate, literal );
     }
     
     private void enqueueCommand( boolean trueForIndex,
-        Node node, Uri predicate, Object literal )
+        long nodeId, String predicate, Object literal )
     {
         if ( predicateFilter != null &&
-            !predicateFilter.contains( predicate.getUriAsString() ) )
+            !predicateFilter.contains( predicate ) )
         {
             return;
         }
@@ -217,7 +231,7 @@ public class SimpleFulltextIndex implements FulltextIndex
                 toIndex.put( key, commands );
             }
             commands.add( new Object[] {
-                trueForIndex, node.getId(), predicate.getUriAsString(), literal
+                trueForIndex, nodeId, predicate, literal
             } );
         }
         catch ( SystemException e )
@@ -280,7 +294,12 @@ public class SimpleFulltextIndex implements FulltextIndex
     
     public void removeIndex( Node node, Uri predicate, Object literal )
     {
-        enqueueCommand( false, node, predicate, literal );
+        removeIndex( node.getId(), predicate.getUriAsString(), literal );
+    }
+    
+    private void removeIndex( long nodeId, String predicate, Object literal )
+    {
+        enqueueCommand( false, nodeId, predicate, literal );
     }
     
     private void doRemoveIndex( long nodeId, String predicate, Object literal )
@@ -319,9 +338,6 @@ public class SimpleFulltextIndex implements FulltextIndex
     
     public Iterable<RawQueryResult> search( String query )
     {
-        // Maybe return an iterable with just the hits and the queryresult
-        // conversion will be on the fly (because snippet rendering is slow?)
-        
         IndexSearcher searcher = null;
         try
         {
@@ -334,10 +350,18 @@ public class SimpleFulltextIndex implements FulltextIndex
             long searchTime = timer.lap();
             Highlighter highlighter = new Highlighter( highlightFormatter,
                 new QueryScorer( searcher.rewrite( q ) ) );
+            Set<Long> ids = new HashSet<Long>();
             for ( int i = 0; i < hits.length(); i++ )
             {
                 Document doc = hits.doc( i );
                 long id = Long.parseLong( doc.get( KEY_ID ) );
+                if ( !ids.add( id ) )
+                {
+                    // It's a duplicate here, probably after a crash or
+                    // something
+                    removeDuplicate( doc );
+                    continue;
+                }
                 float score = hits.score( i );
                 String snippet = generateSnippet( doc, highlighter );
                 result.add( new RawQueryResult( neo.getNodeById( id ),
@@ -362,6 +386,15 @@ public class SimpleFulltextIndex implements FulltextIndex
         {
             safeClose( searcher );
         }
+    }
+    
+    private void removeDuplicate( Document doc )
+    {
+        long nodeId = Long.parseLong( doc.get( KEY_ID ) );
+        String predicate = doc.get( KEY_PREDICATE );
+        String literal = doc.get( KEY_INDEX_SOURCE );
+        removeIndex( nodeId, predicate, literal );
+        index( nodeId, predicate, literal );
     }
     
     private String generateSnippet( Document doc, Highlighter highlighter )
