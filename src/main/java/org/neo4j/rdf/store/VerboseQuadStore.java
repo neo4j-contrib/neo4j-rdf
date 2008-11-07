@@ -603,7 +603,7 @@ public class VerboseQuadStore extends RdfStoreImpl
         extends PrefetchingIterator<Object[]>
     {
         private Statement statement;
-        private NestingIterator<Node> middleNodesWithContexts;
+        private NestingIterator<Node, Node> middleNodesWithContexts;
         private Relationship lastContextRelationship;
         
         MiddleNodeToQuadIterator( Statement statement,
@@ -611,7 +611,7 @@ public class VerboseQuadStore extends RdfStoreImpl
         {
             this.statement = statement;
             this.middleNodesWithContexts =
-                new NestingIterator<Node>( middleNodes )
+                new NestingIterator<Node, Node>( middleNodes )
             {
                 @Override
                 protected Iterator<Node> createNestedIterator( Node item )
