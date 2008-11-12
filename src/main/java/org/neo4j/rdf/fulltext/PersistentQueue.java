@@ -384,13 +384,13 @@ public class PersistentQueue implements Iterator<PersistentQueue.Entry>
         boolean hasNext = hasNext();
         boolean hasIncompletedEntries =
             numberOfEntriesReadButNotYetCompleted.get() > 0;
-            boolean keepFile = hasNext || hasIncompletedEntries;
-            closeChannel();
-            if ( !keepFile )
-            {
-                deleteBackingFile();
-            }
-            return !keepFile;
+        boolean keepFile = hasNext || hasIncompletedEntries;
+        closeChannel();
+        if ( !keepFile )
+        {
+            deleteBackingFile();
+        }
+        return !keepFile;
     }
     
     protected void deleteBackingFile()

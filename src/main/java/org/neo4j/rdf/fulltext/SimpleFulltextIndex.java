@@ -170,7 +170,9 @@ public class SimpleFulltextIndex implements FulltextIndex
     
     public void clear()
     {
-        shutDown();
+        TemporaryLogger.getLogger().info( getClass().getName() +
+            " clear called", new Exception() );
+        internalShutDown();
         delete();
         startUpDirectoryAndThread();
     }
@@ -468,6 +470,13 @@ public class SimpleFulltextIndex implements FulltextIndex
     }
     
     public void shutDown()
+    {
+        TemporaryLogger.getLogger().info( getClass().getName() +
+            " shutDown called", new Exception() );
+        internalShutDown();
+    }
+    
+    private void internalShutDown()
     {
         indexingThread.halt();
         try

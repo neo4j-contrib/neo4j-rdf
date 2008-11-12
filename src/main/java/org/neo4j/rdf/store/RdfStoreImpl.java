@@ -14,6 +14,7 @@ import org.neo4j.rdf.store.representation.AbstractRepresentation;
 import org.neo4j.rdf.store.representation.RepresentationExecutor;
 import org.neo4j.rdf.store.representation.RepresentationStrategy;
 import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
+import org.neo4j.rdf.util.TemporaryLogger;
 
 /**
  * Default implementation of an {@link RdfStore}.
@@ -196,6 +197,9 @@ public abstract class RdfStoreImpl implements RdfStore
     
     public void shutDown()
     {
+        TemporaryLogger.getLogger().info( getClass().getName() +
+            " shutDown called", new Exception() );
+        
         FulltextIndex index = getFulltextIndex();
         if ( index != null )
         {
