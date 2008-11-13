@@ -81,7 +81,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
 //    {
 //        System.out.println( message );
 //    }
-
+//
 //    private void debugRelationship( Relationship relationship,
 //        boolean create )
 //    {
@@ -143,6 +143,13 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         {
             node = createNode( abstractNode, nodeMapping );
             created = true;
+        }
+        else
+        {
+            if ( nodeMapping != null )
+            {
+                nodeMapping.put( abstractNode, node );
+            }
         }
         return new NodeContext( node, created );
     }
@@ -364,13 +371,6 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         return true;
     }
 
-    protected boolean contextRelationshipIsEmpty(
-        AbstractRelationship abstractRelationship, Relationship relationship )
-    {
-        return !relationship.hasProperty(
-            StandardAbstractRepresentationStrategy.CONTEXT_PROPERTY_POSTFIX );
-    }
-
     protected boolean removeRepresentation( AbstractElement element,
         PropertyContainer container, String key )
     {
@@ -405,23 +405,34 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         Object value =
             abstractNode.properties().get( predicate ).iterator().next();
 //        debugCreateNode( node, "(literal)" );
-        index().index( node, LITERAL_VALUE_KEY, value );
-        if ( getFulltextIndex() != null )
-        {
-            getFulltextIndex().index( node, new Uri( predicate ), value );
-        }
+        indexLiteral( node, new Uri( predicate ), value );
         return node;
     }
 
     protected void deleteLiteralNode( Node node,
         String predicate, Object value )
     {
-        index().removeIndex( node, LITERAL_VALUE_KEY, value );
+        removeLiteralIndex( node, new Uri( predicate ), value );
+        deleteNode( node, null );
+    }
+    
+    protected void indexLiteral( Node node, Uri predicate, Object literalValue )
+    {
+        index().index( node, LITERAL_VALUE_KEY, literalValue );
         if ( getFulltextIndex() != null )
         {
-            getFulltextIndex().removeIndex( node, new Uri( predicate ), value );
+            getFulltextIndex().index( node, predicate, literalValue );
         }
-        deleteNode( node, null );
+    }
+    
+    protected void removeLiteralIndex( Node node, Uri predicate,
+        Object literalValue )
+    {
+        index().removeIndex( node, LITERAL_VALUE_KEY, literalValue );
+        if ( getFulltextIndex() != null )
+        {
+            getFulltextIndex().removeIndex( node, predicate, literalValue );
+        }
     }
 
     public Iterable<Node> findLiteralNodes( Object value )

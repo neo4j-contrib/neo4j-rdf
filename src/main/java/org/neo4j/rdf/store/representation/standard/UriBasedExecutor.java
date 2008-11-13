@@ -32,12 +32,25 @@ import org.neo4j.util.matching.PatternNode;
  * An implementation of {@link RepresentationExecutor} which uses an
  * {@link Index}, where the indexing key is each elements {@link Uri} as a way
  * of looking up the objects.
+ * 
+ * This is an attempt to implement a generic executor which tries to execute a
+ * {@link AbstractRepresentation}s as straight forward and correct as possible.
  */
 public class UriBasedExecutor extends AbstractUriBasedExecutor
 {
-    public static final String CONTEXT_DELIMITER = "ö";
-    public static final String LOOKUP_CONTEXT_KEYS = "contextKeys";
-    public static final String LOOKUP_IS_LITERAL = "literal";
+    /**
+     * Set on an AbstractNode (with a boolean as value) to let the executor
+     * know that the node is a literal node (and should be indexed).
+     */
+    public static final String EXEC_INFO_IS_LITERAL_NODE = "literal";
+    
+    /**
+     * Set on an AbstractElement (with a Collection<String> as value) containing
+     * the keys in that element which should be treated as literals
+     * (and hence should be indexed).
+     */
+    public static final String EXEC_INFO_KEYS_WHICH_ARE_LITERALS =
+        "literal_keys";
 
     /**
      * @param neo the {@link NeoService}.
@@ -196,24 +209,6 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
         }
     }
 
-    protected String getPropertyKeyForContextKey( AbstractElement element,
-        String contextKey )
-    {
-        Map<?, ?> contextToPropertyKeys = ( Map<?, ?> ) element.getExecutorInfo(
-            UriBasedExecutor.LOOKUP_CONTEXT_KEYS );
-        return contextToPropertyKeys == null ? null :
-            ( String ) contextToPropertyKeys.get( contextKey );
-    }
-
-    protected boolean isContextKey( AbstractElement element,
-        String key )
-    {
-        Map<?, ?> contextToPropertyKeys = ( Map<?, ?> ) element.getExecutorInfo(
-            UriBasedExecutor.LOOKUP_CONTEXT_KEYS );
-        return contextToPropertyKeys != null &&
-            contextToPropertyKeys.containsKey( key );
-    }
-
     private boolean oneNodeIsBlankAndItsNotEmpty(
         AbstractRelationship abstractRelationship, Relationship relationship )
     {
@@ -285,6 +280,10 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
     private void applyOnContainer( AbstractElement abstractElement,
         PropertyContainer container )
     {
+        Collection<?> keysWhichAreLiterals = ( Collection<?> )
+            abstractElement.getExecutorInfo(
+                EXEC_INFO_KEYS_WHICH_ARE_LITERALS );
+        
         for ( Map.Entry<String, Collection<Object>> entry :
             abstractElement.properties().entrySet() )
         {
@@ -295,8 +294,14 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
                 boolean added = neoValues.add( value );
                 if ( added )
                 {
-//                    debug( "\t+Property" + " (" + container + ") "
-//                        + entry.getKey() + " " + "[" + value + "]" );
+//                  debug( "\t+Property" + " (" + container + ") "
+//                  + entry.getKey() + " " + "[" + value + "]" );
+                    if ( keysWhichAreLiterals != null &&
+                        keysWhichAreLiterals.contains( entry.getKey() ) )
+                    {
+                        indexLiteral( ( Node ) container,
+                            new Uri( entry.getKey() ), value );
+                    }
                 }
             }
         }
@@ -309,10 +314,6 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
             abstractRelationship.properties().entrySet() )
         {
             String key = entry.getKey();
-            if ( !isContextKey( abstractRelationship, key ) )
-            {
-                throw new UnsupportedOperationException( key );
-            }
             Collection<Object> neoValues = new NeoPropertyArraySet<Object>(
                 neo(), relationship, key );
             removeAll( relationship, key, neoValues,
@@ -340,84 +341,31 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
 
     protected void removeFromNode( AbstractNode abstractNode, Node node )
     {
-        // Take the context properties first.
-        Map<String, String> realToContext = new HashMap<String, String>();
-        for ( Map.Entry<String, Collection<Object>> entry :
-            abstractNode.properties().entrySet() )
-        {
-            String key = entry.getKey();
-            if ( !isContextKey( abstractNode, key ) )
-            {
-                continue;
-            }
-            String realKey =
-                getPropertyKeyForContextKey( abstractNode, key );
-            if ( realKey != null )
-            {
-                realToContext.put( realKey, key );
-            }
-            Collection<Object> neoValues = new NeoPropertyArraySet<Object>(
-                neo(), node, key );
-            removeAll( node, key, neoValues, entry.getValue(), "Property" );
-        }
-
+        Collection<?> keysWhichAreLiterals = ( Collection<?> )
+            abstractNode.getExecutorInfo( EXEC_INFO_KEYS_WHICH_ARE_LITERALS );
+        
         // Do the real keys
         for ( Map.Entry<String, Collection<Object>> entry :
             abstractNode.properties().entrySet() )
         {
             String key = entry.getKey();
-            if ( isContextKey( abstractNode, key ) )
-            {
-                continue;
-            }
             Collection<Object> neoValues = new NeoPropertyArraySet<Object>(
                 neo(), node, key );
-            String contextKey = realToContext.get( key );
-            if ( contextKey != null )
+            for ( Object value : entry.getValue() )
             {
-                // This means that we're trying to remove contexts, not the
-                // actual property, unless all the contexts has been removed.
-                for ( Object value : entry.getValue() )
+                boolean removed = neoValues.remove( value );
+                if ( removed )
                 {
-                    if ( !thereAreMoreContexts( node, key, neoValues, value ) )
+                    if ( keysWhichAreLiterals != null &&
+                        keysWhichAreLiterals.contains( entry.getKey() ) )
                     {
-                        boolean removed = neoValues.remove( value );
-                        if ( removed )
-                        {
-//                            debug( "\t-Property"  + " (" + node + ") "
-//                                + key + " " + "[" + value + "]" );
-                        }
+                        removeLiteralIndex( node, new Uri( key ), value );
                     }
-                }
-            }
-            else
-            {
-                // This means that we're removing the property and all its
-                // contexts as well.
-                for ( Object value : entry.getValue() )
-                {
-                    if ( node.removeProperty( formContextPropertyKey(
-                        key, value ) ) != null )
-                    {
-//                        debug( "\t-" + "Contexts" + " (" + node + ") "
-//                            + key + " " + "[" + value + "]" );
-                    }
-                    boolean removed = neoValues.remove( value );
-                    if ( removed )
-                    {
-//                        debug( "\t-Property"  + " (" + node + ") "
-//                            + key + " " + "[" + value + "]" );
-                    }
+//                    debug( "\t-Property"  + " (" + node + ") "
+//                        + key + " " + "[" + value + "]" );
                 }
             }
         }
-    }
-
-    private boolean thereAreMoreContexts( Node node, String key,
-        Collection<Object> neoValues, Object value )
-    {
-        String contextKey = formContextPropertyKey( key, value );
-        return node.hasProperty( contextKey );
     }
 
     private NodeAndRelationship findOtherNodePresumedBlank(
@@ -436,7 +384,7 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
         PatternNode startingPatternNode = patternNodes
             .get( startingAbstractNode );
         Iterator<PatternMatch> matches = PatternMatcher.getMatcher().match(
-            startingPatternNode, startingNode ).iterator();
+            startingPatternNode, startingNode, null ).iterator();
         Node node = null;
         Relationship relationship = null;
         if ( matches.hasNext() )
@@ -543,14 +491,8 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
     protected boolean isLiteralNode( AbstractNode node )
     {
         Boolean isLiteralNode = ( Boolean )
-        node.getExecutorInfo( LOOKUP_IS_LITERAL );
+        node.getExecutorInfo( EXEC_INFO_IS_LITERAL_NODE );
         return isLiteralNode != null && isLiteralNode;
-    }
-
-    public static String formContextPropertyKey( String predicate,
-        Object value )
-    {
-        return predicate + CONTEXT_DELIMITER + value.toString();
     }
 
     public static class ARelationshipType implements RelationshipType

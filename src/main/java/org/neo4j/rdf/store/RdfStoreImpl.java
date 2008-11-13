@@ -1,15 +1,19 @@
 package org.neo4j.rdf.store;
 
 import org.neo4j.api.core.NeoService;
+import org.neo4j.api.core.Node;
+import org.neo4j.api.core.RelationshipType;
 import org.neo4j.api.core.Transaction;
 import org.neo4j.rdf.fulltext.FulltextIndex;
 import org.neo4j.rdf.fulltext.QueryResult;
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Statement;
+import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Value;
 import org.neo4j.rdf.model.Wildcard;
 import org.neo4j.rdf.model.WildcardStatement;
+import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRepresentation;
 import org.neo4j.rdf.store.representation.RepresentationExecutor;
 import org.neo4j.rdf.store.representation.RepresentationStrategy;
@@ -81,6 +85,33 @@ public abstract class RdfStoreImpl implements RdfStore
     }
 
 
+    protected Node lookupNode( Value uri )
+    {
+        return getRepresentationStrategy().getExecutor().lookupNode(
+            new AbstractNode( uri ) );
+    }
+    
+    protected RelationshipType relType( final String name )
+    {
+        return new RelationshipType()
+        {
+            public String name()
+            {
+                return name;
+            }
+        };
+    }
+    
+    protected RelationshipType relType( Value value )
+    {
+        return relType( ( ( Uri ) value ).getUriAsString() );
+    }
+    
+    protected RelationshipType relType( Statement statement )
+    {
+        return relType( statement.getPredicate() );
+    }
+    
     public Iterable<CompleteStatement> getStatements(
         WildcardStatement statement, boolean includeInferredStatements )
     {

@@ -1,8 +1,8 @@
 package org.neo4j.rdf.store.representation.standard;
 
 import java.text.ParseException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Collection;
+import java.util.HashSet;
 
 import org.neo4j.api.core.NeoService;
 import org.neo4j.neometa.structure.MetaStructure;
@@ -16,7 +16,6 @@ import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Value;
 import org.neo4j.rdf.model.Wildcard;
-import org.neo4j.rdf.store.representation.AbstractElement;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractRepresentation;
@@ -31,12 +30,6 @@ import org.neo4j.rdf.store.representation.RepresentationStrategy;
 abstract class StandardAbstractRepresentationStrategy
     implements RepresentationStrategy
 {
-    /**
-     * The property postfix which is concatenated with a property key to get
-     * the context property key on a node (literal values).
-     */
-    public static final String CONTEXT_PROPERTY_POSTFIX = "context";
-
     private final RepresentationExecutor executor;
     private final MetaStructure meta;
 
@@ -56,7 +49,8 @@ abstract class StandardAbstractRepresentationStrategy
         String predicate =
             ( ( Uri ) statement.getPredicate() ).getUriAsString();
         AbstractRepresentation representation = null;
-        if ( predicate.equals( AbstractUriBasedExecutor.RDF_TYPE_URI ) )
+        if ( meta != null &&
+            predicate.equals( AbstractUriBasedExecutor.RDF_TYPE_URI ) )
         {
             representation = getMetaInstanceOfRepresentation( statement );
         }
@@ -96,15 +90,14 @@ abstract class StandardAbstractRepresentationStrategy
         AbstractRepresentation representation = newRepresentation();
         AbstractNode subjectNode = getSubjectNode( statement );
         representation.addNode( subjectNode );
-        addPropertyWithContexts( statement, subjectNode );
+        addPropertyFromObjectLiteral( statement, subjectNode );
         return representation;
     }
 
-    protected void addPropertyWithContexts( Statement statement,
+    protected void addPropertyFromObjectLiteral( Statement statement,
         AbstractNode subjectNode )
     {
         Value object = statement.getObject();
-        Object literalValue = null;
         String predicate =
             ( ( Uri ) statement.getPredicate() ).getUriAsString();
         if ( object instanceof Wildcard )
@@ -114,22 +107,23 @@ abstract class StandardAbstractRepresentationStrategy
         }
         else
         {
-            literalValue = convertLiteralValueToRealValue(
+            Object literalValue = convertLiteralValueToRealValue(
                 statement, ( ( Literal ) statement.getObject() ).getValue() );
+            subjectNode.addProperty( predicate, literalValue );
+            
+            // Tell the executor that this is a literal
+            Collection<String> keysWhichAreLiterals = ( Collection<String> )
+                subjectNode.getExecutorInfo(
+                    UriBasedExecutor.EXEC_INFO_KEYS_WHICH_ARE_LITERALS );
+            if ( keysWhichAreLiterals == null )
+            {
+                keysWhichAreLiterals = new HashSet<String>();
+                subjectNode.addExecutorInfo(
+                    UriBasedExecutor.EXEC_INFO_KEYS_WHICH_ARE_LITERALS,
+                    keysWhichAreLiterals );
+            }
+            keysWhichAreLiterals.add( predicate );
         }
-
-        subjectNode.addProperty( predicate, literalValue );
-        String predicateContext = UriBasedExecutor.formContextPropertyKey(
-            predicate, literalValue );
-        if ( !statement.getContext().isWildcard() )
-        {
-            subjectNode.addProperty( predicateContext,
-                ( ( Context ) statement.getContext() ).getUriAsString() );
-        }
-        Map<String, String> contextKeys = new HashMap<String, String>();
-        contextKeys.put( predicateContext, predicate );
-        subjectNode.addExecutorInfo( UriBasedExecutor.LOOKUP_CONTEXT_KEYS,
-            contextKeys );
     }
 
     private PropertyRange getPropertyRange( Uri predicate )
@@ -245,20 +239,6 @@ abstract class StandardAbstractRepresentationStrategy
         return value instanceof Resource;
     }
 
-    protected void addSingleContextsToElement( Statement statement,
-        AbstractElement element )
-    {
-        if ( !statement.getContext().isWildcard() )
-        {
-            element.addProperty( CONTEXT_PROPERTY_POSTFIX,
-                ( ( Context ) statement.getContext() ).getUriAsString() );
-        }
-        Map<String, String> contextKeys = new HashMap<String, String>();
-        contextKeys.put( CONTEXT_PROPERTY_POSTFIX, null );
-        element.addExecutorInfo( UriBasedExecutor.LOOKUP_CONTEXT_KEYS,
-            contextKeys );
-    }
-
     protected AbstractRepresentation getTwoNodeObjectTypeFragment(
         Statement statement )
     {
@@ -269,7 +249,6 @@ abstract class StandardAbstractRepresentationStrategy
         representation.addNode( objectNode );
         AbstractRelationship relationship = new AbstractRelationship(
             subjectNode, asUri( statement.getPredicate() ), objectNode );
-        addSingleContextsToElement( statement, relationship );
         representation.addRelationship( relationship );
         return representation;
     }
@@ -283,10 +262,9 @@ abstract class StandardAbstractRepresentationStrategy
         AbstractNode literalNode = new AbstractNode( null );
         literalNode.addProperty( UriBasedExecutor.LITERAL_VALUE_KEY,
             ( ( Literal ) statement.getObject() ).getValue() );
-        literalNode.addExecutorInfo( UriBasedExecutor.LOOKUP_IS_LITERAL, true );
+        literalNode.addExecutorInfo( UriBasedExecutor.EXEC_INFO_IS_LITERAL_NODE, true );
         AbstractRelationship relationship = new AbstractRelationship(
             subjectNode, asUri( statement.getPredicate() ), literalNode );
-        addSingleContextsToElement( statement, relationship );
 
         representation.addNode( literalNode );
         representation.addRelationship( relationship );

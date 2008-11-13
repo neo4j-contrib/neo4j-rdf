@@ -9,7 +9,6 @@ import org.neo4j.api.core.Direction;
 import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
 import org.neo4j.api.core.Relationship;
-import org.neo4j.api.core.RelationshipType;
 import org.neo4j.api.core.StopEvaluator;
 import org.neo4j.api.core.Transaction;
 import org.neo4j.api.core.Traverser.Order;
@@ -73,7 +72,7 @@ public class VerboseQuadStore extends RdfStoreImpl
     public Iterable<CompleteStatement> getStatements(
         WildcardStatement statement,
         boolean includeInferredStatements )
-        {
+    {
         //        debug( "getStatements( " + statement + " )" );
         Transaction tx = neo().beginTx();
         try
@@ -135,7 +134,7 @@ public class VerboseQuadStore extends RdfStoreImpl
         {
             tx.finish();
         }
-        }
+    }
     
     @Override
     public void reindexFulltextIndex()
@@ -268,12 +267,6 @@ public class VerboseQuadStore extends RdfStoreImpl
         //        System.out.println( "====> VerboseQuadStore: " + message );
     }
     
-    private Node lookupNode( Value uri )
-    {
-        return getRepresentationStrategy().getExecutor().
-        lookupNode( new AbstractNode( uri ) );
-    }
-    
     private String getNodeUriOrNull( Node node )
     {
         return ( String ) node.getProperty(
@@ -300,32 +293,11 @@ public class VerboseQuadStore extends RdfStoreImpl
         }
     }
     
-    private RelationshipType relType( final String name )
-    {
-        return new RelationshipType()
-        {
-            public String name()
-            {
-                return name;
-            }
-        };
-    }
-    
-    private RelationshipType relType( Value value )
-    {
-        return relType( ( ( Uri ) value ).getUriAsString() );
-    }
-    
-    private RelationshipType relType( Statement statement )
-    {
-        return relType( statement.getPredicate() );
-    }
-    
     private Iterable<Node> getMiddleNodesFromLiterals( Statement statement )
     {
         Literal literal = ( Literal ) statement.getObject();
         Iterable<Node> literalNodes = getRepresentationStrategy().
-        getExecutor().findLiteralNodes( literal.getValue() );
+            getExecutor().findLiteralNodes( literal.getValue() );
         return new LiteralToMiddleNodeIterable( literalNodes );
     }
     

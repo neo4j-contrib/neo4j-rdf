@@ -1,6 +1,7 @@
 package org.neo4j.rdf.store;
 
 import org.neo4j.rdf.model.CompleteStatement;
+import org.neo4j.rdf.model.Literal;
 
 public class TestLiteralQuadContract extends QuadStoreAbstractTestCase
 {
@@ -8,21 +9,21 @@ public class TestLiteralQuadContract extends QuadStoreAbstractTestCase
         completeStatement(
             TestUri.EMIL,
             TestUri.FOAF_NICK,
-            "Emil",
+            new Literal( "Emil" ),
             TestUri.EMIL_PUBLIC_GRAPH );
 
     private static final CompleteStatement EMIL_NICK_EMPA_PUBLIC =
         completeStatement(
             TestUri.EMIL,
             TestUri.FOAF_NICK,
-            "Empa",
+            new Literal( "Empa" ),
             TestUri.EMIL_PUBLIC_GRAPH );
 
     private static final CompleteStatement EMIL_NICK_EMPA_PRIVATE =
         completeStatement(
             TestUri.EMIL,
             TestUri.FOAF_NICK,
-            "Empa",
+            new Literal( "Empa" ),
             TestUri.EMIL_PRIVATE_GRAPH );
 
     @Override

@@ -1,5 +1,8 @@
 package org.neo4j.rdf.store;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import org.neo4j.rdf.fulltext.QueryResult;
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
@@ -11,6 +14,44 @@ import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
 
 public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
 {
+    public void testSameSameStatements() throws Exception
+    {
+        Uri uriA = new Uri( BASE_URI + "uriA" );
+        Uri uriB = new Uri( BASE_URI + "uriB" );
+        Uri uriC = new Uri( BASE_URI + "uriC" );
+        Uri uriD = new Uri( BASE_URI + "uriD" );
+        Uri[] uris = { uriA, uriB, uriC, uriD };
+        
+        Collection<CompleteStatement> statements =
+            new ArrayList<CompleteStatement>();
+        int counter = 0;
+        for ( int a = 0; a < uris.length; a++ )
+        {
+            for ( int b = 0; b < uris.length; b++ )
+            {
+                for ( int c = 0; c < uris.length; c++ )
+                {
+                    for ( int d = 0; d < uris.length; d++ )
+                    {
+                        CompleteStatement statement = new CompleteStatement(
+                            uris[ a ], uris[ b ], uris[ c ],
+                            new Context( uris[ d ].getUriAsString() ) );
+                        statements.add( statement );
+                        addStatements( statement );
+                        counter++;
+                    }
+                }
+            }
+        }
+        
+        WildcardStatement wildcardStatement = wildcardStatement(
+            new Wildcard( "s" ), new Wildcard( "p" ), new Wildcard( "o" ),
+            new Wildcard( "g" ) );
+        assertResult( wildcardStatement, statements.toArray(
+            new CompleteStatement[ 0 ] ) );
+        removeStatements( wildcardStatement );
+    }
+
     public void testIt()
     {
         CompleteStatement mattiasKnowsEmilPublic =
@@ -125,7 +166,7 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
             completeStatement(
                 TestUri.MATTIAS,
                 TestUri.FOAF_NICK,
-                "Mattias Persson",
+                new Literal( "Mattias Persson" ),
                 TestUri.MATTIAS_PUBLIC_GRAPH );
         
         addStatements( mattiasTypePerson, mattiasNamePublic );
@@ -155,13 +196,13 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
             completeStatement(
                 TestUri.MATTIAS,
                 TestUri.FOAF_NICK,
-                "Persson",
+                new Literal( "Persson" ),
                 TestUri.MATTIAS_PUBLIC_GRAPH );
         CompleteStatement mattiasNickPublic =
             completeStatement(
                 TestUri.MATTIAS,
                 TestUri.FOAF_NAME,
-                "Mattias Persson",
+                new Literal( "Mattias Persson" ),
                 TestUri.MATTIAS_PUBLIC_GRAPH );
         
         addStatements( mattiasTypePerson, mattiasNamePublic,
@@ -233,19 +274,19 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
             completeStatement(
                 TestUri.MATTIAS,
                 TestUri.FOAF_NICK,
-                "Matte",
+                new Literal( "Matte" ),
                 TestUri.MATTIAS_PUBLIC_GRAPH );
         CompleteStatement mattiasNamePublic =
             completeStatement(
                 TestUri.MATTIAS,
                 TestUri.FOAF_NAME,
-                "Mattias Persson",
+                new Literal( "Mattias Persson" ),
                 TestUri.MATTIAS_PUBLIC_GRAPH );
         CompleteStatement emilNamePublic =
             completeStatement(
                 TestUri.EMIL,
                 TestUri.FOAF_NAME,
-                "Emil Eifrém",
+                new Literal( "Emil Eifrém" ),
                 TestUri.EMIL_PUBLIC_GRAPH );
         
         addStatements( mattiasTypePerson, mattiasNickPublic,
@@ -293,7 +334,7 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
             completeStatement(
                 TestUri.MATTIAS,
                 TestUri.FOAF_NICK,
-                "Matte",
+                new Literal( "Matte" ),
                 TestUri.MATTIAS_PUBLIC_GRAPH );
         
         addStatements( mattiasTypePerson, mattiasNickPublic );
