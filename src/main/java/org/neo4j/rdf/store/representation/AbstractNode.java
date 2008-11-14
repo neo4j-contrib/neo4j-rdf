@@ -10,7 +10,7 @@ import org.neo4j.rdf.model.Wildcard;
  */
 public class AbstractNode extends AbstractElement
 {
-    private final Value wildcardOruriOrNull;
+    private final Value wildcardOrUriOrNull;
     private final Object keyOrNull;
 
     /**
@@ -25,14 +25,14 @@ public class AbstractNode extends AbstractElement
     public AbstractNode( Value wildcardOrUriOrNull,
         Object alternativeKeyOrNull )
     {
-        this.wildcardOruriOrNull = wildcardOrUriOrNull;
+        this.wildcardOrUriOrNull = wildcardOrUriOrNull;
         this.keyOrNull = alternativeKeyOrNull;
     }
     
     public Object getKey()
     {
         return this.keyOrNull != null ?
-            this.keyOrNull : this.wildcardOruriOrNull;
+            this.keyOrNull : this.wildcardOrUriOrNull;
     }
 
     /**
@@ -41,9 +41,9 @@ public class AbstractNode extends AbstractElement
      */
     public Uri getUriOrNull()
     {
-        return this.wildcardOruriOrNull == null ||
-            !( this.wildcardOruriOrNull instanceof Uri )
-            ? null : ( Uri ) this.wildcardOruriOrNull;
+        return this.wildcardOrUriOrNull == null ||
+            !( this.wildcardOrUriOrNull instanceof Uri )
+            ? null : ( Uri ) this.wildcardOrUriOrNull;
     }
 
     /**
@@ -52,9 +52,9 @@ public class AbstractNode extends AbstractElement
      */
     public Wildcard getWildcardOrNull()
     {
-        return this.wildcardOruriOrNull == null ||
-            !( this.wildcardOruriOrNull instanceof Wildcard ) ?
-                null : ( Wildcard ) this.wildcardOruriOrNull;
+        return this.wildcardOrUriOrNull == null ||
+            !( this.wildcardOrUriOrNull instanceof Wildcard ) ?
+                null : ( Wildcard ) this.wildcardOrUriOrNull;
     }
     
     /**
@@ -62,6 +62,13 @@ public class AbstractNode extends AbstractElement
      */
     public boolean isWildcard()
     {
-    	return this.wildcardOruriOrNull instanceof Wildcard;
+    	return this.wildcardOrUriOrNull instanceof Wildcard;
+    }
+    
+    @Override
+    public String toString()
+    {
+        return "AbstractNode[value=" + this.wildcardOrUriOrNull + ", " +
+            "key=" + this.keyOrNull + "]";
     }
 }

@@ -9,11 +9,6 @@ public class Wildcard implements Value
 {
     private final String name;
     
-    public Wildcard()
-    {
-        this.name = null;
-    }  
-    
     public Wildcard( String name )
     {
         this.name = name;
@@ -35,11 +30,23 @@ public class Wildcard implements Value
     public boolean isWildcard()
     {        
         return true;
-    }   
+    }
+    
+    @Override
+    public int hashCode()
+    {
+        return this.name.hashCode();
+    }
+    
+    @Override
+    public boolean equals( Object o )
+    {
+        return o instanceof Wildcard && ( ( Wildcard ) o ).name.equals( name );
+    }
 
     @Override
     public String toString()
     {
-        return "Wildcard[" + name == null ? "no name" : name + "]";
+        return "Wildcard[" + ( name == null ? "no name" : name ) + "]";
     }
 }

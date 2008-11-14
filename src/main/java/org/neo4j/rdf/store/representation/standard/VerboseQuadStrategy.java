@@ -59,7 +59,8 @@ public class VerboseQuadStrategy
             return representation;
         }
         
-        if ( isObjectType( statement.getObject() ) )
+        if ( statement.getObject().isWildcard() ||
+            isObjectType( statement.getObject() ) )
         {
             getObjectTypeRepresentation( statement, representation );
         }
@@ -91,7 +92,7 @@ public class VerboseQuadStrategy
         if ( statement.getObject().isWildcard() )
         {
             // TODO What?
-            literalNode.addProperty( predicate, statement.getObject() );
+//            literalNode.addProperty( predicate, statement.getObject() );
         }
         else
         {
@@ -100,12 +101,14 @@ public class VerboseQuadStrategy
             literalNode.addExecutorInfo( EXECUTOR_INFO_PREDICATE, predicate );
             if ( literal.getDatatype() != null )
             {
-                literalNode.addProperty( VerboseQuadExecutor.LITERAL_DATATYPE_KEY,
+                literalNode.addProperty(
+                    VerboseQuadExecutor.LITERAL_DATATYPE_KEY,
                     literal.getDatatype().getUriAsString() );
             }
             if ( literal.getLanguage() != null )
             {
-                literalNode.addProperty( VerboseQuadExecutor.LITERAL_LANGUAGE_KEY,
+                literalNode.addProperty(
+                    VerboseQuadExecutor.LITERAL_LANGUAGE_KEY,
                     literal.getLanguage() );
             }
         }

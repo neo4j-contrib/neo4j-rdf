@@ -144,8 +144,9 @@ public class VerboseQuadStore extends RdfStoreImpl
         {
             Iterable<Node> allMiddleNodes = getMiddleNodesFromAllContexts();
             Iterable<Object[]> allQuads = new MiddleNodeToQuadIterable(
-                new WildcardStatement( new Wildcard(), new Wildcard(),
-                    new Wildcard(), new Wildcard() ), allMiddleNodes );
+                new WildcardStatement( new Wildcard( "s" ), new Wildcard( "p" ),
+                    new Wildcard( "o" ), new Wildcard( "g" ) ),
+                    allMiddleNodes );
             int counter = 0;
             FulltextIndex fulltextIndex = getFulltextIndex();
             for ( Object[] quad : allQuads )
