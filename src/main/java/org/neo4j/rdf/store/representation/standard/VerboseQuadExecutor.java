@@ -127,10 +127,13 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         Map<String, AbstractNode> map = new HashMap<String, AbstractNode>();
         for ( AbstractNode node : representation.nodes() )
         {
-            String nodeType = getNodeType( node );
-            if ( nodeType != null )
+            Collection<Object> nodeTypes = getNodeTypes( node );
+            if ( nodeTypes != null )
             {
-                map.put( nodeType, node );
+                for ( Object nodeType : nodeTypes )
+                {
+                    map.put( ( String ) nodeType, node );
+                }
             }
         }
         return map;
@@ -147,11 +150,11 @@ public class VerboseQuadExecutor extends UriBasedExecutor
             return null;
         }
         
-        boolean willCreate = contextNode == null;
+        boolean willCreateContextNode = contextNode == null;
         contextNode = contextNode != null ? contextNode :
             createNode( abstractContextNode, null );
         Relationship relationship = null;
-        if ( willCreate )
+        if ( willCreateContextNode )
         {
             Node contextRefNode = getContextsReferenceNode();
             contextRefNode.createRelationshipTo( contextNode,
@@ -321,9 +324,10 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         for ( AbstractRelationship abstractRelationship :
             representation.relationships() )
         {
-            if ( relationshipIsType( abstractRelationship,
-                VerboseQuadStrategy.TYPE_MIDDLE,
-                VerboseQuadStrategy.TYPE_CONTEXT ) )
+            String type = ( String ) abstractRelationship.getSingleExecutorInfo(
+                VerboseQuadStrategy.EXECUTOR_INFO_NODE_TYPE );
+            if ( type != null &&
+                type.equals( VerboseQuadStrategy.TYPE_CONTEXT ) )
             {
                 list.add( abstractRelationship );
             }
@@ -342,17 +346,17 @@ public class VerboseQuadExecutor extends UriBasedExecutor
     {
         return typeToNode.get( VerboseQuadStrategy.TYPE_OBJECT ) != null;
     }
-
-    private String getNodeType( AbstractNode node )
+    
+    private Collection<Object> getNodeTypes( AbstractNode node )
     {
-    	return ( String ) node.getExecutorInfo(
+        return node.getExecutorInfo(
             VerboseQuadStrategy.EXECUTOR_INFO_NODE_TYPE );
     }
 
     private boolean nodeIsType( AbstractNode node, String type )
     {
-        String value = getNodeType( node );
-        return value != null && value.equals( type );
+        Collection<Object> nodeTypes = getNodeTypes( node );
+        return nodeTypes != null && nodeTypes.contains( type );
     }
 
     private boolean relationshipIsType( AbstractRelationship relationship,
@@ -576,7 +580,8 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         Node subjectNode, AbstractRelationship subjectToMiddle )
     {
         ensureDirectlyDisconnected( middleNode, middleToOther, otherNode );
-        ensureDirectlyDisconnected( subjectNode, subjectToMiddle, middleNode );
+        ensureDirectlyDisconnected( subjectNode, subjectToMiddle, middleNode,
+            Direction.INCOMING );
         deleteNode( middleNode, null );
     }
 }

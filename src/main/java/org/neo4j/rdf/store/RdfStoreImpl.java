@@ -75,7 +75,8 @@ public abstract class RdfStoreImpl implements RdfStore
     protected void addStatement( Statement statement )
     {
         AbstractRepresentation fragment = representationStrategy
-            .getAbstractRepresentation( statement );
+            .getAbstractRepresentation( statement,
+                new AbstractRepresentation() );
         getExecutor().addToNodeSpace( fragment );
     }
 
@@ -216,7 +217,8 @@ public abstract class RdfStoreImpl implements RdfStore
         try
         {
             AbstractRepresentation fragment = representationStrategy
-                .getAbstractRepresentation( statement );
+                .getAbstractRepresentation( statement,
+                    new AbstractRepresentation() );
             getExecutor().removeFromNodeSpace( fragment );
             tx.success();
         }

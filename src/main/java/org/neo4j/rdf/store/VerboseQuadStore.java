@@ -641,11 +641,24 @@ public class VerboseQuadStore extends RdfStoreImpl
                 Direction.INCOMING ).iterator().next();
             String predicate = subjectRelationship.getType().name();
             Node subjectNode = subjectRelationship.getOtherNode( middleNode );
-            Node objectNode = middleNode.getSingleRelationship(
-                subjectRelationship.getType(),
-                Direction.OUTGOING ).getEndNode();
-            return new Object[] { subjectNode, predicate,
-                objectNode, contextNode, middleNode, lastContextRelationship };
+            try
+            {
+                Node objectNode = middleNode.getSingleRelationship(
+                    subjectRelationship.getType(),
+                    Direction.OUTGOING ).getEndNode();
+                return new Object[] { subjectNode, predicate,
+                    objectNode, contextNode, middleNode, lastContextRelationship };
+            }
+            catch ( RuntimeException e )
+            {
+                System.out.println( "hmm, middle node " + middleNode );
+                for ( Relationship rel : middleNode.getRelationships() )
+                {
+                    System.out.println( rel.getStartNode() + " --[" +
+                        rel.getType().name() + "]--> " + rel.getEndNode() );
+                }
+                throw e;
+            }
         }
     }
     

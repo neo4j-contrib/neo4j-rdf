@@ -11,6 +11,7 @@ import org.neo4j.rdf.model.Wildcard;
 public class AbstractNode extends AbstractElement
 {
     private final Value wildcardOruriOrNull;
+    private final Object keyOrNull;
 
     /**
      * @param wildcardOrUriOrNull the URI of this node, a wildcard, or {@code null} if
@@ -18,7 +19,20 @@ public class AbstractNode extends AbstractElement
      */
     public AbstractNode( Value wildcardOrUriOrNull )
     {
-    	this.wildcardOruriOrNull = wildcardOrUriOrNull;
+        this( wildcardOrUriOrNull, null );
+    }
+    
+    public AbstractNode( Value wildcardOrUriOrNull,
+        Object alternativeKeyOrNull )
+    {
+        this.wildcardOruriOrNull = wildcardOrUriOrNull;
+        this.keyOrNull = alternativeKeyOrNull;
+    }
+    
+    public Object getKey()
+    {
+        return this.keyOrNull != null ?
+            this.keyOrNull : this.wildcardOruriOrNull;
     }
 
     /**

@@ -33,11 +33,10 @@ public class DenseTripleStrategy
 
     @Override
     public AbstractRepresentation getAbstractRepresentation(
-        Statement statement )
+        Statement statement, AbstractRepresentation representation )
     {
-        AbstractRepresentation representation =
-            super.getAbstractRepresentation( statement );
-        if ( representation != null )
+        if ( super.getAbstractRepresentation( statement, representation ) !=
+            null )
         {
             return representation;
         }
@@ -52,12 +51,12 @@ public class DenseTripleStrategy
             pointsToObjectType( ( Uri ) statement.getPredicate() ) )
         {
             // ( S ) -- predicate_uri --> ( O )
-            representation = getTwoNodeObjectTypeFragment( statement );
+            getTwoNodeObjectTypeFragment( statement, representation );
         }
         else
         {
             // ( S ) with property [key=predicate_uri, value=O]
-            representation = getOneNodeWithLiteralsAsProperties( statement );
+            getOneNodeWithLiteralsAsProperties( statement, representation );
         }
         return representation;
     }

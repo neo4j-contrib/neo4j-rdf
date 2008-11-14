@@ -2,7 +2,6 @@ package org.neo4j.rdf.store.representation.standard;
 
 import org.neo4j.api.core.RelationshipType;
 import org.neo4j.neometa.structure.MetaStructure;
-import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Literal;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.store.representation.AbstractNode;
@@ -52,31 +51,41 @@ public class VerboseQuadStrategy
 
     @Override
     public AbstractRepresentation getAbstractRepresentation(
-        Statement statement )
+        Statement statement, AbstractRepresentation representation )
     {
-        AbstractRepresentation representation = null;
+        if ( super.getAbstractRepresentation( statement, representation ) !=
+            null )
+        {
+            return representation;
+        }
+        
         if ( isObjectType( statement.getObject() ) )
         {
-            representation = getObjectTypeRepresentation( statement );
+            getObjectTypeRepresentation( statement, representation );
         }
         else
         {
-            representation = getLiteralRepresentation( statement );
+            getLiteralRepresentation( statement, representation );
         }
         return representation;
     }
+    
+    private String formMiddleNodeKey( Statement statement )
+    {
+        return "M" + formTripleNodeKey( statement );
+    }
 
     protected AbstractRepresentation getLiteralRepresentation(
-        Statement statement )
+        Statement statement, AbstractRepresentation representation )
     {
-        AbstractRepresentation representation = newRepresentation();
-        AbstractNode subjectNode = getSubjectNode( statement );
-        representation.addNode( subjectNode );
+        AbstractNode subjectNode = getOrCreateNode( representation,
+            statement.getSubject() );
         subjectNode.addExecutorInfo( EXECUTOR_INFO_NODE_TYPE, TYPE_SUBJECT );
-        AbstractNode middleNode = new AbstractNode( null );
+        AbstractNode middleNode = getOrCreateNode( representation, null,
+            formMiddleNodeKey( statement ) );
         middleNode.addExecutorInfo( EXECUTOR_INFO_NODE_TYPE, TYPE_MIDDLE );
-        representation.addNode( middleNode );
-        AbstractNode literalNode = new AbstractNode( null );
+        AbstractNode literalNode = getOrCreateNode( representation, null,
+            formTripleNodeKey( statement ) );
         literalNode.addExecutorInfo( EXECUTOR_INFO_NODE_TYPE, TYPE_LITERAL );
         Literal literal = ( Literal ) statement.getObject();
         String predicate = asUri( statement.getPredicate() );
@@ -92,11 +101,11 @@ public class VerboseQuadStrategy
             literalNode.addProperty( VerboseQuadExecutor.LITERAL_LANGUAGE_KEY,
                 literal.getLanguage() );
         }
-        representation.addNode( literalNode );
 
         connectThreeNodes( representation, subjectNode, middleNode,
             literalNode, statement );
-        addNodeToContexts( representation, middleNode, statement );
+        connectMiddleNodeWithContext( representation, middleNode,
+            statement );
         return representation;
     }
 
@@ -113,40 +122,41 @@ public class VerboseQuadStrategy
         representation.addRelationship( middleToOther );
     }
 
-    protected void addNodeToContexts(
+    protected void connectMiddleNodeWithContext(
         AbstractRepresentation representation, AbstractNode middleNode,
         Statement statement )
     {
         if ( !statement.getContext().isWildcard() )
         {
-            AbstractNode contextNode = getContextNode(
-                ( Context ) statement.getContext() );
+            AbstractNode contextNode = getOrCreateNode( representation,
+                statement.getContext() );
             AbstractRelationship middleToContext = new AbstractRelationship(
                 middleNode, RelTypes.IN_CONTEXT.name(), contextNode );
+            middleToContext.addExecutorInfo( EXECUTOR_INFO_NODE_TYPE,
+                TYPE_CONTEXT );
             representation.addRelationship( middleToContext );
             contextNode.addExecutorInfo( EXECUTOR_INFO_NODE_TYPE,
                 TYPE_CONTEXT );
-            representation.addNode( contextNode );
         }
     }
 
     protected AbstractRepresentation getObjectTypeRepresentation(
-        Statement statement )
+        Statement statement, AbstractRepresentation representation )
     {
-        AbstractRepresentation representation = newRepresentation();
-        AbstractNode subjectNode = getSubjectNode( statement );
-        representation.addNode( subjectNode );
+        AbstractNode subjectNode = getOrCreateNode( representation,
+            statement.getSubject() );
         subjectNode.addExecutorInfo( EXECUTOR_INFO_NODE_TYPE, TYPE_SUBJECT );
-        AbstractNode middleNode = new AbstractNode( null );
+        AbstractNode middleNode = getOrCreateNode( representation, null,
+            formMiddleNodeKey( statement ) );
         middleNode.addExecutorInfo( EXECUTOR_INFO_NODE_TYPE, TYPE_MIDDLE );
-        representation.addNode( middleNode );
-        AbstractNode objectNode = getObjectNode( statement );
+        AbstractNode objectNode = getOrCreateNode( representation,
+            statement.getObject() );
         objectNode.addExecutorInfo( EXECUTOR_INFO_NODE_TYPE, TYPE_OBJECT );
-        representation.addNode( objectNode );
 
         connectThreeNodes( representation, subjectNode, middleNode, objectNode,
             statement );
-        addNodeToContexts( representation, middleNode, statement );
+        connectMiddleNodeWithContext( representation, middleNode,
+            statement );
         return representation;
     }
 

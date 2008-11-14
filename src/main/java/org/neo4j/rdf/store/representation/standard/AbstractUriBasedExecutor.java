@@ -226,10 +226,23 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     protected void ensureDirectlyDisconnected( Node startNode,
         AbstractRelationship abstractRelationship, Node endNode )
     {
+        ensureDirectlyDisconnected( startNode, abstractRelationship, endNode,
+            Direction.OUTGOING );
+    }
+    
+    protected void ensureDirectlyDisconnected( Node startNode,
+        AbstractRelationship abstractRelationship, Node endNode,
+        Direction optimizeDirection )
+    {
+        Node start = optimizeDirection == Direction.OUTGOING ?
+            startNode : endNode;
+        Node end = optimizeDirection == Direction.OUTGOING ?
+            endNode : startNode;
+        
         RelationshipType relType = relationshipType(
             abstractRelationship.getRelationshipTypeName() );
-        Relationship relationship = findDirectRelationship( startNode, relType,
-            endNode, Direction.OUTGOING );
+        Relationship relationship = findDirectRelationship( start, relType,
+            end, optimizeDirection );
         if ( relationship != null )
         {
             deleteRelationship( relationship );
@@ -239,13 +252,25 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     protected Relationship ensureDirectlyConnected( Node startNode,
         AbstractRelationship abstractRelationship, Node endNode )
     {
+        return ensureDirectlyConnected( startNode, abstractRelationship,
+            endNode, Direction.OUTGOING );
+    }
+    
+    protected Relationship ensureDirectlyConnected( Node startNode,
+        AbstractRelationship abstractRelationship, Node endNode,
+        Direction optimizeDirection )
+    {
+        Node start = optimizeDirection == Direction.OUTGOING ?
+            startNode : endNode;
+        Node end = optimizeDirection == Direction.OUTGOING ?
+            endNode : startNode;
         RelationshipType relType = relationshipType(
             abstractRelationship.getRelationshipTypeName() );
         Relationship relationship = findDirectRelationship(
-            startNode, relType, endNode, Direction.OUTGOING );
+            start, relType, end, optimizeDirection );
         if ( relationship == null )
         {
-            createRelationship( startNode, abstractRelationship, endNode );
+            createRelationship( start, abstractRelationship, end );
         }
         return relationship;
     }
@@ -257,7 +282,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
 
     protected String getMetaExecutorInfo( AbstractNode node )
     {
-        return ( String ) node.getExecutorInfo( META_EXECUTOR_INFO_KEY );
+        return ( String ) node.getSingleExecutorInfo( META_EXECUTOR_INFO_KEY );
     }
 
     protected boolean isMeta( AbstractNode node )
@@ -400,7 +425,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     {
         Node node = neo.createNode();
         applyRepresentation( abstractNode, node );
-        String predicate = ( String ) abstractNode.getExecutorInfo(
+        String predicate = ( String ) abstractNode.getSingleExecutorInfo(
             VerboseQuadStrategy.EXECUTOR_INFO_PREDICATE );
         Object value =
             abstractNode.properties().get( predicate ).iterator().next();

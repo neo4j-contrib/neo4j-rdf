@@ -3,6 +3,7 @@ package org.neo4j.rdf.store.representation;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -17,8 +18,8 @@ public abstract class AbstractElement
 {
     private final Map<String, Collection<Object>> propertyMap = 
         new HashMap<String, Collection<Object>>();
-    private final Map<String, Object> executorInfoMap = 
-        new HashMap<String, Object>();
+    private final Map<String, Collection<Object>> executorInfoMap = 
+        new HashMap<String, Collection<Object>>();
 
     /**
      * Adds a property to this node.
@@ -58,7 +59,7 @@ public abstract class AbstractElement
      */
     public void addExecutorInfo( String key, Object value )
     {
-        this.executorInfoMap.put( key, value );
+        addToMap( executorInfoMap, key, value );
     }
 
     /**
@@ -67,8 +68,24 @@ public abstract class AbstractElement
      * @return the value for the data key, or {@code null} if there were
      * no value associated with {@code key}.
      */
-    public Object getExecutorInfo( String key )
+    public Collection<Object> getExecutorInfo( String key )
     {
-        return this.executorInfoMap.get( key );
+        return executorInfoMap.get( key );
+    }
+    
+    public Object getSingleExecutorInfo( String key )
+    {
+        Collection<Object> values = getExecutorInfo( key );
+        if ( values == null )
+        {
+            return null;
+        }
+        Iterator<Object> itr = values.iterator();
+        Object value = itr.hasNext() ? itr.next() : null;
+        if ( itr.hasNext() )
+        {
+            throw new RuntimeException( "More than one value for " + this );
+        }
+        return value;
     }
 }

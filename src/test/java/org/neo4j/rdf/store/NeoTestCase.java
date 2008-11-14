@@ -33,8 +33,9 @@ public abstract class NeoTestCase extends TestCase
         super.setUp();
         if ( neo == null )
         {
-            neo = new EmbeddedNeo(
-            	new File( basePath, "neo" ).getAbsolutePath() );
+            File neoPath = new File( basePath, "neo" );
+            deleteFileOrDirectory( neoPath );
+            neo = new EmbeddedNeo( neoPath.getAbsolutePath() );
             Runtime.getRuntime().addShutdownHook( new Thread()
             {
                 @Override
@@ -51,6 +52,26 @@ public abstract class NeoTestCase extends TestCase
     protected File getBasePath()
     {
         return basePath;
+    }
+    
+    protected void deleteFileOrDirectory( File file )
+    {
+        if ( !file.exists() )
+        {
+            return;
+        }
+        
+        if ( file.isDirectory() )
+        {
+            for ( File child : file.listFiles() )
+            {
+                deleteFileOrDirectory( child );
+            }
+        }
+        else
+        {
+            file.delete();
+        }
     }
 
     protected void restartTx()

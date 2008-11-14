@@ -2,6 +2,7 @@ package org.neo4j.rdf.store.representation;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -19,6 +20,8 @@ import org.neo4j.rdf.model.Value;
  */
 public class AbstractRepresentation
 {
+    private final Map<Object, AbstractNode> nodeKeys =
+        new HashMap<Object, AbstractNode>();
     private final List<AbstractNode> nodes = new ArrayList<AbstractNode>();
     private final List<AbstractRelationship> relationships =
     	new ArrayList<AbstractRelationship>();
@@ -32,7 +35,16 @@ public class AbstractRepresentation
         if ( !this.nodes.contains( node ) )
         {
             this.nodes.add( node );
+            if ( node.getKey() != null )
+            {
+                this.nodeKeys.put( node.getKey(), node );
+            }
         }
+    }
+    
+    public AbstractNode node( Object key )
+    {
+        return nodeKeys.get( key );
     }
     
     /**

@@ -1,15 +1,12 @@
 package org.neo4j.rdf.store.representation.standard;
 
 import java.text.ParseException;
-import java.util.Collection;
-import java.util.HashSet;
 
 import org.neo4j.api.core.NeoService;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.neometa.structure.MetaStructureProperty;
 import org.neo4j.neometa.structure.MetaStructureRelTypes;
 import org.neo4j.neometa.structure.PropertyRange;
-import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Literal;
 import org.neo4j.rdf.model.Resource;
 import org.neo4j.rdf.model.Statement;
@@ -44,17 +41,20 @@ abstract class StandardAbstractRepresentationStrategy
     }
 
     public AbstractRepresentation getAbstractRepresentation(
-        Statement statement )
+        Statement statement, AbstractRepresentation representation )
     {
         String predicate =
             ( ( Uri ) statement.getPredicate() ).getUriAsString();
-        AbstractRepresentation representation = null;
         if ( meta != null &&
             predicate.equals( AbstractUriBasedExecutor.RDF_TYPE_URI ) )
         {
-            representation = getMetaInstanceOfRepresentation( statement );
+            getMetaInstanceOfRepresentation( statement, representation );
+            return representation;
         }
-        return representation;
+        
+        // Just so that overriding classes can see if something happened in
+        // here or not.
+        return null;
     }
 
     public RepresentationExecutor getExecutor()
@@ -66,64 +66,66 @@ abstract class StandardAbstractRepresentationStrategy
     {
         return new AbstractRepresentation();
     }
-
-    protected AbstractRepresentation getMetaInstanceOfRepresentation(
-        Statement statement )
+    
+    protected void getMetaInstanceOfRepresentation(
+        Statement statement, AbstractRepresentation representation )
     {
-        AbstractRepresentation representation = newRepresentation();
-        AbstractNode subjectNode = getSubjectNode( statement );
-        representation.addNode( subjectNode );
-        AbstractNode classNode = getObjectNode( statement );
-        representation.addNode( classNode );
+        AbstractNode subjectNode = getOrCreateNode( representation,
+            statement.getSubject() );
+        AbstractNode classNode = getOrCreateNode( representation,
+            statement.getObject(), statement.getObject() );
         classNode.addExecutorInfo(
             AbstractUriBasedExecutor.META_EXECUTOR_INFO_KEY, "class" );
-        AbstractRelationship instanceOfRelationship = new AbstractRelationship(
-            subjectNode, MetaStructureRelTypes.META_IS_INSTANCE_OF.name(),
-            classNode );
+        AbstractRelationship instanceOfRelationship =
+            new AbstractRelationship( subjectNode,
+                MetaStructureRelTypes.META_IS_INSTANCE_OF.name(),
+                classNode );
         representation.addRelationship( instanceOfRelationship );
-        return representation;
     }
 
-    protected AbstractRepresentation getOneNodeWithLiteralsAsProperties(
-        Statement statement )
+    protected void getOneNodeWithLiteralsAsProperties( Statement statement,
+        AbstractRepresentation representation )
     {
-        AbstractRepresentation representation = newRepresentation();
-        AbstractNode subjectNode = getSubjectNode( statement );
-        representation.addNode( subjectNode );
+        AbstractNode subjectNode = getOrCreateNode( representation,
+            statement.getSubject() );
         addPropertyFromObjectLiteral( statement, subjectNode );
-        return representation;
     }
 
     protected void addPropertyFromObjectLiteral( Statement statement,
-        AbstractNode subjectNode )
+        AbstractNode node )
     {
         Value object = statement.getObject();
         String predicate =
             ( ( Uri ) statement.getPredicate() ).getUriAsString();
         if ( object instanceof Wildcard )
         {
-            subjectNode.addProperty( predicate, object );
+            node.addProperty( predicate, object );
             return;
         }
         else
         {
             Object literalValue = convertLiteralValueToRealValue(
                 statement, ( ( Literal ) statement.getObject() ).getValue() );
-            subjectNode.addProperty( predicate, literalValue );
+            node.addProperty( predicate, literalValue );
             
             // Tell the executor that this is a literal
-            Collection<String> keysWhichAreLiterals = ( Collection<String> )
-                subjectNode.getExecutorInfo(
-                    UriBasedExecutor.EXEC_INFO_KEYS_WHICH_ARE_LITERALS );
-            if ( keysWhichAreLiterals == null )
-            {
-                keysWhichAreLiterals = new HashSet<String>();
-                subjectNode.addExecutorInfo(
-                    UriBasedExecutor.EXEC_INFO_KEYS_WHICH_ARE_LITERALS,
-                    keysWhichAreLiterals );
-            }
-            keysWhichAreLiterals.add( predicate );
+            node.addExecutorInfo(
+                UriBasedExecutor.EXEC_INFO_KEYS_WHICH_ARE_LITERALS,
+                predicate );
         }
+
+//        node.addProperty( predicate, literalValue );
+//        String predicateContext = UriBasedExecutor.formContextPropertyKey(
+//            predicate, literalValue );
+//        if ( !statement.getContext().isWildcard() )
+//        {
+//            node.addProperty( predicateContext,
+//                ( ( Context ) statement.getContext() ).getUriAsString() );
+//        }
+//        Map<String, String> contextKeys = new HashMap<String, String>();
+//        contextKeys.put( predicateContext, predicate );
+//        node.addExecutorInfo( UriBasedExecutor.LOOKUP_CONTEXT_KEYS,
+//            contextKeys );
     }
 
     private PropertyRange getPropertyRange( Uri predicate )
@@ -176,11 +178,6 @@ abstract class StandardAbstractRepresentationStrategy
         return result;
     }
 
-    protected AbstractNode getNode( Value value )
-    {
-        return new AbstractNode( value );
-    }
-
     protected String asUri( Value value )
     {
         return ( ( Uri ) value ).getUriAsString();
@@ -203,34 +200,24 @@ abstract class StandardAbstractRepresentationStrategy
         }
         return string;
     }
-
-    protected AbstractNode getSubjectNode( Statement statement )
+    
+    protected AbstractNode getOrCreateNode(
+        AbstractRepresentation representation, Value uriOrSomething )
     {
-       return getNode( statement.getSubject() );
+        return getOrCreateNode( representation, uriOrSomething,
+            uriOrSomething );
     }
-
-    protected AbstractNode getObjectNode( Statement statement )
+    
+    protected AbstractNode getOrCreateNode(
+        AbstractRepresentation representation, Value uriOrSomething,
+        Object key )
     {
-        AbstractNode node = getNode( statement.getObject() );
-        if ( ( ( Uri ) statement.getPredicate() ).getUriAsString().equals(
-            AbstractUriBasedExecutor.RDF_TYPE_URI ) )
+        AbstractNode node = representation.node( key );
+        if ( node == null )
         {
-            node.addExecutorInfo(
-                AbstractUriBasedExecutor.META_EXECUTOR_INFO_KEY, "class" );
+            node = new AbstractNode( uriOrSomething, key );
+            representation.addNode( node );
         }
-        return node;
-    }
-
-    protected AbstractNode getContextNode( Context context )
-    {
-        return getNode( context );
-    }
-
-    protected AbstractNode getPredicateNode( Statement statement )
-    {
-        AbstractNode node = getNode( statement.getPredicate() );
-        node.addExecutorInfo(
-            AbstractUriBasedExecutor.META_EXECUTOR_INFO_KEY, "property" );
         return node;
     }
 
@@ -240,33 +227,50 @@ abstract class StandardAbstractRepresentationStrategy
     }
 
     protected AbstractRepresentation getTwoNodeObjectTypeFragment(
-        Statement statement )
+        Statement statement, AbstractRepresentation representation )
     {
-        AbstractRepresentation representation = newRepresentation();
-        AbstractNode subjectNode = getSubjectNode( statement );
-        representation.addNode( subjectNode );
-        AbstractNode objectNode = getObjectNode( statement );
-        representation.addNode( objectNode );
+        AbstractNode subjectNode = getOrCreateNode( representation,
+            statement.getSubject() );
+        AbstractNode objectNode = getOrCreateNode( representation,
+            statement.getObject() );
         AbstractRelationship relationship = new AbstractRelationship(
             subjectNode, asUri( statement.getPredicate() ), objectNode );
         representation.addRelationship( relationship );
         return representation;
     }
+    
+    protected String formTripleNodeKey( Statement statement )
+    {
+        String s = "S" + ( ( Uri ) statement.getSubject() ).getUriAsString();
+        String p = "P" + ( ( Uri ) statement.getPredicate() ).getUriAsString();
+        String o = null;
+        if ( statement.getObject() instanceof Literal )
+        {
+            Object literalValue =
+                ( ( Literal ) statement.getObject() ).getValue();
+            o = "L" + literalValue.getClass().getSimpleName() + literalValue;
+        }
+        else
+        {
+            o = "O" + ( ( Uri ) statement.getObject() ).getUriAsString();
+        }
+        return s + p + o;
+    }
 
     protected AbstractRepresentation getTwoNodeDataTypeFragment(
-        Statement statement )
+        Statement statement, AbstractRepresentation representation )
     {
-        AbstractRepresentation representation = newRepresentation();
-        AbstractNode subjectNode = getSubjectNode( statement );
-        representation.addNode( subjectNode );
-        AbstractNode literalNode = new AbstractNode( null );
+        AbstractNode subjectNode = getOrCreateNode( representation,
+            statement.getSubject() );
+        Object literalNodeKey = formTripleNodeKey( statement );
+        AbstractNode literalNode = getOrCreateNode( representation, null,
+            literalNodeKey );
         literalNode.addProperty( UriBasedExecutor.LITERAL_VALUE_KEY,
             ( ( Literal ) statement.getObject() ).getValue() );
         literalNode.addExecutorInfo( UriBasedExecutor.EXEC_INFO_IS_LITERAL_NODE, true );
         AbstractRelationship relationship = new AbstractRelationship(
             subjectNode, asUri( statement.getPredicate() ), literalNode );
 
-        representation.addNode( literalNode );
         representation.addRelationship( relationship );
         return representation;
     }

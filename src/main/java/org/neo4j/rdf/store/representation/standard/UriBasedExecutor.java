@@ -491,7 +491,7 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
     protected boolean isLiteralNode( AbstractNode node )
     {
         Boolean isLiteralNode = ( Boolean )
-        node.getExecutorInfo( EXEC_INFO_IS_LITERAL_NODE );
+            node.getSingleExecutorInfo( EXEC_INFO_IS_LITERAL_NODE );
         return isLiteralNode != null && isLiteralNode;
     }
 
