@@ -241,7 +241,7 @@ abstract class StandardAbstractRepresentationStrategy
     
     protected String formTripleNodeKey( Statement statement )
     {
-        String s = "S" + ( ( Uri ) statement.getSubject() ).getUriAsString();
+        String s = "S" + statement.getSubject().toString();
         String p = "P" + ( ( Uri ) statement.getPredicate() ).getUriAsString();
         String o = null;
         if ( statement.getObject() instanceof Literal )
@@ -252,7 +252,7 @@ abstract class StandardAbstractRepresentationStrategy
         }
         else
         {
-            o = "O" + ( ( Uri ) statement.getObject() ).getUriAsString();
+            o = "O" + statement.getObject().toString();
         }
         return s + p + o;
     }
@@ -267,7 +267,8 @@ abstract class StandardAbstractRepresentationStrategy
             literalNodeKey );
         literalNode.addProperty( UriBasedExecutor.LITERAL_VALUE_KEY,
             ( ( Literal ) statement.getObject() ).getValue() );
-        literalNode.addExecutorInfo( UriBasedExecutor.EXEC_INFO_IS_LITERAL_NODE, true );
+        literalNode.addExecutorInfo( UriBasedExecutor.EXEC_INFO_IS_LITERAL_NODE,
+            true );
         AbstractRelationship relationship = new AbstractRelationship(
             subjectNode, asUri( statement.getPredicate() ), literalNode );
 

@@ -87,19 +87,27 @@ public class VerboseQuadStrategy
         AbstractNode literalNode = getOrCreateNode( representation, null,
             formTripleNodeKey( statement ) );
         literalNode.addExecutorInfo( EXECUTOR_INFO_NODE_TYPE, TYPE_LITERAL );
-        Literal literal = ( Literal ) statement.getObject();
         String predicate = asUri( statement.getPredicate() );
-        literalNode.addProperty( predicate, literal.getValue() );
-        literalNode.addExecutorInfo( EXECUTOR_INFO_PREDICATE, predicate );
-        if ( literal.getDatatype() != null )
+        if ( statement.getObject().isWildcard() )
         {
-            literalNode.addProperty( VerboseQuadExecutor.LITERAL_DATATYPE_KEY,
-                literal.getDatatype().getUriAsString() );
+            // TODO What?
+            literalNode.addProperty( predicate, statement.getObject() );
         }
-        if ( literal.getLanguage() != null )
+        else
         {
-            literalNode.addProperty( VerboseQuadExecutor.LITERAL_LANGUAGE_KEY,
-                literal.getLanguage() );
+            Literal literal = ( Literal ) statement.getObject();
+            literalNode.addProperty( predicate, literal.getValue() );
+            literalNode.addExecutorInfo( EXECUTOR_INFO_PREDICATE, predicate );
+            if ( literal.getDatatype() != null )
+            {
+                literalNode.addProperty( VerboseQuadExecutor.LITERAL_DATATYPE_KEY,
+                    literal.getDatatype().getUriAsString() );
+            }
+            if ( literal.getLanguage() != null )
+            {
+                literalNode.addProperty( VerboseQuadExecutor.LITERAL_LANGUAGE_KEY,
+                    literal.getLanguage() );
+            }
         }
 
         connectThreeNodes( representation, subjectNode, middleNode,

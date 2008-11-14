@@ -6,8 +6,12 @@ import junit.framework.TestCase;
 
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
+import org.neo4j.rdf.model.Resource;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.model.Uri;
+import org.neo4j.rdf.model.Value;
+import org.neo4j.rdf.model.Wildcard;
+import org.neo4j.rdf.model.WildcardStatement;
 import org.neo4j.rdf.store.representation.standard.VerboseQuadStrategy;
 
 public class TestRepresentations extends TestCase
@@ -52,6 +56,41 @@ public class TestRepresentations extends TestCase
         }
         assertEquals( 1, middleNodeCount );
         assertEquals( 2, contextNodeCount );
+    }
+    
+    public void testVerboseQuadWildcards() throws Exception
+    {
+        RepresentationStrategy strategy = new VerboseQuadStrategy( null, null );
+        Value[] s = { new Uri( "http://test.com/uriA" ), new Wildcard( "s" ) };
+        Value[] p = { new Uri( "http://test.com/uriB" ) };
+        Value[] o = { new Uri( "http://test.com/uriC" ), new Wildcard( "o" ) };
+        Value[] g = { new Uri( "http://test.com/uriD" ), new Wildcard( "g" ) };
+        for ( Value vs : s )
+        {
+            for ( Value vp : p )
+            {
+                for ( Value vo : o )
+                {
+                    for ( Value vg : g )
+                    {
+                        Statement statement = null;
+                        if ( vs.isWildcard() || vp.isWildcard() ||
+                            vo.isWildcard() || vg.isWildcard() )
+                        {
+                            statement = new WildcardStatement( vs, vp, vo, vg );
+                        }
+                        else
+                        {
+                            statement = new CompleteStatement( ( Resource ) vs,
+                                ( Uri ) vp, ( Resource ) vo, new Context(
+                                    ( ( Uri ) vg ).getUriAsString() ) );
+                        }
+                        strategy.getAbstractRepresentation( statement,
+                            new AbstractRepresentation() );
+                    }
+                }
+            }
+        }
     }
     
     private int countIterable( Iterable<?> iterable )
