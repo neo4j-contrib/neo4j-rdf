@@ -552,17 +552,17 @@ public class VerboseQuadExecutor extends UriBasedExecutor
             middleNode ).iterator().hasNext();
     }
 
-    private String guessPredicateKey( Iterable<String> keys )
-    {
-        for ( String key : keys )
-        {
-            if ( !EXCLUDED_LITERAL_KEYS.contains( key ) )
-            {
-                return key;
-            }
-        }
-        return null;
-    }
+//    private String guessPredicateKey( Iterable<String> keys )
+//    {
+//        for ( String key : keys )
+//        {
+//            if ( !EXCLUDED_LITERAL_KEYS.contains( key ) )
+//            {
+//                return key;
+//            }
+//        }
+//        return null;
+//    }
 
     private void deleteMiddleAndLiteral( Node middleNode,
         AbstractRelationship middleToLiteral, Node literalNode,
@@ -570,8 +570,9 @@ public class VerboseQuadExecutor extends UriBasedExecutor
     {
         disconnectMiddle( middleNode, middleToLiteral, literalNode,
             subjectNode, subjectToMiddle );
-        String predicate = guessPredicateKey( literalNode.getPropertyKeys() );
-        Object value = literalNode.getProperty( predicate );
+        String predicate = middleToLiteral.getRelationshipTypeName();
+        Object value = literalNode.getProperty(
+            AbstractUriBasedExecutor.LITERAL_VALUE_KEY );
         deleteLiteralNode( literalNode, predicate, value );
     }
 

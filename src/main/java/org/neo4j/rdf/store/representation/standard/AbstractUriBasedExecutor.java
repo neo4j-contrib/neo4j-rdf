@@ -11,8 +11,6 @@ import org.neo4j.api.core.PropertyContainer;
 import org.neo4j.api.core.Relationship;
 import org.neo4j.api.core.RelationshipType;
 import org.neo4j.neometa.structure.MetaStructure;
-import org.neo4j.neometa.structure.MetaStructureObject;
-import org.neo4j.neometa.structure.MetaStructureThing;
 import org.neo4j.rdf.fulltext.FulltextIndex;
 import org.neo4j.rdf.model.Literal;
 import org.neo4j.rdf.model.Uri;
@@ -72,10 +70,10 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         return this.neoUtil;
     }
 
-    protected MetaStructure meta()
-    {
-        return this.meta;
-    }
+//    protected MetaStructure meta()
+//    {
+//        return this.meta;
+//    }
 
 //    protected void debug( String message )
 //    {
@@ -121,16 +119,16 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     public Node lookupNode( AbstractNode abstractNode )
     {
         Node result = null;
-        if ( isMeta( abstractNode ) )
-        {
-            MetaStructureThing thing = getMetaStructureThing( abstractNode );
-            result = thing == null ? null : thing.node();
-        }
-        else
-        {
+//        if ( isMeta( abstractNode ) )
+//        {
+//            MetaStructureThing thing = getMetaStructureThing( abstractNode );
+//            result = thing == null ? null : thing.node();
+//        }
+//        else
+//        {
             result = index().getSingleNode( URI_PROPERTY_KEY,
                 getNodeUri( abstractNode ) );
-        }
+//        }
         return result;
     }
 
@@ -174,35 +172,36 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         }
     }
 
-    protected MetaStructureThing getMetaStructureThing( AbstractNode node )
-    {
-        MetaStructureThing thing = null;
-        String metaInfo = getMetaExecutorInfo( node );
-        if ( node.getUriOrNull() == null )
-        {
-        }
-        else if ( metaInfo.equals( "class" ) )
-        {
-            thing = meta().getGlobalNamespace().getMetaClass(
-                node.getUriOrNull().getUriAsString(), false );
-        }
-        else if ( metaInfo.equals( "property" ) )
-        {
-            thing = meta().getGlobalNamespace().getMetaProperty(
-                node.getUriOrNull().getUriAsString(), false );
-        }
-        else
-        {
-            throw new IllegalArgumentException( "Strange meta info '" +
-                metaInfo + "'" );
-        }
-        return thing;
-    }
+//    protected MetaStructureThing getMetaStructureThing( AbstractNode node )
+//    {
+//        MetaStructureThing thing = null;
+//        String metaInfo = getMetaExecutorInfo( node );
+//        if ( node.getUriOrNull() == null )
+//        {
+//        }
+//        else if ( metaInfo.equals( "class" ) )
+//        {
+//            thing = meta().getGlobalNamespace().getMetaClass(
+//                node.getUriOrNull().getUriAsString(), false );
+//        }
+//        else if ( metaInfo.equals( "property" ) )
+//        {
+//            thing = meta().getGlobalNamespace().getMetaProperty(
+//                node.getUriOrNull().getUriAsString(), false );
+//        }
+//        else
+//        {
+//            throw new IllegalArgumentException( "Strange meta info '" +
+//                metaInfo + "'" );
+//        }
+//        return thing;
+//    }
 
     public String getNodeUriPropertyKey( AbstractNode abstractNode )
     {
-        return isMeta( abstractNode ) ? MetaStructureObject.KEY_NAME :
-            URI_PROPERTY_KEY;
+//        return isMeta( abstractNode ) ? MetaStructureObject.KEY_NAME :
+//            URI_PROPERTY_KEY;
+        return URI_PROPERTY_KEY;
     }
 
     protected Relationship findDirectRelationship( Node startNode,
@@ -285,10 +284,10 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         return ( String ) node.getSingleExecutorInfo( META_EXECUTOR_INFO_KEY );
     }
 
-    protected boolean isMeta( AbstractNode node )
-    {
-        return meta() != null && getMetaExecutorInfo( node ) != null;
-    }
+//    protected boolean isMeta( AbstractNode node )
+//    {
+//        return meta() != null && getMetaExecutorInfo( node ) != null;
+//    }
 
     protected boolean containsProperties( PropertyContainer container,
         Map<String, Collection<Object>> containingProperties,
@@ -427,8 +426,8 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         applyRepresentation( abstractNode, node );
         String predicate = ( String ) abstractNode.getSingleExecutorInfo(
             VerboseQuadStrategy.EXECUTOR_INFO_PREDICATE );
-        Object value =
-            abstractNode.properties().get( predicate ).iterator().next();
+        Object value = abstractNode.properties().get(
+            AbstractUriBasedExecutor.LITERAL_VALUE_KEY ).iterator().next();
 //        debugCreateNode( node, "(literal)" );
         indexLiteral( node, new Uri( predicate ), value );
         return node;

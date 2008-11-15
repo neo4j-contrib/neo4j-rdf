@@ -3,7 +3,6 @@ package org.neo4j.rdf.store.representation.standard;
 import org.neo4j.api.core.NeoService;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.rdf.model.Statement;
-import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Wildcard;
 import org.neo4j.rdf.store.representation.AbstractRepresentation;
 import org.neo4j.rdf.store.representation.RepresentationExecutor;
@@ -47,8 +46,7 @@ public class DenseTripleStrategy
                 "wildcard predicates" );
         }
 
-        if ( isObjectType( statement.getObject() ) ||
-            pointsToObjectType( ( Uri ) statement.getPredicate() ) )
+        if ( objectIsObjectType( statement ) )
         {
             // ( S ) -- predicate_uri --> ( O )
             getTwoNodeObjectTypeFragment( statement, representation );

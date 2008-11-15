@@ -5,7 +5,6 @@ import java.text.ParseException;
 import org.neo4j.api.core.NeoService;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.neometa.structure.MetaStructureProperty;
-import org.neo4j.neometa.structure.MetaStructureRelTypes;
 import org.neo4j.neometa.structure.PropertyRange;
 import org.neo4j.rdf.model.Literal;
 import org.neo4j.rdf.model.Resource;
@@ -43,14 +42,14 @@ abstract class StandardAbstractRepresentationStrategy
     public AbstractRepresentation getAbstractRepresentation(
         Statement statement, AbstractRepresentation representation )
     {
-        String predicate =
-            ( ( Uri ) statement.getPredicate() ).getUriAsString();
-        if ( meta != null &&
-            predicate.equals( AbstractUriBasedExecutor.RDF_TYPE_URI ) )
-        {
-            getMetaInstanceOfRepresentation( statement, representation );
-            return representation;
-        }
+//        String predicate =
+//            ( ( Uri ) statement.getPredicate() ).getUriAsString();
+//        if ( meta != null &&
+//            predicate.equals( AbstractUriBasedExecutor.RDF_TYPE_URI ) )
+//        {
+//            getMetaInstanceOfRepresentation( statement, representation );
+//            return representation;
+//        }
         
         // Just so that overriding classes can see if something happened in
         // here or not.
@@ -67,21 +66,21 @@ abstract class StandardAbstractRepresentationStrategy
         return new AbstractRepresentation();
     }
     
-    protected void getMetaInstanceOfRepresentation(
-        Statement statement, AbstractRepresentation representation )
-    {
-        AbstractNode subjectNode = getOrCreateNode( representation,
-            statement.getSubject() );
-        AbstractNode classNode = getOrCreateNode( representation,
-            statement.getObject(), statement.getObject() );
-        classNode.addExecutorInfo(
-            AbstractUriBasedExecutor.META_EXECUTOR_INFO_KEY, "class" );
-        AbstractRelationship instanceOfRelationship =
-            new AbstractRelationship( subjectNode,
-                MetaStructureRelTypes.META_IS_INSTANCE_OF.name(),
-                classNode );
-        representation.addRelationship( instanceOfRelationship );
-    }
+//    protected void getMetaInstanceOfRepresentation(
+//        Statement statement, AbstractRepresentation representation )
+//    {
+//        AbstractNode subjectNode = getOrCreateNode( representation,
+//            statement.getSubject() );
+//        AbstractNode classNode = getOrCreateNode( representation,
+//            statement.getObject(), statement.getObject() );
+//        classNode.addExecutorInfo(
+//            AbstractUriBasedExecutor.META_EXECUTOR_INFO_KEY, "class" );
+//        AbstractRelationship instanceOfRelationship =
+//            new AbstractRelationship( subjectNode,
+//                MetaStructureRelTypes.META_IS_INSTANCE_OF.name(),
+//                classNode );
+//        representation.addRelationship( instanceOfRelationship );
+//    }
 
     protected void getOneNodeWithLiteralsAsProperties( Statement statement,
         AbstractRepresentation representation )
@@ -142,14 +141,12 @@ abstract class StandardAbstractRepresentationStrategy
             meta.lookup( property, MetaStructure.LOOKUP_PROPERTY_RANGE );
     }
 
-    public boolean pointsToObjectType( Uri predicate )
+    private boolean pointsToObjectType( Uri predicate )
     {
         PropertyRange range = getPropertyRange( predicate );
         if ( range == null )
         {
         	return false;
-//            throw new UnsupportedOperationException( "No range found for '" +
-//                predicate + "'" );
         }
         return !range.isDatatype();
     }
@@ -221,9 +218,10 @@ abstract class StandardAbstractRepresentationStrategy
         return node;
     }
 
-    protected boolean isObjectType( Value value )
+    protected boolean objectIsObjectType( Statement statement )
     {
-        return value instanceof Resource;
+        return statement.getObject() instanceof Resource ||
+            pointsToObjectType( ( Uri ) statement.getPredicate() );
     }
 
     protected AbstractRepresentation getTwoNodeObjectTypeFragment(

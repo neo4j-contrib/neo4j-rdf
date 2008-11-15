@@ -59,8 +59,7 @@ public class VerboseQuadStrategy
             return representation;
         }
         
-        if ( statement.getObject().isWildcard() ||
-            isObjectType( statement.getObject() ) )
+        if ( objectIsObjectType( statement ) )
         {
             getObjectTypeRepresentation( statement, representation );
         }
@@ -89,15 +88,15 @@ public class VerboseQuadStrategy
             formTripleNodeKey( statement ) );
         literalNode.addExecutorInfo( EXECUTOR_INFO_NODE_TYPE, TYPE_LITERAL );
         String predicate = asUri( statement.getPredicate() );
+        String valueKey = AbstractUriBasedExecutor.LITERAL_VALUE_KEY;
         if ( statement.getObject().isWildcard() )
         {
-            // TODO What?
-//            literalNode.addProperty( predicate, statement.getObject() );
+            literalNode.addProperty( valueKey, statement.getObject() );
         }
         else
         {
             Literal literal = ( Literal ) statement.getObject();
-            literalNode.addProperty( predicate, literal.getValue() );
+            literalNode.addProperty( valueKey, literal.getValue() );
             literalNode.addExecutorInfo( EXECUTOR_INFO_PREDICATE, predicate );
             if ( literal.getDatatype() != null )
             {

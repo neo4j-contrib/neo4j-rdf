@@ -86,4 +86,85 @@ public class AbstractRepresentation
     {
         return Collections.emptyMap();
     }
+    
+    /**
+     * http://en.wikipedia.org/wiki/DOT_language
+     * @return this representation as a DOT graph, good for debugging.
+     */
+    public String toDotFormat()
+    {
+        CharRef counter = new CharRef();
+        counter.ch = 'a';
+        Map<AbstractNode, String> nameMap = new HashMap<AbstractNode, String>();
+        StringBuffer result = new StringBuffer( "digraph representation\n" );
+        result.append( "{\n" );
+        for ( AbstractRelationship relationship : relationships() )
+        {
+            String[] start = getNodeNameAndLabel( nameMap,
+                relationship.getStartNode(), counter );
+            if ( start[ 1 ] != null )
+            {
+                result.append( "\t" + start[ 0 ] + " [label=\"" +
+                    start[ 1 ] + "\"];\n" );
+            }
+            
+            String[] end = getNodeNameAndLabel( nameMap,
+                relationship.getEndNode(), counter );
+            if ( end[ 1 ] != null )
+            {
+                result.append( "\t" + end[ 0 ] + " [label=\"" +
+                    end[ 1 ] + "\"];\n" );
+            }
+            
+            result.append( "\t" + start[ 0 ] + " -> " + end[ 0 ] +
+                " [label=\"" + relationship.getRelationshipTypeName().substring(
+                    relationship.getRelationshipTypeName().length() - 15 ) +
+                "\"];\n" );
+        }
+        result.append( "}" );
+        return result.toString();
+    }
+    
+    private String[] getNodeNameAndLabel( Map<AbstractNode, String> nameMap,
+        AbstractNode node, CharRef counter )
+    {
+        String name;
+        String label = null;
+        if ( !nameMap.containsKey( node ) )
+        {
+            name = String.valueOf( counter.ch );
+            counter.ch++;
+            nameMap.put( node, name );
+            if ( node.getUriOrNull() != null )
+            {
+                label = node.getUriOrNull().getUriAsString().substring(
+                    node.getUriOrNull().getUriAsString().length() - 15 );
+            }
+            else if ( node.getWildcardOrNull() != null )
+            {
+                label = "?" + node.getWildcardOrNull().getVariableName();
+            }
+            else if ( !node.properties().isEmpty() )
+            {
+                for ( String key : node.properties().keySet() )
+                {
+                    for ( Object value : node.properties().get( key ) )
+                    {
+                        label = label == null ? "'" + value + "'" :
+                            ", '" + value + "'";
+                    }
+                }
+            }
+        }
+        else
+        {
+            name = nameMap.get( node );
+        }
+        return new String[] { name, label };
+    }
+    
+    private static class CharRef
+    {
+        private char ch;
+    }
 }
