@@ -33,6 +33,7 @@ import org.neo4j.rdf.store.representation.standard.VerboseQuadStrategy;
 import org.neo4j.util.FilteringIterable;
 import org.neo4j.util.FilteringIterator;
 import org.neo4j.util.IterableWrapper;
+import org.neo4j.util.NeoUtil;
 import org.neo4j.util.NestingIterator;
 import org.neo4j.util.OneOfRelTypesReturnableEvaluator;
 import org.neo4j.util.PrefetchingIterator;
@@ -746,8 +747,17 @@ public class VerboseQuadStore extends RdfStoreImpl
         @Override
         protected Node underlyingObjectToObject( Node literalNode )
         {
-            return literalNode.getRelationships(
-                Direction.INCOMING ).iterator().next().getStartNode();
+            Iterator<Relationship> relationships = literalNode.getRelationships(
+                Direction.INCOMING ).iterator();
+            if ( !relationships.hasNext() )
+            {
+                throw new RuntimeException( literalNode + " is a node which " +
+                    "should've been a literal node and, hence, had an " +
+                    "INCOMING relationship representing the relationship to " +
+                    "the middle node of the statement. Instead it has\n" +
+                    new NeoUtil( neo() ).sumNodeContents( literalNode ) );
+            }
+            return relationships.next().getStartNode();
         }
     }
     
