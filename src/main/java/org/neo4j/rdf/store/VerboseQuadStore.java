@@ -650,7 +650,8 @@ public class VerboseQuadStore extends RdfStoreImpl
                     subjectRelationship.getType(),
                     Direction.OUTGOING ).getEndNode();
                 return new Object[] { subjectNode, predicate,
-                    objectNode, contextNode, middleNode, lastContextRelationship };
+                    objectNode, contextNode, middleNode,
+                    lastContextRelationship };
             }
             catch ( RuntimeException e )
             {
