@@ -42,8 +42,6 @@ public class VerboseQuadExecutor extends UriBasedExecutor
     	IS_A_CONTEXT,
     }
     
-    private Node contextRefNodeCache;
-
     public VerboseQuadExecutor( NeoService neo, IndexService index,
         MetaStructure meta, FulltextIndex fulltextIndex )
     {
@@ -52,12 +50,8 @@ public class VerboseQuadExecutor extends UriBasedExecutor
     
     public Node getContextsReferenceNode()
     {
-        if ( this.contextRefNodeCache == null )
-        {
-            this.contextRefNodeCache = this.neoUtil().
-                getOrCreateSubReferenceNode( RelTypes.REF_CONTEXTS );
-        }
-        return this.contextRefNodeCache;
+        return this.neoUtil().getOrCreateSubReferenceNode(
+            RelTypes.REF_CONTEXTS );
     }
 
     @Override

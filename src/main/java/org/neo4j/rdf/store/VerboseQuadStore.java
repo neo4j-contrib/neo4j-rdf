@@ -228,7 +228,7 @@ public class VerboseQuadStore extends RdfStoreImpl
             if ( contexts.length == 0 )
             {
                 Node contextRefNode = getRepresentationStrategy().getExecutor().
-                getContextsReferenceNode();
+                    getContextsReferenceNode();
                 contextNodes = new RelationshipToNodeIterable( contextRefNode,
                     contextRefNode.getRelationships(
                         VerboseQuadExecutor.RelTypes.IS_A_CONTEXT,
