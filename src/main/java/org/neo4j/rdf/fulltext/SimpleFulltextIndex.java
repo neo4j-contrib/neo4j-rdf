@@ -26,6 +26,7 @@ import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.IndexWriter.MaxFieldLength;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.BooleanQuery;
@@ -43,6 +44,7 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
+import org.neo4j.api.core.NotFoundException;
 import org.neo4j.rdf.fulltext.PersistentQueue.Entry;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.util.TemporaryLogger;
@@ -182,14 +184,14 @@ public class SimpleFulltextIndex implements FulltextIndex
         if ( !IndexReader.indexExists( directoryPath ) )
         {
             new File( directoryPath ).mkdirs();
-            IndexWriter writer =
-                new IndexWriter( directoryPath, analyzer, true );
+            IndexWriter writer = new IndexWriter( directoryPath, analyzer,
+                true, MaxFieldLength.UNLIMITED );
             writer.close();
         }
         directory = FSDirectory.getDirectory( directoryPath );
-        if ( IndexReader.isLocked( directory ) )
+        if ( IndexWriter.isLocked( directory ) )
         {
-            IndexReader.unlock( directory );
+            IndexWriter.unlock( directory );
         }
     }
     
@@ -200,7 +202,8 @@ public class SimpleFulltextIndex implements FulltextIndex
     
     private IndexWriter getWriter( boolean create ) throws IOException
     {
-        return new IndexWriter( getDir(), analyzer, create );
+        return new IndexWriter( getDir(), analyzer, create,
+            MaxFieldLength.UNLIMITED );
     }
     
     public void index( Node node, Uri predicate, Object literal )
@@ -279,13 +282,13 @@ public class SimpleFulltextIndex implements FulltextIndex
         {
             Document doc = new Document();
             doc.add( new Field( KEY_ID, String.valueOf( nodeId ), Store.YES,
-                Index.UN_TOKENIZED ) );
+                Index.NOT_ANALYZED ) );
             doc.add( new Field( KEY_INDEX, getLiteralReader().read( literal ),
-                Store.YES, Index.TOKENIZED ) );
+                Store.YES, Index.ANALYZED ) );
             doc.add( new Field( KEY_PREDICATE, predicate,
-                Store.YES, Index.UN_TOKENIZED ) );
+                Store.YES, Index.NOT_ANALYZED ) );
             doc.add( new Field( KEY_INDEX_SOURCE, literal.toString(),
-                Store.YES, Index.UN_TOKENIZED ) );
+                Store.YES, Index.NOT_ANALYZED ) );
             writer.addDocument( doc );
         }
         catch ( IOException e )
@@ -304,37 +307,25 @@ public class SimpleFulltextIndex implements FulltextIndex
         enqueueCommand( false, nodeId, predicate, literal );
     }
     
-    private void doRemoveIndex( long nodeId, String predicate, Object literal )
+    private void doRemoveIndex( IndexWriter writer,
+        long nodeId, String predicate, Object literal )
     {
-        IndexReader reader = null;
-        IndexSearcher searcher = null;
         try
         {
-            reader = IndexReader.open( getDir() );
-            BooleanQuery masterQuery = new BooleanQuery();
-            masterQuery.add( new TermQuery(
+            BooleanQuery deletionQuery = new BooleanQuery();
+            deletionQuery.add( new TermQuery(
                 new Term( KEY_ID, String.valueOf( nodeId ) ) ), Occur.MUST );
-            masterQuery.add( new TermQuery(
+            deletionQuery.add( new TermQuery(
                 new Term( KEY_PREDICATE, predicate ) ), Occur.MUST );
-            masterQuery.add( new TermQuery(
+            deletionQuery.add( new TermQuery(
                 new Term( KEY_INDEX_SOURCE, literal.toString() ) ),
                 Occur.MUST );
             
-            searcher = new IndexSearcher( getDir() );
-            Hits hits = searcher.search( masterQuery );
-            for ( int i = 0; i < hits.length(); i++ )
-            {
-                reader.deleteDocument( hits.id( i ) );
-            }
+            writer.deleteDocuments( deletionQuery );
         }
         catch ( IOException e )
         {
             throw new RuntimeException( e );
-        }
-        finally
-        {
-            safeClose( searcher );
-            safeClose( reader );
         }
     }
     
@@ -366,8 +357,25 @@ public class SimpleFulltextIndex implements FulltextIndex
                 }
                 float score = hits.score( i );
                 String snippet = generateSnippet( doc, highlighter );
-                result.add( new RawQueryResult( neo.getNodeById( id ),
-                    score, snippet ) );
+                
+                try
+                {
+                    Node node = neo.getNodeById( id );
+                    result.add( new RawQueryResult( node, score, snippet ) );
+                }
+                catch ( NotFoundException e )
+                {
+                    // Ok, probably index lagging a bit behind, that's all.
+                    // This also effectively hides many bugs, which is a
+                    // BAAD thing.
+                    TemporaryLogger.getLogger().info( "Fulltext index refers " +
+                        "to missing node (" + id + "). This probably means " +
+                        "that the indexer is lagging behind a bit. If this " +
+                        "id is reported as missing a couple of more times " +
+                        "then there's probably a bug and you should " +
+                        "report it" );
+                }
+                
             }
             long sortTime = timer.lap();
             TemporaryLogger.getLogger().info( "FulltextIndex.search: " +
@@ -525,20 +533,18 @@ public class SimpleFulltextIndex implements FulltextIndex
                     {
                         Entry entry = indexingQueue.next();
                         Object[] data = entry.data();
+                        ensureWriters();
                         if ( ( Boolean ) data[ 0 ] )
                         {
-                            ensureWriter();
                             doIndex( writer, ( Long ) data[ 1 ],
                                 ( String ) data[ 2 ], data[ 3 ] );
-                            entriesToComplete.add( entry );
                         }
                         else
                         {
-                            flushEntries();
-                            doRemoveIndex( ( Long ) data[ 1 ],
+                            doRemoveIndex( writer, ( Long ) data[ 1 ],
                                 ( String ) data[ 2 ], data[ 3 ] );
-                            indexingQueue.markAsCompleted( entry );
                         }
+                        entriesToComplete.add( entry );
                         
                         if ( entriesToComplete.size() >= COUNT_BEFORE_WRITE ||
                             !indexingQueue.hasNext() )
@@ -573,11 +579,13 @@ public class SimpleFulltextIndex implements FulltextIndex
             }
         }
         
-        private void ensureWriter() throws Exception
+        private void ensureWriters() throws Exception
         {
             if ( writer == null )
             {
                 writer = getWriter( false );
+                writer.setMaxBufferedDocs( COUNT_BEFORE_WRITE * 2 );
+                writer.setMaxBufferedDeleteTerms( COUNT_BEFORE_WRITE * 2 );
             }
         }
         
