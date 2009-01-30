@@ -136,6 +136,12 @@ public abstract class RdfStoreImpl implements RdfStore
     	throw new UnsupportedOperationException( "No implementation here" );
     }
     
+    public Iterable<QueryResult> searchFulltextWithSnippets( String query,
+        int snippetCountLimit )
+    {
+        throw new UnsupportedOperationException( "No implementation here" );
+    }
+    
     public int size( Context... contexts )
     {
     	throw new UnsupportedOperationException();
@@ -231,7 +237,8 @@ public abstract class RdfStoreImpl implements RdfStore
     public void shutDown()
     {
         TemporaryLogger.getLogger().info( getClass().getName() +
-            " shutDown called", new Exception() );
+            " shutDown called", new Exception( "Just a stack trace to see " +
+            "where the shut down method is called" ) );
         
         FulltextIndex index = getFulltextIndex();
         if ( index != null )

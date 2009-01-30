@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -46,9 +46,13 @@ import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
 import org.neo4j.api.core.NotFoundException;
 import org.neo4j.rdf.fulltext.PersistentQueue.Entry;
+import org.neo4j.rdf.fulltext.VerificationHook.Status;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.util.TemporaryLogger;
+import org.neo4j.util.FilteringIterator;
+import org.neo4j.util.IteratorAsIterable;
 import org.neo4j.util.NeoUtil;
+import org.neo4j.util.PrefetchingIterator;
 
 /**
  * A {@link FulltextIndex} using lucene.
@@ -75,6 +79,7 @@ public class SimpleFulltextIndex implements FulltextIndex
     private static final String KEY_PREDICATE = "predicate";
     private static final String KEY_INDEX_SOURCE = "index_source";
     private static final String SNIPPET_DELIMITER = "...";
+    private static final int BATCH_SIZE = 100;
     
     private LiteralReader literalReader = new SimpleLiteralReader();
     private String directoryPath;
@@ -97,6 +102,7 @@ public class SimpleFulltextIndex implements FulltextIndex
     private IndexingThread indexingThread;
     private Formatter highlightFormatter;
     private Set<String> predicateFilter;
+    private IndexSearcher indexSearcher;
     
     public SimpleFulltextIndex( NeoService neo, File storagePath )
     {
@@ -172,8 +178,6 @@ public class SimpleFulltextIndex implements FulltextIndex
     
     public void clear()
     {
-        TemporaryLogger.getLogger().info( getClass().getName() +
-            " clear called", new Exception() );
         internalShutDown();
         delete();
         startUpDirectoryAndThread();
@@ -329,60 +333,59 @@ public class SimpleFulltextIndex implements FulltextIndex
         }
     }
     
+    private synchronized IndexSearcher getSearcher() throws IOException
+    {
+        if ( this.indexSearcher == null )
+        {
+            this.indexSearcher = new IndexSearcher( getDir() );
+        }
+        else
+        {
+            IndexReader reopened =
+                this.indexSearcher.getIndexReader().reopen();
+            if ( reopened != null )
+            {
+                this.indexSearcher = new IndexSearcher( reopened );
+            }
+        }
+        return this.indexSearcher;
+    }
+    
+    private void leaveSearcher( IndexSearcher searcher )
+    {
+    }
+    
     public Iterable<RawQueryResult> search( String query )
+    {
+        return searchWithSnippets( query, 0 );
+    }
+    
+    public Iterable<RawQueryResult> searchWithSnippets( String query,
+        int snippetCountLimit )
     {
         IndexSearcher searcher = null;
         try
         {
             TemporaryLogger.Timer timer = new TemporaryLogger.Timer();
-            searcher = new IndexSearcher( getDir() );
-            List<RawQueryResult> result =
-                new ArrayList<RawQueryResult>();
+            searcher = getSearcher();
             Query q = new QueryParser( KEY_INDEX, analyzer ).parse( query );
             Hits hits = searcher.search( q, Sort.RELEVANCE );
             long searchTime = timer.lap();
-            Highlighter highlighter = new Highlighter( highlightFormatter,
-                new QueryScorer( searcher.rewrite( q ) ) );
-            Set<Long> ids = new HashSet<Long>();
-            for ( int i = 0; i < hits.length(); i++ )
-            {
-                Document doc = hits.doc( i );
-                long id = Long.parseLong( doc.get( KEY_ID ) );
-                if ( !ids.add( id ) )
-                {
-                    // It's a duplicate here, probably after a crash or
-                    // something
-                    removeDuplicate( doc );
-                    continue;
-                }
-                float score = hits.score( i );
-                String snippet = generateSnippet( doc, highlighter );
-                
-                try
-                {
-                    Node node = neo.getNodeById( id );
-                    result.add( new RawQueryResult( node, score, snippet ) );
-                }
-                catch ( NotFoundException e )
-                {
-                    // Ok, probably index lagging a bit behind, that's all.
-                    // This also effectively hides many bugs, which is a
-                    // BAAD thing.
-                    TemporaryLogger.getLogger().info( "Fulltext index refers " +
-                        "to missing node (" + id + "). This probably means " +
-                        "that the indexer is lagging behind a bit. If this " +
-                        "id is reported as missing a couple of more times " +
-                        "then there's probably a bug and you should " +
-                        "report it" );
-                }
-                
-            }
-            long sortTime = timer.lap();
             TemporaryLogger.getLogger().info( "FulltextIndex.search: " +
                 "search{q:'" + query + "' time:" + searchTime +
-                " hits:" + hits.length() + "} " +
-                "sort and snippeting{time:" + sortTime + "}" );
-            return result;
+                " hits:" + hits.length() + "}" );
+            
+            Highlighter highlighter = null;
+            if ( snippetCountLimit > 0 )
+            {
+                highlighter = new Highlighter( highlightFormatter,
+                    new QueryScorer( searcher.rewrite( q ) ) );
+            }
+            
+            Iterator<RawQueryResult> resultIterator =
+                new ResultIterator( hits, snippetCountLimit,
+                    highlighter );
+            return new IteratorAsIterable<RawQueryResult>( resultIterator );
         }
         catch ( IOException e )
         {
@@ -394,7 +397,115 @@ public class SimpleFulltextIndex implements FulltextIndex
         }
         finally
         {
-            safeClose( searcher );
+            leaveSearcher( searcher );
+        }
+    }
+    
+    private class ResultIterator extends FilteringIterator<RawQueryResult>
+    {
+        ResultIterator( Hits hits, int snippetCountLimit,
+            Highlighter highlighter )
+        {
+            super( new RawResultIterator( hits, snippetCountLimit,
+                highlighter ) );
+        }
+
+        @Override
+        protected boolean passes( RawQueryResult result )
+        {
+            return result != null && result != SPECIAL_FILTERING_INSTANCE;
+        }
+    }
+    
+    private static final RawQueryResult SPECIAL_FILTERING_INSTANCE =
+        new RawQueryResult( null, 0, null );
+    
+    private class RawResultIterator extends PrefetchingIterator<RawQueryResult>
+    {
+        private Hits hits;
+        private int hitsLength;
+        private int snippetCountLimit;
+        private Highlighter highlighter;
+        private int counter = 0;
+        private Set<Long> ids = new HashSet<Long>();
+        
+        private long getIdTime = 0;
+        private long getSnippetTime = 0;
+        private long getNodeTime = 0;
+        
+        RawResultIterator( Hits hits, int snippetCountLimit,
+            Highlighter highlighter )
+        {
+            this.hits = hits;
+            this.hitsLength = hits.length();
+            this.snippetCountLimit = snippetCountLimit;
+            this.highlighter = highlighter;
+        }
+        
+        @Override
+        protected RawQueryResult fetchNextOrNull()
+        {
+            int docNum = counter;
+            if ( counter >= hitsLength )
+            {
+                TemporaryLogger.getLogger().info( "Fulltext.search DONE {" +
+                    "getId:" + getIdTime + " " +
+                    "getSnippet:" + getSnippetTime + " " +
+                    "getNode:" + getNodeTime +
+                    "}" );
+                return null;
+            }
+            
+            counter++;
+            try
+            {
+                long t = System.currentTimeMillis();
+                Document doc = hits.doc( docNum );
+                long id = Long.parseLong( doc.get( KEY_ID ) );
+                getIdTime += ( System.currentTimeMillis() - t );
+                if ( !ids.add( id ) )
+                {
+                    // It's a duplicate here, probably after a crash or
+                    // something
+                    removeDuplicate( doc );
+                    return SPECIAL_FILTERING_INSTANCE;
+                }
+                float score = hits.score( docNum );
+                
+                String snippet = null;
+                t = System.currentTimeMillis();
+                if ( docNum < snippetCountLimit )
+                {
+                    snippet = generateSnippet( doc, highlighter );
+                }
+                getSnippetTime += ( System.currentTimeMillis() - t );
+                
+                try
+                {
+                    t = System.currentTimeMillis();
+                    Node node = neo.getNodeById( id );
+                    getNodeTime += ( System.currentTimeMillis() - t );
+                    return new RawQueryResult( node, score, snippet );
+                }
+                catch ( NotFoundException e )
+                {
+                    // Ok, probably index lagging a bit behind, that's all.
+                    // This also effectively hides many bugs, which is a
+                    // BAAD thing.
+                    TemporaryLogger.getLogger().info(
+                    "Fulltext index refers " +
+                    "to missing node (" + id + "). This probably means " +
+                    "that the indexer is lagging behind a bit. If this " +
+                    "id is reported as missing a couple of more times " +
+                    "then there's probably a bug and you should " +
+                    "report it" );
+                    return SPECIAL_FILTERING_INSTANCE;
+                }
+            }
+            catch ( IOException e )
+            {
+                throw new RuntimeException( e );
+            }
         }
     }
     
@@ -432,6 +543,113 @@ public class SimpleFulltextIndex implements FulltextIndex
             }
         }
         return snippet.toString();
+    }
+    
+    public boolean verify( VerificationHook hook, String queryOrNullForAll )
+    {
+        IndexSearcher searcher = null;
+        try
+        {
+            searcher = new IndexSearcher( getDir() );
+            Map<Status, MutableInteger> counts =
+                new HashMap<Status, MutableInteger>();
+            int maxDoc = 0;
+            final IndexReader reader = searcher.getIndexReader();
+            Iterator<Integer> hitsIterator = null;
+            if ( queryOrNullForAll == null )
+            {
+                maxDoc = reader.maxDoc();
+                hitsIterator = new PrefetchingIterator<Integer>()
+                {
+                    private int limit = reader.maxDoc();
+                    private int counter;
+                    
+                    @Override
+                    protected Integer fetchNextOrNull()
+                    {
+                        int c = counter++;
+                        return c < limit ? c : null;
+                    }
+                };
+            }
+            else
+            {
+                Query q = new QueryParser( KEY_INDEX, analyzer ).parse(
+                    queryOrNullForAll );
+                final Hits hits = searcher.search( q, Sort.RELEVANCE );
+                maxDoc = hits.length();
+                hitsIterator = new PrefetchingIterator<Integer>()
+                {
+                    private int counter;
+                    
+                    @Override
+                    protected Integer fetchNextOrNull()
+                    {
+                        try
+                        {
+                            int c = counter++;
+                            return c < hits.length() ? hits.id( c ) : null;
+                        }
+                        catch ( IOException e )
+                        {
+                            throw new RuntimeException( e );
+                        }
+                    }
+                };
+            }
+            
+            hook.verificationStarting( maxDoc );
+            while ( hitsIterator.hasNext() )
+            {
+                int docId = hitsIterator.next();
+                if ( reader.isDeleted( docId ) )
+                {
+                    hook.oneWasSkipped();
+                    continue;
+                }
+                
+                Document doc = reader.document( docId );
+                long nodeId = Long.parseLong( doc.get( KEY_ID ) );
+                Status status = hook.verify( nodeId,
+                    doc.get( KEY_PREDICATE ), doc.get( KEY_INDEX_SOURCE ) );
+                MutableInteger count = counts.get( status );
+                if ( count == null )
+                {
+                    count = new MutableInteger();
+                    counts.put( status, count );
+                }
+                count.value++;
+            }
+            
+            Map<Status, Integer> resultCounts = new HashMap<Status, Integer>();
+            int errors = 0;
+            for ( Map.Entry<Status, MutableInteger> count :
+                counts.entrySet() )
+            {
+                resultCounts.put( count.getKey(), count.getValue().value );
+                errors += ( count.getKey() == Status.OK ? 0 :
+                    count.getValue().value );
+            }
+            hook.verificationCompleted( resultCounts );
+            return errors == 0;
+        }
+        catch ( ParseException e )
+        {
+            throw new RuntimeException( e );
+        }
+        catch ( IOException e )
+        {
+            throw new RuntimeException( e );
+        }
+        finally
+        {
+            safeClose( searcher );
+        }
+    }
+    
+    private static class MutableInteger
+    {
+        private int value;
     }
     
     public LiteralReader getLiteralReader()
@@ -479,8 +697,8 @@ public class SimpleFulltextIndex implements FulltextIndex
     
     public void shutDown()
     {
-        TemporaryLogger.getLogger().info( getClass().getName() +
-            " shutDown called", new Exception() );
+//        TemporaryLogger.getLogger().info( getClass().getName() +
+//            " shutDown called", new Exception() );
         internalShutDown();
     }
     
@@ -505,12 +723,12 @@ public class SimpleFulltextIndex implements FulltextIndex
         {
             throw new RuntimeException( e );
         }
+        safeClose( this.indexSearcher );
+        this.indexSearcher = null;
     }
     
     private class IndexingThread extends Thread
     {
-        private static final int COUNT_BEFORE_WRITE = 100;
-        
         private boolean halted;
         private boolean hasItems;
         private IndexWriter writer;
@@ -546,7 +764,7 @@ public class SimpleFulltextIndex implements FulltextIndex
                         }
                         entriesToComplete.add( entry );
                         
-                        if ( entriesToComplete.size() >= COUNT_BEFORE_WRITE ||
+                        if ( entriesToComplete.size() >= BATCH_SIZE ||
                             !indexingQueue.hasNext() )
                         {
                             flushEntries();
@@ -564,7 +782,7 @@ public class SimpleFulltextIndex implements FulltextIndex
                             System.currentTimeMillis() - time < 100 )
                         {
                             hasItems = indexingQueue.hasNext();
-                            Thread.sleep( 5 );
+                            Thread.sleep( 20 );
                         }
                     }
                     catch ( InterruptedException e )
@@ -584,8 +802,8 @@ public class SimpleFulltextIndex implements FulltextIndex
             if ( writer == null )
             {
                 writer = getWriter( false );
-                writer.setMaxBufferedDocs( COUNT_BEFORE_WRITE * 2 );
-                writer.setMaxBufferedDeleteTerms( COUNT_BEFORE_WRITE * 2 );
+                writer.setMaxBufferedDocs( BATCH_SIZE * 2 );
+                writer.setMaxBufferedDeleteTerms( BATCH_SIZE * 2 );
             }
         }
         
@@ -598,6 +816,18 @@ public class SimpleFulltextIndex implements FulltextIndex
             
             safeClose( writer );
             writer = null;
+//            try
+//            {
+//                writer.commit();
+//                
+//            }
+//            catch ( IOException e )
+//            {
+//                TemporaryLogger.getLogger().info(
+//                    "Couldn't commit fulltext index writer ", e );
+//                safeClose( writer );
+//                writer = null;
+//            }
             indexingQueue.markAsCompleted( entriesToComplete.toArray(
                 new Entry[ entriesToComplete.size() ] ) );
             entriesToComplete.clear();

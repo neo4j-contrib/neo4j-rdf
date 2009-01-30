@@ -122,6 +122,11 @@ public class DenseTripleStore extends RdfStoreImpl
         }
     }
     
+    public boolean verifyFulltextIndex( String queryOrNullForAll )
+    {
+        throw new UnsupportedOperationException( "Not implemented yet" );
+    }
+    
     private Iterator<Node> getNodesForLiteral( Statement statement )
     {
         Literal literal = ( Literal ) statement.getObject();

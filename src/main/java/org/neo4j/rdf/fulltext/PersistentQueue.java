@@ -163,7 +163,7 @@ public class PersistentQueue implements Iterator<PersistentQueue.Entry>
             {
                 channel.position( channel.size() );
                 channel.write( fillBuffer( entryData ) );
-                channel.force( true );
+//                channel.force( true );
             }
             catch ( IOException e )
             {
@@ -235,7 +235,7 @@ public class PersistentQueue implements Iterator<PersistentQueue.Entry>
                     channel.write( buffer );
                     numberOfEntriesReadButNotYetCompleted.decrementAndGet();
                 }
-                channel.force( false );
+//                channel.force( false );
             }
             finally
             {

@@ -66,6 +66,28 @@ public interface FulltextIndex
     Iterable<RawQueryResult> search( String query );
     
     /**
+     * Searches the index for matches. See above for query format.
+     * @param query the search query.
+     * @param snippetCountLimit only generate snippets for a maximum of hits.
+     * The rest of the hits (if any) will be returned, but will not have
+     * snippets generated for them.
+     * @return the matches sorted by relevance.
+     */
+    Iterable<RawQueryResult> searchWithSnippets( String query,
+        int snippetCountLimit );
+    
+    /**
+     * Runs through the index and verifying that its contents are ok.
+     * @param hook the hook which the caller uses to implement the verification
+     * logic for an entry as well as displaying progress a.s.o.
+     * @param queryOrNullForAll enter a query to just verify that result,
+     * or pass in {@code null} to verify the entire index.
+     * @return {@code true} if the index was completely ok, otherwise
+     * {@code false}.
+     */
+    boolean verify( VerificationHook hook, String queryOrNullForAll );
+    
+    /**
      * @return the {@link LiteralReader} instance used to get data from a
      * literal.
      */

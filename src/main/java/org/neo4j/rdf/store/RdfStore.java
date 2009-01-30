@@ -38,6 +38,20 @@ public interface RdfStore
     Iterable<QueryResult> searchFulltext( String query );
 
     /**
+     * Temporary name, search fulltext (literals). The arguments are sure
+     * to change over time.
+     * @param query the query, basically just a string with a word or two.
+     * @param snippetCountLimit only generate snippets for a maximum of hits.
+     * The rest of the hits (if any) will be returned, but will not have
+     * snippets generated for them.
+     * @return statements matching the query.
+     */
+    Iterable<QueryResult> searchFulltextWithSnippets( String query,
+        int snippetCountLimit );
+    
+    boolean verifyFulltextIndex( String queryOrNullForAll );
+    
+    /**
      * Removes any matching statement from the store.
      * @param statement a {@link Statement} with optional wildcard members
      */

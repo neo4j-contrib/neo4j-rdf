@@ -1,21 +1,27 @@
 package org.neo4j.rdf.store;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.Set;
 
 import org.neo4j.api.core.Direction;
 import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
+import org.neo4j.api.core.NotFoundException;
 import org.neo4j.api.core.Relationship;
-import org.neo4j.api.core.StopEvaluator;
 import org.neo4j.api.core.Transaction;
-import org.neo4j.api.core.Traverser.Order;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.rdf.fulltext.FulltextIndex;
 import org.neo4j.rdf.fulltext.QueryResult;
 import org.neo4j.rdf.fulltext.RawQueryResult;
+import org.neo4j.rdf.fulltext.VerificationHook;
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Literal;
@@ -30,12 +36,12 @@ import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
 import org.neo4j.rdf.store.representation.standard.VerboseQuadExecutor;
 import org.neo4j.rdf.store.representation.standard.VerboseQuadStrategy;
+import org.neo4j.rdf.util.TemporaryLogger;
 import org.neo4j.util.FilteringIterable;
 import org.neo4j.util.FilteringIterator;
 import org.neo4j.util.IterableWrapper;
-import org.neo4j.util.NeoUtil;
+import org.neo4j.util.NestingIterable;
 import org.neo4j.util.NestingIterator;
-import org.neo4j.util.OneOfRelTypesReturnableEvaluator;
 import org.neo4j.util.PrefetchingIterator;
 import org.neo4j.util.RelationshipToNodeIterable;
 import org.neo4j.util.index.IndexService;
@@ -137,8 +143,7 @@ public class VerboseQuadStore extends RdfStoreImpl
         }
     }
     
-    @Override
-    public void reindexFulltextIndex()
+    public void reindexFulltextIndex( Integer maxEntries )
     {
         Transaction tx = neo().beginTx();
         try
@@ -148,8 +153,10 @@ public class VerboseQuadStore extends RdfStoreImpl
                 new WildcardStatement( new Wildcard( "s" ), new Wildcard( "p" ),
                     new Wildcard( "o" ), new Wildcard( "g" ) ),
                     allMiddleNodes );
+            int totalCounter = 0;
             int counter = 0;
             FulltextIndex fulltextIndex = getFulltextIndex();
+            fulltextIndex.clear();
             for ( Object[] quad : allQuads )
             {
                 String predicate = ( String ) quad[ 1 ];
@@ -160,10 +167,23 @@ public class VerboseQuadStore extends RdfStoreImpl
                 {
                     fulltextIndex.index( objectNode, new Uri( predicate ),
                         ( ( Literal ) objectValue ).getValue() );
-                    if ( ++counter % 5000 == 0 )
+                    if ( ++counter % 10000 == 0 )
                     {
                         fulltextIndex.end( true );
+                        tx.success();
+                        tx.finish();
+                        tx = neo().beginTx();
+                        if ( maxEntries != null && counter > maxEntries )
+                        {
+                            break;
+                        }
                     }
+                }
+                
+                if ( ++totalCounter % 1000 == 0 )
+                {
+                    TemporaryLogger.getLogger().info( "Reindex progress " +
+                        totalCounter + " (literals " + counter + ")" );
                 }
             }
             fulltextIndex.end( true );
@@ -176,7 +196,18 @@ public class VerboseQuadStore extends RdfStoreImpl
     }
     
     @Override
+    public void reindexFulltextIndex()
+    {
+        reindexFulltextIndex( null );
+    }
+    
+    @Override
     public Iterable<QueryResult> searchFulltext( String query )
+    {
+        return searchFulltextWithSnippets( query, 0 );
+    }
+    
+    protected FulltextIndex getInitializedFulltextIndex()
     {
         FulltextIndex fulltextIndex = getFulltextIndex();
         if ( fulltextIndex == null )
@@ -185,8 +216,17 @@ public class VerboseQuadStore extends RdfStoreImpl
                 "please supply a FulltextIndex instance at construction time " +
             "to get this feature" );
         }
-        
-        Iterable<RawQueryResult> rawResult = fulltextIndex.search( query );
+        return fulltextIndex;
+    }
+    
+    @Override
+    public Iterable<QueryResult> searchFulltextWithSnippets( String query,
+        int snippetCountLimit )
+    {
+        FulltextIndex fulltextIndex = getInitializedFulltextIndex();
+        Iterable<RawQueryResult> rawResult = snippetCountLimit == 0 ?
+            fulltextIndex.search( query ) :
+            fulltextIndex.searchWithSnippets( query, snippetCountLimit );
         final RawQueryResult[] latestQueryResult = new RawQueryResult[ 1 ];
         Iterable<Node> middleNodes = new LiteralToMiddleNodeIterable(
             new IterableWrapper<Node, RawQueryResult>( rawResult )
@@ -206,7 +246,7 @@ public class VerboseQuadStore extends RdfStoreImpl
             fakeWildcardStatement, middleNodes );
         return new IterableWrapper<QueryResult, CompleteStatement>(
             statementIterator )
-            {
+        {
             @Override
             protected QueryResult underlyingObjectToObject(
                 CompleteStatement object )
@@ -215,7 +255,23 @@ public class VerboseQuadStore extends RdfStoreImpl
                     latestQueryResult[ 0 ].getScore(),
                     latestQueryResult[ 0 ].getSnippet() );
             }
-            };
+        };
+    }
+    
+    public boolean verifyFulltextIndex( String queryOrNullForAll )
+    {
+        Transaction tx = neo().beginTx();
+        try
+        {
+            boolean result = getInitializedFulltextIndex().verify(
+                new QuadVerificationHook(), queryOrNullForAll );
+            tx.success();
+            return result;
+        }
+        finally
+        {
+            tx.finish();
+        }
     }
     
     @Override
@@ -306,13 +362,42 @@ public class VerboseQuadStore extends RdfStoreImpl
     
     private Iterable<Node> getMiddleNodesFromAllContexts()
     {
-        return getRepresentationStrategy().getExecutor().
-        getContextsReferenceNode().traverse( Order.DEPTH_FIRST,
-            StopEvaluator.END_OF_GRAPH,
-            new OneOfRelTypesReturnableEvaluator(
-                VerboseQuadStrategy.RelTypes.IN_CONTEXT ),
-                VerboseQuadExecutor.RelTypes.IS_A_CONTEXT, Direction.OUTGOING,
-                VerboseQuadStrategy.RelTypes.IN_CONTEXT, Direction.INCOMING );
+        Node contextsRefNode = getRepresentationStrategy().getExecutor().
+            getContextsReferenceNode();
+        Iterable<Node> contexts = new RelationshipToNodeIterable(
+            contextsRefNode, contextsRefNode.getRelationships(
+            VerboseQuadExecutor.RelTypes.IS_A_CONTEXT, Direction.OUTGOING ) );
+        
+        return new NestingIterable<Node, Node>( contexts )
+        {
+            private Set<Long> visitedMiddleNodes = new HashSet<Long>();
+            
+            @Override
+            protected Iterator<Node> createNestedIterator( Node contextNode )
+            {
+                return new FilteringIterator<Node>(
+                    new RelationshipToNodeIterable( contextNode,
+                        contextNode.getRelationships(
+                            VerboseQuadStrategy.RelTypes.
+                            IN_CONTEXT, Direction.INCOMING ) ).iterator() )
+                {
+                    @Override
+                    protected boolean passes( Node middleNode )
+                    {
+                        return visitedMiddleNodes.add( middleNode.getId() );
+                    }
+                };
+            }
+        };
+        
+        // Traversers are too slow, and it's so much manlier to do it manually
+//        return getRepresentationStrategy().getExecutor().
+//        getContextsReferenceNode().traverse( Order.DEPTH_FIRST,
+//            StopEvaluator.END_OF_GRAPH,
+//            new OneOfRelTypesReturnableEvaluator(
+//                VerboseQuadStrategy.RelTypes.IN_CONTEXT ),
+//                VerboseQuadExecutor.RelTypes.IS_A_CONTEXT, Direction.OUTGOING,
+//                VerboseQuadStrategy.RelTypes.IN_CONTEXT, Direction.INCOMING );
     }
     
     private Iterable<CompleteStatement> handleSubjectPredicateWildcard(
@@ -748,17 +833,17 @@ public class VerboseQuadStore extends RdfStoreImpl
         @Override
         protected Node underlyingObjectToObject( Node literalNode )
         {
-            Iterator<Relationship> relationships = literalNode.getRelationships(
-                Direction.INCOMING ).iterator();
-            if ( !relationships.hasNext() )
+            try
             {
-                throw new RuntimeException( literalNode + " is a node which " +
-                    "should've been a literal node and, hence, had an " +
-                    "INCOMING relationship representing the relationship to " +
-                    "the middle node of the statement. Instead it has\n" +
-                    new NeoUtil( neo() ).sumNodeContents( literalNode ) );
+                return literalNode.getRelationships(
+                    Direction.INCOMING ).iterator().next().getStartNode();
             }
-            return relationships.next().getStartNode();
+            catch ( RuntimeException e )
+            {
+                TemporaryLogger.getLogger().info( "There is a node which " +
+                    "should have been a literal but isn't " + literalNode );
+                throw e;
+            }
         }
     }
     
@@ -845,6 +930,97 @@ public class VerboseQuadStore extends RdfStoreImpl
                 }
             }
             return keys;
+        }
+    }
+    
+    public class QuadVerificationHook implements VerificationHook
+    {
+        private static final int INTERVAL = 10000;
+        private PrintStream output;
+        private int max;
+        private int counter;
+        
+        public Status verify( long id, String predicate, Object literal )
+        {
+            incrementCounter();
+            Status result = Status.OK;
+            try
+            {
+                Node node = neo().getNodeById( id );
+                Value value = getValueForObjectNode( predicate, node );
+                if ( !( value instanceof Literal ) )
+                {
+                    result = Status.NOT_LITERAL;
+                }
+                else
+                {
+                    Literal literalObject = ( Literal ) value;
+                    if ( !literalObject.getValue().toString().equals(
+                        literal.toString() ) )
+                    {
+                        result = Status.WRONG_LITERAL;
+                    }
+                }
+            }
+            catch ( NotFoundException e )
+            {
+                result = Status.MISSING;
+            }
+            
+            if ( result != Status.OK )
+            {
+                output.println( result.name() + " " + id );
+            }
+            return result;
+        }
+
+        public void verificationCompleted( Map<Status, Integer> counts )
+        {
+            displayProgress();
+            output.println( "\n-----------------\nTotal\n" );
+            for ( Map.Entry<Status, Integer> entry : counts.entrySet() )
+            {
+                output.println( entry.getKey().name() + ": " +
+                    entry.getValue() );
+            }
+        }
+
+        public void verificationStarting( int numberOfDocumentsToVerify )
+        {
+            try
+            {
+                output = new PrintStream( new File( "verify-fulltextindex-" +
+                    System.currentTimeMillis() ) );
+                output.println( "Verification starting. We have " +
+                    numberOfDocumentsToVerify + " documents ahead of us,\n" +
+                    "displaying progress each " + INTERVAL + " records\n" );
+                this.max = numberOfDocumentsToVerify;
+            }
+            catch ( IOException e )
+            {
+                throw new RuntimeException( e );
+            }
+        }
+        
+        private void incrementCounter()
+        {
+            if ( ++counter % INTERVAL == 0 )
+            {
+                displayProgress();
+            }
+        }
+        
+        private void displayProgress()
+        {
+            double percent = ( double ) counter / ( double ) max;
+            percent *= 100d;
+            output.println( "---" + counter +
+                " (" + ( int ) percent + "%)" );
+        }
+
+        public void oneWasSkipped()
+        {
+            incrementCounter();
         }
     }
 }
