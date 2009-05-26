@@ -1,3 +1,87 @@
 Neo4j RDF
 
-    Neo4j-backed RDF store
+    Ever wanted Neo4j to feel more like a triple/quad RDF store? This is a
+    layer around Neo4j which does just that. It models statements as
+    nodes/relationships using a pluggable representation. Currently there's
+    two default representations which you may use if you don't decide to
+    design your own. Let's begin with the easy one...
+    
+DenseTripleStore
+
+	Is, as the name implies, as dense as possible to make the node space more
+	compact. It also wont store the context part of the statements
+	(a statement consists of Subject, Predicate, Object, Context[] ).
+	This representation looks (for object type values):
+	
+---
+	(S) ---[P]---> (O)
+---
+	Where S and O are nodes and P the relationship type. The S and O mustn't be
+	blank nodes, they must have a URI because they are indexed and looked up
+	via that URI (the nodes also get the "uri" property which holds those URIs).
+	The representation for literal values:
+	
+---
+	(S) *[P]=[O]
+---
+	That is a property with the predicate as property key.
+	
+VerboseQuadStore
+
+	Is quite verbose in its representation and it can handle contexts as well.
+	Here's the representation of an object type value:
+	
+---
+	   (C1)                  (C2)
+	     ^                    ^
+	      \                  /
+	    [IN_CONTEXT]   [IN_CONTEXT]
+	         \            /
+	           \        /
+	             \    /
+	               \/
+	(S) ---[P]---> (m) ---[P]---> (O)
+---
+	Where S and O are the subject and object respectively. The 'm' node is just
+	a middle node which each unique S, P, O has. So it if you were to add
+	two statements with the exact same S, P, O but with another C (context)
+	there would be just a relationship created to another context node
+	Literal statements are modeled in the same way, but with the difference
+	that the O node will have a property P=O
+	
+Instantiating an RdfStore
+
+	So to start up an RdfStore you just:
+	
+---
+	NeoService neo = new EmbeddedNeo( "my/path" );
+	IndexService indexService = new LuceneIndexService( neo );
+	RdfStore store = new VerboseQuadStore( neo, indexService );
+---
+
+	Also don't forget to add some kind of shut down hook which shuts down the
+	components in the order: store, indexService, neo.
+
+Fulltext index
+
+	There's an extra feature you can use to enable fulltext search in all
+	literals for all statements in the store. To use that feature you need to
+	instantiate such an index and pass it in to the <<RdfStore>> constructor.
+	
+---
+	...
+	FulltextIndex fulltextIndex =
+		new SimpleFulltextIndex( neo, new File( "path/to/index" ) );
+	RdfStore store =
+		new VerboseQuadStore( neo, indexService, null, fulltextIndex );
+	...
+	for ( QueryResult searchHit : store.search( "rdf AND store" ) )
+	{
+		System.out.println( searchHits.getStatement() );
+	}
+---
+	The <<SimpleFulltextIndex>> index uses lucene and has an internal
+	asynchronous indexing queue which it processes as quickly as possible.
+	This makes insertion speed virtually unaffected, but it can also make the
+	fulltext index lag behind slightly. Although tests have shown that this is
+	rarely more than half a second or so even under very heavy load.
