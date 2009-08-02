@@ -17,7 +17,7 @@ DenseTripleStore
 	(S) ---[P]---> (O)
 ---
 	Where S and O are nodes and P the relationship type. The S and O mustn't be
-	blank nodes, they must have an URI because they are indexed and looked up
+	blank nodes, they must have a URI because they are indexed and looked up
 	via that URI (the nodes also get the "uri" property which holds those URIs).
 	The representation for literal values:
 	
