@@ -88,7 +88,7 @@ public class VerboseQuadStrategy
             formTripleNodeKey( statement ) );
         literalNode.addExecutorInfo( EXECUTOR_INFO_NODE_TYPE, TYPE_LITERAL );
         String predicate = asUri( statement.getPredicate() );
-        String valueKey = AbstractUriBasedExecutor.LITERAL_VALUE_KEY;
+        String valueKey = getExecutor().getLiteralNodePropertyKey( predicate );
         if ( statement.getObject().isWildcard() )
         {
             literalNode.addProperty( valueKey, statement.getObject() );

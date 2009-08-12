@@ -254,23 +254,4 @@ abstract class StandardAbstractRepresentationStrategy
         }
         return s + p + o;
     }
-
-    protected AbstractRepresentation getTwoNodeDataTypeFragment(
-        Statement statement, AbstractRepresentation representation )
-    {
-        AbstractNode subjectNode = getOrCreateNode( representation,
-            statement.getSubject() );
-        Object literalNodeKey = formTripleNodeKey( statement );
-        AbstractNode literalNode = getOrCreateNode( representation, null,
-            literalNodeKey );
-        literalNode.addProperty( UriBasedExecutor.LITERAL_VALUE_KEY,
-            ( ( Literal ) statement.getObject() ).getValue() );
-        literalNode.addExecutorInfo( UriBasedExecutor.EXEC_INFO_IS_LITERAL_NODE,
-            true );
-        AbstractRelationship relationship = new AbstractRelationship(
-            subjectNode, asUri( statement.getPredicate() ), literalNode );
-
-        representation.addRelationship( relationship );
-        return representation;
-    }
 }

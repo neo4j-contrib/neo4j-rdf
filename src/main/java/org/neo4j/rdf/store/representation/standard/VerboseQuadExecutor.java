@@ -12,6 +12,7 @@ import org.neo4j.api.core.Relationship;
 import org.neo4j.api.core.RelationshipType;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.rdf.fulltext.FulltextIndex;
+import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractRepresentation;
@@ -32,14 +33,14 @@ public class VerboseQuadExecutor extends UriBasedExecutor
     	new HashSet<String>();
     static
     {
-    	EXCLUDED_LITERAL_KEYS.add( LITERAL_DATATYPE_KEY );
-    	EXCLUDED_LITERAL_KEYS.add( LITERAL_LANGUAGE_KEY );
+        EXCLUDED_LITERAL_KEYS.add( LITERAL_DATATYPE_KEY );
+        EXCLUDED_LITERAL_KEYS.add( LITERAL_LANGUAGE_KEY );
     }
     
     public static enum RelTypes implements RelationshipType
     {
-    	REF_CONTEXTS,
-    	IS_A_CONTEXT,
+        REF_CONTEXTS,
+        IS_A_CONTEXT,
     }
     
     public VerboseQuadExecutor( NeoService neo, IndexService index,
@@ -131,6 +132,30 @@ public class VerboseQuadExecutor extends UriBasedExecutor
             }
         }
         return map;
+    }
+    
+    public String getLiteralNodePropertyKey( String predicate )
+    {
+        return AbstractUriBasedExecutor.LITERAL_VALUE_KEY;
+    }
+
+    protected Node createLiteralNode( AbstractNode abstractNode )
+    {
+        Node node = neo().createNode();
+        applyRepresentation( abstractNode, node );
+        String predicate = ( String ) abstractNode.getSingleExecutorInfo(
+            VerboseQuadStrategy.EXECUTOR_INFO_PREDICATE );
+        Object value = abstractNode.properties().get(
+            getLiteralNodePropertyKey( predicate ) ).iterator().next();
+        indexLiteral( node, new Uri( predicate ), value );
+        return node;
+    }
+
+    protected void deleteLiteralNode( Node node,
+        String predicate, Object value )
+    {
+        removeLiteralIndex( node, new Uri( predicate ), value );
+        deleteNode( node, null );
     }
 
     private Relationship findContextRelationship(
@@ -566,7 +591,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
             subjectNode, subjectToMiddle );
         String predicate = middleToLiteral.getRelationshipTypeName();
         Object value = literalNode.getProperty(
-            AbstractUriBasedExecutor.LITERAL_VALUE_KEY );
+            getLiteralNodePropertyKey( predicate ) );
         deleteLiteralNode( literalNode, predicate, value );
     }
 

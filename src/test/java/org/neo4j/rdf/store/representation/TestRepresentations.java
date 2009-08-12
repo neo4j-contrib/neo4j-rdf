@@ -1,9 +1,5 @@
 package org.neo4j.rdf.store.representation;
 
-import java.util.Iterator;
-
-import junit.framework.TestCase;
-
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Resource;
@@ -12,9 +8,11 @@ import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Value;
 import org.neo4j.rdf.model.Wildcard;
 import org.neo4j.rdf.model.WildcardStatement;
+import org.neo4j.rdf.store.NeoWithIndexTestCase;
+import org.neo4j.rdf.store.representation.standard.VerboseQuadExecutor;
 import org.neo4j.rdf.store.representation.standard.VerboseQuadStrategy;
 
-public class TestRepresentations extends TestCase
+public class TestRepresentations extends NeoWithIndexTestCase
 {
     public void testVerboseQuadRepresentation() throws Exception
     {
@@ -60,7 +58,10 @@ public class TestRepresentations extends TestCase
     
     public void testVerboseQuadWildcards() throws Exception
     {
-        RepresentationStrategy strategy = new VerboseQuadStrategy( null, null );
+        RepresentationExecutor executor = new VerboseQuadExecutor( neo(),
+            indexService(), null, null );
+        RepresentationStrategy strategy =
+            new VerboseQuadStrategy( executor, null );
         Value[] s = { new Uri( "http://test.com/uriA" ), new Wildcard( "s" ) };
         Value[] p = { new Uri( "http://test.com/uriB" ) };
         Value[] o = { new Uri( "http://test.com/uriC" ), new Wildcard( "o" ) };
@@ -91,17 +92,5 @@ public class TestRepresentations extends TestCase
                 }
             }
         }
-    }
-    
-    private int countIterable( Iterable<?> iterable )
-    {
-        int counter = 0;
-        Iterator<?> itr = iterable.iterator();
-        while ( itr.hasNext() )
-        {
-            counter++;
-            itr.next();
-        }
-        return counter;
     }
 }

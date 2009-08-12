@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.neo4j.api.core.Direction;
+import org.neo4j.api.core.DynamicRelationshipType;
 import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
 import org.neo4j.api.core.PropertyContainer;
@@ -276,7 +277,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
 
     protected RelationshipType relationshipType( String name )
     {
-        return new RelationshipTypeImpl( name );
+        return DynamicRelationshipType.withName( name );
     }
 
     protected String getMetaExecutorInfo( AbstractNode node )
@@ -420,26 +421,6 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         return literal.getValue();
     }
 
-    protected Node createLiteralNode( AbstractNode abstractNode )
-    {
-        Node node = neo.createNode();
-        applyRepresentation( abstractNode, node );
-        String predicate = ( String ) abstractNode.getSingleExecutorInfo(
-            VerboseQuadStrategy.EXECUTOR_INFO_PREDICATE );
-        Object value = abstractNode.properties().get(
-            AbstractUriBasedExecutor.LITERAL_VALUE_KEY ).iterator().next();
-//        debugCreateNode( node, "(literal)" );
-        indexLiteral( node, new Uri( predicate ), value );
-        return node;
-    }
-
-    protected void deleteLiteralNode( Node node,
-        String predicate, Object value )
-    {
-        removeLiteralIndex( node, new Uri( predicate ), value );
-        deleteNode( node, null );
-    }
-    
     protected void indexLiteral( Node node, Uri predicate, Object literalValue )
     {
         index().index( node, LITERAL_VALUE_KEY, literalValue );

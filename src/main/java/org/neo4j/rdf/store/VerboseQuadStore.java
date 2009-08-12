@@ -64,6 +64,19 @@ public class VerboseQuadStore extends RdfStoreImpl
         debug( "I'm initialized!" );
     }
     
+    /**
+     * Provided if you'd like to customize the {@link VerboseQuadStrategy}
+     * to fit your needs.
+     * 
+     * @param neo the {@link NeoService} to use.
+     * @param strategy the {@link VerboseQuadStrategy} to use.
+     */
+    protected VerboseQuadStore( NeoService neo, VerboseQuadStrategy strategy )
+    {
+        super( neo, strategy );
+        this.meta = null;
+    }
+    
     protected MetaStructure meta()
     {
         return this.meta;
@@ -86,8 +99,8 @@ public class VerboseQuadStore extends RdfStoreImpl
         {
             if ( includeInferredStatements )
             {
-                throw new UnsupportedOperationException( "We currently not " +
-                "support getStatements() with reasoning enabled" );
+                throw new UnsupportedOperationException( "We currently don't " +
+                    "support getStatements() with reasoning enabled" );
             }
             
             Iterable<CompleteStatement> result = null;
@@ -342,7 +355,8 @@ public class VerboseQuadStore extends RdfStoreImpl
         else
         {
             Object value = objectNode.getProperty(
-                AbstractUriBasedExecutor.LITERAL_VALUE_KEY );
+                getRepresentationStrategy().getExecutor()
+                    .getLiteralNodePropertyKey( predicate ) );
             String datatype = ( String ) objectNode.getProperty(
                 VerboseQuadExecutor.LITERAL_DATATYPE_KEY, null );
             String language = ( String ) objectNode.getProperty(
