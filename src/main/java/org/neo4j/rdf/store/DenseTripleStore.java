@@ -11,6 +11,10 @@ import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
 import org.neo4j.api.core.Relationship;
 import org.neo4j.api.core.Transaction;
+import org.neo4j.commons.iterator.FilteringIterator;
+import org.neo4j.commons.iterator.IteratorWrapper;
+import org.neo4j.commons.iterator.NestingIterator;
+import org.neo4j.commons.iterator.PrefetchingIterator;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.rdf.fulltext.FulltextIndex;
 import org.neo4j.rdf.model.CompleteStatement;
@@ -24,11 +28,7 @@ import org.neo4j.rdf.model.WildcardStatement;
 import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
 import org.neo4j.rdf.store.representation.standard.DenseTripleStrategy;
 import org.neo4j.rdf.store.representation.standard.UriBasedExecutor;
-import org.neo4j.util.FilteringIterator;
-import org.neo4j.util.IteratorWrapper;
 import org.neo4j.util.NeoUtil;
-import org.neo4j.util.NestingIterator;
-import org.neo4j.util.PrefetchingIterator;
 import org.neo4j.util.index.IndexService;
 
 public class DenseTripleStore extends RdfStoreImpl

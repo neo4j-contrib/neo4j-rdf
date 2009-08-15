@@ -45,14 +45,14 @@ import org.apache.lucene.store.FSDirectory;
 import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
 import org.neo4j.api.core.NotFoundException;
+import org.neo4j.commons.iterator.FilteringIterator;
+import org.neo4j.commons.iterator.IteratorAsIterable;
+import org.neo4j.commons.iterator.PrefetchingIterator;
 import org.neo4j.rdf.fulltext.PersistentQueue.Entry;
 import org.neo4j.rdf.fulltext.VerificationHook.Status;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.util.TemporaryLogger;
-import org.neo4j.util.FilteringIterator;
-import org.neo4j.util.IteratorAsIterable;
 import org.neo4j.util.NeoUtil;
-import org.neo4j.util.PrefetchingIterator;
 
 /**
  * A {@link FulltextIndex} using lucene.

@@ -6,11 +6,14 @@ import java.util.Map;
 
 import org.neo4j.api.core.Direction;
 import org.neo4j.api.core.DynamicRelationshipType;
+import org.neo4j.api.core.EmbeddedNeo;
 import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
+import org.neo4j.api.core.NotFoundException;
 import org.neo4j.api.core.PropertyContainer;
 import org.neo4j.api.core.Relationship;
 import org.neo4j.api.core.RelationshipType;
+import org.neo4j.impl.transaction.LockManager;
 import org.neo4j.neometa.structure.MetaStructure;
 import org.neo4j.rdf.fulltext.FulltextIndex;
 import org.neo4j.rdf.model.Literal;
@@ -477,8 +480,24 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
 
     protected void deleteRelationship( Relationship relationship )
     {
-//        debugDeleteRelationship( relationship );
-        relationship.delete();
+        getLockManager().getReadLock( relationship );
+        try
+        {
+            relationship.delete();
+        }
+        catch ( NotFoundException e )
+        {
+            // ok some other thread deleted it
+        }
+        finally
+        {
+            getLockManager().releaseReadLock( relationship );
+        }
+    }
+    
+    private LockManager getLockManager()
+    {
+        return ((EmbeddedNeo) neo).getConfig().getLockManager();
     }
     
     protected static class NodeContext
