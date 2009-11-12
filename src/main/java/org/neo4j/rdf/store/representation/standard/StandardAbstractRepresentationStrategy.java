@@ -2,10 +2,9 @@ package org.neo4j.rdf.store.representation.standard;
 
 import java.text.ParseException;
 
-import org.neo4j.api.core.NeoService;
-import org.neo4j.neometa.structure.MetaStructure;
-import org.neo4j.neometa.structure.MetaStructureProperty;
-import org.neo4j.neometa.structure.PropertyRange;
+import org.neo4j.meta.model.MetaModel;
+import org.neo4j.meta.model.MetaModelProperty;
+import org.neo4j.meta.model.PropertyRange;
 import org.neo4j.rdf.model.Literal;
 import org.neo4j.rdf.model.Resource;
 import org.neo4j.rdf.model.Statement;
@@ -27,13 +26,10 @@ abstract class StandardAbstractRepresentationStrategy
     implements RepresentationStrategy
 {
     private final RepresentationExecutor executor;
-    private final MetaStructure meta;
+    private final MetaModel meta;
 
-    /**
-     * @param neo the {@link NeoService}.
-     */
     public StandardAbstractRepresentationStrategy(
-        RepresentationExecutor executor, MetaStructure meta )
+        RepresentationExecutor executor, MetaModel meta )
     {
         this.executor = executor;
         this.meta = meta;
@@ -134,11 +130,11 @@ abstract class StandardAbstractRepresentationStrategy
             return null;
         }
 
-        MetaStructureProperty property =
+        MetaModelProperty property =
             meta.getGlobalNamespace().getMetaProperty(
                 predicate.getUriAsString(), false );
         return property == null ? null :
-            meta.lookup( property, MetaStructure.LOOKUP_PROPERTY_RANGE );
+            meta.lookup( property, MetaModel.LOOKUP_PROPERTY_RANGE );
     }
 
     private boolean pointsToObjectType( Uri predicate )

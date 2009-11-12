@@ -3,7 +3,7 @@ package org.neo4j.rdf.validation;
 import java.util.Collection;
 
 import org.neo4j.api.core.Node;
-import org.neo4j.neometa.structure.MetaStructureClass;
+import org.neo4j.meta.model.MetaModelClass;
 import org.neo4j.rdf.model.Uri;
 
 /**
@@ -18,7 +18,7 @@ public interface Validatable
     /**
      * @return the node types for this entity.
      */
-    Collection<MetaStructureClass> getClasses();
+    Collection<MetaModelClass> getClasses();
     
     /**
      * @return all the property keys.

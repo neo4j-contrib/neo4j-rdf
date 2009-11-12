@@ -2,7 +2,7 @@ package org.neo4j.rdf.model;
 
 import java.text.ParseException;
 
-import org.neo4j.neometa.structure.RdfUtil;
+import org.neo4j.meta.model.RdfUtil;
 
 /**
  * A literal value, i.e. String, int, byte, etc.

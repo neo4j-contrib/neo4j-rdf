@@ -22,7 +22,7 @@ public interface RepresentationStrategy
     /**
      * @return a suitable {@link RepresentationExecutor} which is capable of
      * handling the {@link AbstractRepresentation}s created in
-     * {@link #getAbstractRepresentation(Statement)}.
+     * {@link #getAbstractRepresentation(Statement, AbstractRepresentation)}.
      */
     RepresentationExecutor getExecutor();
 }

@@ -7,20 +7,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.neo4j.neometa.structure.DatatypeClassRange;
-import org.neo4j.neometa.structure.MetaStructure;
-import org.neo4j.neometa.structure.MetaStructureClass;
-import org.neo4j.neometa.structure.MetaStructureClassRange;
-import org.neo4j.neometa.structure.MetaStructureProperty;
-import org.neo4j.neometa.structure.PropertyRange;
+import org.neo4j.meta.model.ClassRange;
+import org.neo4j.meta.model.DatatypeClassRange;
+import org.neo4j.meta.model.MetaModel;
+import org.neo4j.meta.model.MetaModelClass;
+import org.neo4j.meta.model.MetaModelProperty;
+import org.neo4j.meta.model.PropertyRange;
 
-/**
- * A validator for {@link OwlInstance} objects. It checks so that they conform
- * to the ontologies. Objects are validated right before a transaction commit
- * which makes it possible to have objects in the middle of a transaction which
- * right then and there doesn't conform to the ontologies. The only thing that
- * matter is that they conform before they are committed.
- */
 public class Validator
 {
     //	private void debug( Validatable instance, String string )
@@ -36,34 +29,27 @@ public class Validator
     //		}
     //	}
     
-    private MetaStructure meta;
+    private MetaModel meta;
     
-    public Validator( MetaStructure meta )
+    public Validator( MetaModel meta )
     {
         this.meta = meta;
     }
     
-    /**
-     * Validates an {@link OwlInstance}. It uses {@link OwlModel}
-     * ({@link IdmNeoRepo#owlModel()} model) to get the restrictions. 
-     * 
-     * @param instance the instance to validate.
-     * @throws Exception if <code>instance</code> doesn't validate.
-     */
     public void validate( Validatable instance ) throws Exception
     {
         ValidationContext context = new ValidationContext( instance );
         
         // Gather which properties regards to this instance
-        Set<MetaStructureProperty> properties =
-            new HashSet<MetaStructureProperty>();
-        for ( MetaStructureClass cls : context.getClasses() )
+        Set<MetaModelProperty> properties =
+            new HashSet<MetaModelProperty>();
+        for ( MetaModelClass cls : context.getClasses() )
         {
             properties.addAll( cls.getAllProperties() );
         }
         
         // Check cardinality and range on all properties
-        for ( MetaStructureProperty property : properties )
+        for ( MetaModelProperty property : properties )
         {
             validatePropertyIsWithinCardinality( context, property );
             validatePropertyRange( context, property );
@@ -76,7 +62,7 @@ public class Validator
         for ( String key : existingPropertyKeys )
         {
             validatePropertyExists( instance, key );
-            MetaStructureProperty property =
+            MetaModelProperty property =
                 meta.getGlobalNamespace().getMetaProperty( key, false );
             if ( !properties.contains( property ) )
             {
@@ -97,7 +83,7 @@ public class Validator
     }
     
     private void validatePropertyRange( ValidationContext context,
-        MetaStructureProperty metaProperty ) throws Exception
+        MetaModelProperty metaProperty ) throws Exception
     {
         String key = metaProperty.getName();
         PerPropertyContext pContext = context.property( metaProperty );
@@ -107,16 +93,15 @@ public class Validator
         {
             return;
         }
-        else if ( propertyRange instanceof MetaStructureClassRange )
+        else if ( propertyRange instanceof ClassRange )
         {
-            MetaStructureClassRange classRange =
-                ( MetaStructureClassRange ) propertyRange;
-            for ( MetaStructureClass rangeClass : classRange.getRangeClasses() )
+            ClassRange classRange = ( ClassRange ) propertyRange;
+            for ( MetaModelClass rangeClass : classRange.getRangeClasses() )
             {
                 for ( Validatable property : instance.complexProperties( key ) )
                 {
                     boolean found = false;
-                    for ( MetaStructureClass propertyCls :
+                    for ( MetaModelClass propertyCls :
                         property.getClasses() )
                     {
 //                        TODO
@@ -192,7 +177,7 @@ public class Validator
     }
     
     private void validatePropertyIsWithinCardinality( ValidationContext context,
-        MetaStructureProperty property ) throws Exception
+        MetaModelProperty property ) throws Exception
     {
         String key = property.getName();
         PerPropertyContext pContext = context.property( property );
@@ -251,29 +236,29 @@ public class Validator
     private class ValidationContext
     {
         private Validatable validatable;
-        private MetaStructureClass[] instanceOfClasses;
-        private Map<MetaStructureProperty,
+        private MetaModelClass[] instanceOfClasses;
+        private Map<MetaModelProperty,
         PerPropertyContext> propertyContexts =
-            new HashMap<MetaStructureProperty, PerPropertyContext>();
+            new HashMap<MetaModelProperty, PerPropertyContext>();
         
         ValidationContext( Validatable validatable )
         {
             this.validatable = validatable;
         }
         
-        MetaStructureClass[] getClasses()
+        MetaModelClass[] getClasses()
         {
             if ( instanceOfClasses == null )
             {
-                Collection<MetaStructureClass> list =
+                Collection<MetaModelClass> list =
                     validatable.getClasses();
                 instanceOfClasses = list.toArray(
-                    new MetaStructureClass[ list.size() ] );
+                    new MetaModelClass[ list.size() ] );
             }
             return instanceOfClasses;
         }
         
-        PerPropertyContext property( MetaStructureProperty property )
+        PerPropertyContext property( MetaModelProperty property )
         {
             PerPropertyContext result = propertyContexts.get( property );
             if ( result == null )
@@ -288,13 +273,13 @@ public class Validator
     private class PerPropertyContext
     {
         private ValidationContext context;
-        private MetaStructureProperty property;
+        private MetaModelProperty property;
         private PropertyRange range;
         private Integer minCardinality;
         private Integer maxCardinality;
         
         PerPropertyContext( ValidationContext context,
-            MetaStructureProperty property )
+            MetaModelProperty property )
         {
             this.context = context;
             this.property = property;
@@ -305,7 +290,7 @@ public class Validator
             if ( range == null )
             {
                 range = meta.lookup( property,
-                    MetaStructure.LOOKUP_PROPERTY_RANGE, context.getClasses() );
+                    MetaModel.LOOKUP_PROPERTY_RANGE, context.getClasses() );
             }
             return range;
         }
@@ -315,7 +300,7 @@ public class Validator
             if ( minCardinality == null )
             {
                 minCardinality = meta.lookup( property,
-                    MetaStructure.LOOKUP_MIN_CARDINALITY,
+                    MetaModel.LOOKUP_MIN_CARDINALITY,
                     context.getClasses() );
             }
             return minCardinality;
@@ -326,7 +311,7 @@ public class Validator
             if ( maxCardinality == null )
             {
                 maxCardinality = meta.lookup( property,
-                    MetaStructure.LOOKUP_MAX_CARDINALITY,
+                    MetaModel.LOOKUP_MAX_CARDINALITY,
                     context.getClasses() );
             }
             return maxCardinality;

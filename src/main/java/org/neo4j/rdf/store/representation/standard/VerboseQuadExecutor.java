@@ -5,12 +5,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+
 import org.neo4j.api.core.Direction;
 import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
 import org.neo4j.api.core.Relationship;
 import org.neo4j.api.core.RelationshipType;
-import org.neo4j.neometa.structure.MetaStructure;
+import org.neo4j.meta.model.MetaModel;
 import org.neo4j.rdf.fulltext.FulltextIndex;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.store.representation.AbstractNode;
@@ -44,7 +45,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
     }
     
     public VerboseQuadExecutor( NeoService neo, IndexService index,
-        MetaStructure meta, FulltextIndex fulltextIndex )
+        MetaModel meta, FulltextIndex fulltextIndex )
     {
         super( neo, index, meta, fulltextIndex );
     }

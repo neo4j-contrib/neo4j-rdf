@@ -1,7 +1,7 @@
 package org.neo4j.rdf.store.representation.standard;
 
 import org.neo4j.api.core.RelationshipType;
-import org.neo4j.neometa.structure.MetaStructure;
+import org.neo4j.meta.model.MetaModel;
 import org.neo4j.rdf.model.Literal;
 import org.neo4j.rdf.model.Statement;
 import org.neo4j.rdf.store.representation.AbstractNode;
@@ -38,7 +38,7 @@ public class VerboseQuadStrategy
     public static final String KEY_OBJECT_URI_ON_MIDDLE_NODE = "object_uri";
 
     public VerboseQuadStrategy( RepresentationExecutor executor,
-        MetaStructure meta )
+        MetaModel meta )
     {
         super( executor, meta );
     }

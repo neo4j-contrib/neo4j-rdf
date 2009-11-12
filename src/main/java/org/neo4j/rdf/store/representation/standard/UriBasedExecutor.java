@@ -13,7 +13,7 @@ import org.neo4j.api.core.Node;
 import org.neo4j.api.core.PropertyContainer;
 import org.neo4j.api.core.Relationship;
 import org.neo4j.api.core.RelationshipType;
-import org.neo4j.neometa.structure.MetaStructure;
+import org.neo4j.meta.model.MetaModel;
 import org.neo4j.rdf.fulltext.FulltextIndex;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.store.representation.AbstractElement;
@@ -57,7 +57,7 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
      * @param index the {@link Index} to use as the lookup for objects.
      */
     public UriBasedExecutor( NeoService neo, IndexService index,
-        MetaStructure meta, FulltextIndex fulltextIndex )
+        MetaModel meta, FulltextIndex fulltextIndex )
     {
         super( neo, index, meta, fulltextIndex );
     }

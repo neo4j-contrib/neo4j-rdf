@@ -4,18 +4,18 @@ import org.neo4j.api.core.Direction;
 import org.neo4j.api.core.NeoService;
 import org.neo4j.api.core.Node;
 import org.neo4j.api.core.Relationship;
-import org.neo4j.neometa.structure.MetaStructure;
-import org.neo4j.neometa.structure.MetaStructureClass;
-import org.neo4j.neometa.structure.MetaStructureRelTypes;
+import org.neo4j.meta.model.MetaModel;
+import org.neo4j.meta.model.MetaModelClass;
+import org.neo4j.meta.model.MetaModelRelTypes;
 import org.neo4j.util.NeoRelationshipSet;
 
-public class InstanceOfCollection extends NeoRelationshipSet<MetaStructureClass>
+public class InstanceOfCollection extends NeoRelationshipSet<MetaModelClass>
 {
-    private MetaStructure meta;
+    private MetaModel meta;
     
-    public InstanceOfCollection( NeoService neo, MetaStructure meta, Node node )
+    public InstanceOfCollection( NeoService neo, MetaModel meta, Node node )
     {
-        super( neo, node, MetaStructureRelTypes.META_IS_INSTANCE_OF,
+        super( neo, node, MetaModelRelTypes.META_IS_INSTANCE_OF,
             Direction.OUTGOING );
         this.meta = meta;
     }
@@ -23,13 +23,13 @@ public class InstanceOfCollection extends NeoRelationshipSet<MetaStructureClass>
     @Override
     protected Node getNodeFromItem( Object item )
     {
-        return ( ( MetaStructureClass ) item ).node();
+        return ( ( MetaModelClass ) item ).node();
     }
 
     @Override
-    protected MetaStructureClass newObject( Node node,
+    protected MetaModelClass newObject( Node node,
         Relationship relationship )
     {
-        return new MetaStructureClass( meta, node );
+        return new MetaModelClass( meta, node );
     }
 }

@@ -14,7 +14,7 @@ import org.neo4j.api.core.PropertyContainer;
 import org.neo4j.api.core.Relationship;
 import org.neo4j.api.core.RelationshipType;
 import org.neo4j.impl.transaction.LockManager;
-import org.neo4j.neometa.structure.MetaStructure;
+import org.neo4j.meta.model.MetaModel;
 import org.neo4j.rdf.fulltext.FulltextIndex;
 import org.neo4j.rdf.model.Literal;
 import org.neo4j.rdf.model.Uri;
@@ -41,11 +41,11 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     private final NeoService neo;
     private final NeoUtil neoUtil;
     private final IndexService index;
-    private final MetaStructure meta;
+    private final MetaModel meta;
     private FulltextIndex fulltextIndex;
     
     public AbstractUriBasedExecutor( NeoService neo, IndexService index,
-        MetaStructure optionalMeta, FulltextIndex optionalFulltextIndex )
+        MetaModel optionalMeta, FulltextIndex optionalFulltextIndex )
     {
         this.neo = neo;
         this.index = index;

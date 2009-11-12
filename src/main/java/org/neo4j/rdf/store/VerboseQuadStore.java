@@ -23,7 +23,7 @@ import org.neo4j.commons.iterator.IterableWrapper;
 import org.neo4j.commons.iterator.NestingIterable;
 import org.neo4j.commons.iterator.NestingIterator;
 import org.neo4j.commons.iterator.PrefetchingIterator;
-import org.neo4j.neometa.structure.MetaStructure;
+import org.neo4j.meta.model.MetaModel;
 import org.neo4j.rdf.fulltext.FulltextIndex;
 import org.neo4j.rdf.fulltext.QueryResult;
 import org.neo4j.rdf.fulltext.RawQueryResult;
@@ -48,7 +48,7 @@ import org.neo4j.util.index.IndexService;
 
 public class VerboseQuadStore extends RdfStoreImpl
 {
-    private final MetaStructure meta;
+    private final MetaModel meta;
     
     public VerboseQuadStore( NeoService neo, IndexService indexer )
     {
@@ -56,7 +56,7 @@ public class VerboseQuadStore extends RdfStoreImpl
     }
     
     public VerboseQuadStore( NeoService neo, IndexService indexer,
-        MetaStructure meta, FulltextIndex fulltextIndex )
+        MetaModel meta, FulltextIndex fulltextIndex )
     {
         super( neo, new VerboseQuadStrategy( new VerboseQuadExecutor( neo,
             indexer, meta, fulltextIndex ), meta ) );
@@ -77,7 +77,7 @@ public class VerboseQuadStore extends RdfStoreImpl
         this.meta = null;
     }
     
-    protected MetaStructure meta()
+    protected MetaModel meta()
     {
         return this.meta;
     }

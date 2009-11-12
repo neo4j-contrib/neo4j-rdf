@@ -15,7 +15,7 @@ import org.neo4j.commons.iterator.FilteringIterator;
 import org.neo4j.commons.iterator.IteratorWrapper;
 import org.neo4j.commons.iterator.NestingIterator;
 import org.neo4j.commons.iterator.PrefetchingIterator;
-import org.neo4j.neometa.structure.MetaStructure;
+import org.neo4j.meta.model.MetaModel;
 import org.neo4j.rdf.fulltext.FulltextIndex;
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
@@ -33,7 +33,7 @@ import org.neo4j.util.index.IndexService;
 
 public class DenseTripleStore extends RdfStoreImpl
 {
-    private final MetaStructure meta;
+    private final MetaModel meta;
     private final NeoUtil neoUtil;
     
     public DenseTripleStore( NeoService neo, IndexService indexer )
@@ -42,7 +42,7 @@ public class DenseTripleStore extends RdfStoreImpl
     }
     
     public DenseTripleStore( NeoService neo, IndexService indexer,
-        MetaStructure meta, FulltextIndex fulltextIndex )
+        MetaModel meta, FulltextIndex fulltextIndex )
     {
         super( neo, new DenseTripleStrategy( new UriBasedExecutor( neo,
             indexer, meta, fulltextIndex ), meta ) );

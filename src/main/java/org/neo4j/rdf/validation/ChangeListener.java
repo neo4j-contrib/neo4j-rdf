@@ -4,12 +4,6 @@ import org.neo4j.impl.event.Event;
 import org.neo4j.impl.event.EventData;
 import org.neo4j.impl.event.ProActiveEventListener;
 
-/**
- * A listener which listens to {@link IdmNeoRepo#INSTANCE_CHANGED} events
- * (events about which {@link OwlInstance} objects have changed) and keeps
- * them so that a transaction can ask it about which instances needs to be
- * validated before a commit.
- */
 public class ChangeListener implements ProActiveEventListener
 {
     public boolean proActiveEventReceived( Event event, EventData data )
