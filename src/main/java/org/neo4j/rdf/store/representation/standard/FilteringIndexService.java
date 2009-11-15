@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.neo4j.api.core.Node;
+import org.neo4j.util.index.IndexHits;
 import org.neo4j.util.index.IndexService;
 import org.neo4j.util.index.Isolation;
 
@@ -66,7 +67,7 @@ public class FilteringIndexService implements IndexService
         return this.allowedKeys;
     }
 
-    public Iterable<Node> getNodes( String key, Object value )
+    public IndexHits getNodes( String key, Object value )
     {
         return this.indexService.getNodes( key, value );
     }
