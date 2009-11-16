@@ -186,7 +186,7 @@ public class Validator
         if ( maxCardinality == null && minCardinality == null )
         {
             String functionality =
-                property.getAdditionalProperty( "functionality" );
+                ( String ) property.getAdditionalProperty( "functionality" );
             if ( functionality != null )
             {
                 maxCardinality = 1;
