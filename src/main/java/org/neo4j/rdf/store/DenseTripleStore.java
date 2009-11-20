@@ -51,7 +51,7 @@ public class DenseTripleStore extends RdfStoreImpl
     }
 
     @Override
-    protected DenseTripleStrategy getRepresentationStrategy()
+    public DenseTripleStrategy getRepresentationStrategy()
     {
         return ( DenseTripleStrategy ) super.getRepresentationStrategy();
     }

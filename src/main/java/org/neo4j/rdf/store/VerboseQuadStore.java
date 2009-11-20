@@ -83,7 +83,7 @@ public class VerboseQuadStore extends RdfStoreImpl
     }
     
     @Override
-    protected VerboseQuadStrategy getRepresentationStrategy()
+    public VerboseQuadStrategy getRepresentationStrategy()
     {
         return ( VerboseQuadStrategy ) super.getRepresentationStrategy();
     }
