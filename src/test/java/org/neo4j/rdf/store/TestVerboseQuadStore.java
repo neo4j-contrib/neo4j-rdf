@@ -250,6 +250,8 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
         for ( QueryResult oneResult : queryResult )
         {
             counter++;
+            System.out.println( "snippet '" + oneResult.getSnippet() + "'" +
+                ", " + oneResult.getStatement() );
             assertTrue( oneResult.getSnippet().contains( "Persson" ) );
         }
         assertEquals( 2, counter );

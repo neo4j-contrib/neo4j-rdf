@@ -38,6 +38,7 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.highlight.Formatter;
 import org.apache.lucene.search.highlight.Highlighter;
+import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
 import org.apache.lucene.search.highlight.QueryScorer;
 import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
 import org.apache.lucene.store.Directory;
@@ -379,7 +380,7 @@ public class SimpleFulltextIndex implements FulltextIndex
             if ( snippetCountLimit > 0 )
             {
                 highlighter = new Highlighter( highlightFormatter,
-                    new QueryScorer( searcher.rewrite( q ) ) );
+                    new QueryScorer( q ) );
             }
             
             Iterator<RawQueryResult> resultIterator =
@@ -537,6 +538,11 @@ public class SimpleFulltextIndex implements FulltextIndex
                 snippet.append( fragment );
             }
             catch ( IOException e )
+            {
+                // TODO
+                continue;
+            }
+            catch ( InvalidTokenOffsetsException e )
             {
                 // TODO
                 continue;
