@@ -21,7 +21,7 @@ import org.neo4j.util.NeoUtil;
  */
 public abstract class NeoTestCase extends TestCase
 {
-	private static File basePath = new File( "var/test" );
+	private static File basePath = new File( "target/var" );
     private static NeoService neo;
     private static NeoUtil neoUtil;
 

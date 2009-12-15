@@ -12,7 +12,7 @@ public class TestFulltextIndex extends NeoTestCase
     public void testSelfRepair() throws Exception
     {
         FulltextIndex index = new SimpleFulltextIndex( neo(),
-            new File( "var/fulltext" ) );
+            new File( "target/var/fulltext" ) );
         index.clear();
         Node node;
         
