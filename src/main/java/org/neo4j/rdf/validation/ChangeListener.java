@@ -1,8 +1,8 @@
 package org.neo4j.rdf.validation;
 
-import org.neo4j.impl.event.Event;
-import org.neo4j.impl.event.EventData;
-import org.neo4j.impl.event.ProActiveEventListener;
+import org.neo4j.kernel.impl.event.Event;
+import org.neo4j.kernel.impl.event.EventData;
+import org.neo4j.kernel.impl.event.ProActiveEventListener;
 
 public class ChangeListener implements ProActiveEventListener
 {

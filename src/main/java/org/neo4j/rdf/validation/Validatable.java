@@ -2,7 +2,7 @@ package org.neo4j.rdf.validation;
 
 import java.util.Collection;
 
-import org.neo4j.api.core.Node;
+import org.neo4j.graphdb.Node;
 import org.neo4j.meta.model.MetaModelClass;
 import org.neo4j.rdf.model.Uri;
 

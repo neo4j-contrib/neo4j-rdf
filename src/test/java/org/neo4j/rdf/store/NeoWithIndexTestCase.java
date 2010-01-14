@@ -1,6 +1,6 @@
 package org.neo4j.rdf.store;
 
-import org.neo4j.util.index.IndexService;
+import org.neo4j.index.IndexService;
 
 public abstract class NeoWithIndexTestCase extends NeoTestCase
 {

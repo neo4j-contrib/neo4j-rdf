@@ -6,11 +6,11 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import org.neo4j.api.core.Direction;
-import org.neo4j.api.core.NeoService;
-import org.neo4j.api.core.Node;
-import org.neo4j.api.core.Relationship;
-import org.neo4j.api.core.Transaction;
+import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.commons.iterator.FilteringIterator;
 import org.neo4j.commons.iterator.IteratorWrapper;
 import org.neo4j.commons.iterator.NestingIterator;
@@ -29,19 +29,19 @@ import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
 import org.neo4j.rdf.store.representation.standard.DenseTripleStrategy;
 import org.neo4j.rdf.store.representation.standard.UriBasedExecutor;
 import org.neo4j.util.NeoUtil;
-import org.neo4j.util.index.IndexService;
+import org.neo4j.index.IndexService;
 
 public class DenseTripleStore extends RdfStoreImpl
 {
     private final MetaModel meta;
     private final NeoUtil neoUtil;
     
-    public DenseTripleStore( NeoService neo, IndexService indexer )
+    public DenseTripleStore( GraphDatabaseService neo, IndexService indexer )
     {
         this( neo, indexer, null, null );
     }
     
-    public DenseTripleStore( NeoService neo, IndexService indexer,
+    public DenseTripleStore( GraphDatabaseService neo, IndexService indexer,
         MetaModel meta, FulltextIndex fulltextIndex )
     {
         super( neo, new DenseTripleStrategy( new UriBasedExecutor( neo,

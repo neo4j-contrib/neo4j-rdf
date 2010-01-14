@@ -7,10 +7,10 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.neo4j.api.core.Node;
-import org.neo4j.util.index.IndexHits;
-import org.neo4j.util.index.IndexService;
-import org.neo4j.util.index.Isolation;
+import org.neo4j.graphdb.Node;
+import org.neo4j.index.IndexHits;
+import org.neo4j.index.IndexService;
+import org.neo4j.index.Isolation;
 
 public class FilteringIndexService implements IndexService
 {

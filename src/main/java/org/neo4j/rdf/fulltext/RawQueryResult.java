@@ -1,6 +1,6 @@
 package org.neo4j.rdf.fulltext;
 
-import org.neo4j.api.core.Node;
+import org.neo4j.graphdb.Node;
 
 /**
  * Just a raw query result returned from lucene from a search query.

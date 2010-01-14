@@ -6,18 +6,18 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import org.neo4j.api.core.Direction;
-import org.neo4j.api.core.NeoService;
-import org.neo4j.api.core.Node;
-import org.neo4j.api.core.Relationship;
-import org.neo4j.api.core.RelationshipType;
+import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.meta.model.MetaModel;
 import org.neo4j.rdf.fulltext.FulltextIndex;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractRepresentation;
-import org.neo4j.util.index.IndexService;
+import org.neo4j.index.IndexService;
 
 public class VerboseQuadExecutor extends UriBasedExecutor
 {
@@ -44,7 +44,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         IS_A_CONTEXT,
     }
     
-    public VerboseQuadExecutor( NeoService neo, IndexService index,
+    public VerboseQuadExecutor( GraphDatabaseService neo, IndexService index,
         MetaModel meta, FulltextIndex fulltextIndex )
     {
         super( neo, index, meta, fulltextIndex );

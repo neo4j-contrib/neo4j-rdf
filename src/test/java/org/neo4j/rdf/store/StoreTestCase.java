@@ -22,8 +22,8 @@ import org.neo4j.rdf.model.Value;
 import org.neo4j.rdf.model.Wildcard;
 import org.neo4j.rdf.model.WildcardStatement;
 import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
-import org.neo4j.util.index.IndexService;
-import org.neo4j.util.index.NeoIndexService;
+import org.neo4j.index.IndexService;
+import org.neo4j.index.impl.NeoIndexService;
 
 public abstract class StoreTestCase extends NeoWithIndexTestCase
 {

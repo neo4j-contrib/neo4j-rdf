@@ -4,16 +4,16 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.neo4j.api.core.Direction;
-import org.neo4j.api.core.DynamicRelationshipType;
-import org.neo4j.api.core.EmbeddedNeo;
-import org.neo4j.api.core.NeoService;
-import org.neo4j.api.core.Node;
-import org.neo4j.api.core.NotFoundException;
-import org.neo4j.api.core.PropertyContainer;
-import org.neo4j.api.core.Relationship;
-import org.neo4j.api.core.RelationshipType;
-import org.neo4j.impl.transaction.LockManager;
+import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.DynamicRelationshipType;
+import org.neo4j.kernel.EmbeddedGraphDatabase;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.NotFoundException;
+import org.neo4j.graphdb.PropertyContainer;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.kernel.impl.transaction.LockManager;
 import org.neo4j.meta.model.MetaModel;
 import org.neo4j.rdf.fulltext.FulltextIndex;
 import org.neo4j.rdf.model.Literal;
@@ -25,7 +25,7 @@ import org.neo4j.rdf.store.representation.AbstractRepresentation;
 import org.neo4j.rdf.store.representation.RepresentationExecutor;
 import org.neo4j.util.NeoPropertyArraySet;
 import org.neo4j.util.NeoUtil;
-import org.neo4j.util.index.IndexService;
+import org.neo4j.index.IndexService;
 
 public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
 {
@@ -38,13 +38,13 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
     public static final String RDF_TYPE_URI = RDF_NAMESPACE + "type";
 
-    private final NeoService neo;
+    private final GraphDatabaseService neo;
     private final NeoUtil neoUtil;
     private final IndexService index;
     private final MetaModel meta;
     private FulltextIndex fulltextIndex;
     
-    public AbstractUriBasedExecutor( NeoService neo, IndexService index,
+    public AbstractUriBasedExecutor( GraphDatabaseService neo, IndexService index,
         MetaModel optionalMeta, FulltextIndex optionalFulltextIndex )
     {
         this.neo = neo;
@@ -59,7 +59,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         return this.fulltextIndex;
     }
     
-    protected NeoService neo()
+    protected GraphDatabaseService neo()
     {
         return this.neo;
     }
@@ -497,7 +497,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     
     private LockManager getLockManager()
     {
-        return ((EmbeddedNeo) neo).getConfig().getLockManager();
+        return ((EmbeddedGraphDatabase) neo).getConfig().getLockManager();
     }
     
     protected static class NodeContext

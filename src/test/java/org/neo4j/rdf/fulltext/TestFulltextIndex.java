@@ -2,8 +2,8 @@ package org.neo4j.rdf.fulltext;
 
 import java.io.File;
 
-import org.neo4j.api.core.Node;
-import org.neo4j.api.core.Transaction;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.store.NeoTestCase;
 

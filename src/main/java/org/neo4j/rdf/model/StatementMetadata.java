@@ -1,6 +1,6 @@
 package org.neo4j.rdf.model;
 
-import org.neo4j.api.core.PropertyContainer;
+import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.rdf.store.RdfStore;
 
 /**

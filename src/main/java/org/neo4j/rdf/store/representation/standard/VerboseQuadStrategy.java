@@ -1,6 +1,6 @@
 package org.neo4j.rdf.store.representation.standard;
 
-import org.neo4j.api.core.RelationshipType;
+import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.meta.model.MetaModel;
 import org.neo4j.rdf.model.Literal;
 import org.neo4j.rdf.model.Statement;

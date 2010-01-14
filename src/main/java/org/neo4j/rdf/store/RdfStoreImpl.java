@@ -1,9 +1,9 @@
 package org.neo4j.rdf.store;
 
-import org.neo4j.api.core.NeoService;
-import org.neo4j.api.core.Node;
-import org.neo4j.api.core.RelationshipType;
-import org.neo4j.api.core.Transaction;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.rdf.fulltext.FulltextIndex;
 import org.neo4j.rdf.fulltext.QueryResult;
 import org.neo4j.rdf.model.CompleteStatement;
@@ -24,22 +24,22 @@ import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
  */
 public abstract class RdfStoreImpl implements RdfStore
 {
-    private final NeoService neo;
+    private final GraphDatabaseService neo;
     private final RepresentationStrategy representationStrategy;
 
     /**
-     * @param neo the {@link NeoService}.
+     * @param neo the {@link GraphDatabaseService}.
      * @param representationStrategy the {@link RepresentationStrategy}
      * to use when storing statements.
      */
-    public RdfStoreImpl( NeoService neo,
+    public RdfStoreImpl( GraphDatabaseService neo,
         RepresentationStrategy representationStrategy )
     {
         this.neo = neo;
         this.representationStrategy = representationStrategy;
     }
 
-    protected NeoService neo()
+    protected GraphDatabaseService neo()
     {
         return this.neo;
     }

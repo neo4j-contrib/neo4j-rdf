@@ -43,9 +43,9 @@ import org.apache.lucene.search.highlight.QueryScorer;
 import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.neo4j.api.core.NeoService;
-import org.neo4j.api.core.Node;
-import org.neo4j.api.core.NotFoundException;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.NotFoundException;
 import org.neo4j.commons.iterator.FilteringIterator;
 import org.neo4j.commons.iterator.IteratorAsIterable;
 import org.neo4j.commons.iterator.PrefetchingIterator;
@@ -94,7 +94,7 @@ public class SimpleFulltextIndex implements FulltextIndex
             return new LowerCaseFilter( new WhitespaceTokenizer( reader ) );
         }
     };
-    private NeoService neo;
+    private GraphDatabaseService neo;
     private NeoUtil neoUtil;
     private Map<Integer, Collection<Object[]>> toIndex =
         Collections.synchronizedMap(
@@ -105,18 +105,18 @@ public class SimpleFulltextIndex implements FulltextIndex
     private Set<String> predicateFilter;
     private IndexSearcher indexSearcher;
     
-    public SimpleFulltextIndex( NeoService neo, File storagePath )
+    public SimpleFulltextIndex( GraphDatabaseService neo, File storagePath )
     {
         this( neo, storagePath, null );
     }
     
-    public SimpleFulltextIndex( NeoService neo, File storagePath,
+    public SimpleFulltextIndex( GraphDatabaseService neo, File storagePath,
         Collection<String> predicateFilter )
     {
         this( neo, storagePath, null, null, predicateFilter );
     }
     
-    public SimpleFulltextIndex( NeoService neo, File storagePath,
+    public SimpleFulltextIndex( GraphDatabaseService neo, File storagePath,
         String highlightPreTag, String highlightPostTag,
         Collection<String> predicateFilter )
     {

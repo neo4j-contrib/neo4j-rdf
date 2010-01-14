@@ -1,6 +1,6 @@
 package org.neo4j.rdf.store.representation.standard;
 
-import org.neo4j.api.core.RelationshipType;
+import org.neo4j.graphdb.RelationshipType;
 
 public class RelationshipTypeImpl implements RelationshipType
 {

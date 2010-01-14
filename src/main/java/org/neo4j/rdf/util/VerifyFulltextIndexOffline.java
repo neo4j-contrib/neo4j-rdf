@@ -5,20 +5,20 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import org.neo4j.api.core.EmbeddedNeo;
-import org.neo4j.api.core.NeoService;
+import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.rdf.fulltext.FulltextIndex;
 import org.neo4j.rdf.fulltext.SimpleFulltextIndex;
 import org.neo4j.rdf.store.CachingLuceneIndexService;
 import org.neo4j.rdf.store.RdfStore;
 import org.neo4j.rdf.store.VerboseQuadStore;
-import org.neo4j.util.index.IndexService;
+import org.neo4j.index.IndexService;
+import org.neo4j.kernel.EmbeddedGraphDatabase;
 
 public class VerifyFulltextIndexOffline
 {
     public static void main( String[] args ) throws IOException
     {
-        final NeoService neo = new EmbeddedNeo( args[ 0 ] );
+        final GraphDatabaseService neo = new EmbeddedGraphDatabase( args[ 0 ] );
         final IndexService indexService =
             new CachingLuceneIndexService( neo );
         final FulltextIndex fulltextIndex = new SimpleFulltextIndex( neo,

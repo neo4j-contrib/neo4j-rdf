@@ -11,12 +11,12 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
-import org.neo4j.api.core.Direction;
-import org.neo4j.api.core.NeoService;
-import org.neo4j.api.core.Node;
-import org.neo4j.api.core.NotFoundException;
-import org.neo4j.api.core.Relationship;
-import org.neo4j.api.core.Transaction;
+import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.NotFoundException;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.commons.iterator.FilteringIterable;
 import org.neo4j.commons.iterator.FilteringIterator;
 import org.neo4j.commons.iterator.IterableWrapper;
@@ -44,18 +44,18 @@ import org.neo4j.rdf.store.representation.standard.VerboseQuadExecutor;
 import org.neo4j.rdf.store.representation.standard.VerboseQuadStrategy;
 import org.neo4j.rdf.util.TemporaryLogger;
 import org.neo4j.util.RelationshipToNodeIterable;
-import org.neo4j.util.index.IndexService;
+import org.neo4j.index.IndexService;
 
 public class VerboseQuadStore extends RdfStoreImpl
 {
     private final MetaModel meta;
     
-    public VerboseQuadStore( NeoService neo, IndexService indexer )
+    public VerboseQuadStore( GraphDatabaseService neo, IndexService indexer )
     {
         this( neo, indexer, null, null );
     }
     
-    public VerboseQuadStore( NeoService neo, IndexService indexer,
+    public VerboseQuadStore( GraphDatabaseService neo, IndexService indexer,
         MetaModel meta, FulltextIndex fulltextIndex )
     {
         super( neo, new VerboseQuadStrategy( new VerboseQuadExecutor( neo,
@@ -68,10 +68,10 @@ public class VerboseQuadStore extends RdfStoreImpl
      * Provided if you'd like to customize the {@link VerboseQuadStrategy}
      * to fit your needs.
      * 
-     * @param neo the {@link NeoService} to use.
+     * @param neo the {@link GraphDatabaseService} to use.
      * @param strategy the {@link VerboseQuadStrategy} to use.
      */
-    protected VerboseQuadStore( NeoService neo, VerboseQuadStrategy strategy )
+    protected VerboseQuadStore( GraphDatabaseService neo, VerboseQuadStrategy strategy )
     {
         super( neo, strategy );
         this.meta = null;

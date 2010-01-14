@@ -8,11 +8,11 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.neo4j.api.core.EmbeddedNeo;
-import org.neo4j.api.core.NeoService;
-import org.neo4j.api.core.Node;
-import org.neo4j.api.core.Relationship;
-import org.neo4j.api.core.Transaction;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.Transaction;
+import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.util.EntireGraphDeletor;
 import org.neo4j.util.NeoUtil;
 
@@ -22,7 +22,7 @@ import org.neo4j.util.NeoUtil;
 public abstract class NeoTestCase extends TestCase
 {
 	private static File basePath = new File( "target/var" );
-    private static NeoService neo;
+    private static GraphDatabaseService neo;
     private static NeoUtil neoUtil;
 
     private Transaction tx;
@@ -35,7 +35,7 @@ public abstract class NeoTestCase extends TestCase
         {
             File neoPath = new File( basePath, "neo" );
             deleteFileOrDirectory( neoPath );
-            neo = new EmbeddedNeo( neoPath.getAbsolutePath() );
+            neo = new EmbeddedGraphDatabase( neoPath.getAbsolutePath() );
             Runtime.getRuntime().addShutdownHook( new Thread()
             {
                 @Override
@@ -89,7 +89,7 @@ public abstract class NeoTestCase extends TestCase
         super.tearDown();
     }
 
-    protected NeoService neo()
+    protected GraphDatabaseService neo()
     {
         return neo;
     }

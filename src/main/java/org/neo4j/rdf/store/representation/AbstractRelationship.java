@@ -1,6 +1,6 @@
 package org.neo4j.rdf.store.representation;
 
-import org.neo4j.api.core.Relationship;
+import org.neo4j.graphdb.Relationship;
 
 /**
  * Represents a more simple abstraction of a {@link Relationship}.
