@@ -54,13 +54,13 @@ Instantiating an RdfStore
 	So to start up an RdfStore you just do the following:
 	
 ---
-	NeoService neo = new EmbeddedNeo( "my/path" );
-	IndexService indexService = new LuceneIndexService( neo );
-	RdfStore store = new VerboseQuadStore( neo, indexService );
+	GraphDatabaseService graphDb = new EmbeddedGraphDatabase( "my/path" );
+	IndexService indexService = new LuceneIndexService( graphDb );
+	RdfStore store = new VerboseQuadStore( graphDb, indexService );
 ---
 
 	Also don't forget to add some kind of shut down hook which shuts down the
-	components in the order: store, indexService, neo.
+	components in the order: store, indexService, graphDb.
 
 Fulltext index
 
@@ -70,8 +70,8 @@ Fulltext index
 	
 ---
 	...
-	FulltextIndex fulltextIndex = new SimpleFulltextIndex( neo, new File( "path/to/index" ) );
-	RdfStore store = new VerboseQuadStore( neo, indexService, null, fulltextIndex );
+	FulltextIndex fulltextIndex = new SimpleFulltextIndex( graphDb, new File( "path/to/index" ) );
+	RdfStore store = new VerboseQuadStore( graphDb, indexService, null, fulltextIndex );
 	...
 	for ( QueryResult searchHit : store.search( "rdf AND store" ) )
 	{

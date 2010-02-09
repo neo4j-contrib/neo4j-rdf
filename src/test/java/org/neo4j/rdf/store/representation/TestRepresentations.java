@@ -8,11 +8,11 @@ import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Value;
 import org.neo4j.rdf.model.Wildcard;
 import org.neo4j.rdf.model.WildcardStatement;
-import org.neo4j.rdf.store.NeoWithIndexTestCase;
+import org.neo4j.rdf.store.Neo4jWithIndexTestCase;
 import org.neo4j.rdf.store.representation.standard.VerboseQuadExecutor;
 import org.neo4j.rdf.store.representation.standard.VerboseQuadStrategy;
 
-public class TestRepresentations extends NeoWithIndexTestCase
+public class TestRepresentations extends Neo4jWithIndexTestCase
 {
     public void testVerboseQuadRepresentation() throws Exception
     {
@@ -58,7 +58,7 @@ public class TestRepresentations extends NeoWithIndexTestCase
     
     public void testVerboseQuadWildcards() throws Exception
     {
-        RepresentationExecutor executor = new VerboseQuadExecutor( neo(),
+        RepresentationExecutor executor = new VerboseQuadExecutor( graphDb(),
             indexService(), null, null );
         RepresentationStrategy strategy =
             new VerboseQuadStrategy( executor, null );

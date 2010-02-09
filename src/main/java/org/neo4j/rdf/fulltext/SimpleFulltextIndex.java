@@ -43,17 +43,17 @@ import org.apache.lucene.search.highlight.QueryScorer;
 import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.NotFoundException;
 import org.neo4j.commons.iterator.FilteringIterator;
 import org.neo4j.commons.iterator.IteratorAsIterable;
 import org.neo4j.commons.iterator.PrefetchingIterator;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.NotFoundException;
 import org.neo4j.rdf.fulltext.PersistentQueue.Entry;
 import org.neo4j.rdf.fulltext.VerificationHook.Status;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.util.TemporaryLogger;
-import org.neo4j.util.NeoUtil;
+import org.neo4j.util.GraphDatabaseUtil;
 
 /**
  * A {@link FulltextIndex} using lucene.
@@ -94,8 +94,8 @@ public class SimpleFulltextIndex implements FulltextIndex
             return new LowerCaseFilter( new WhitespaceTokenizer( reader ) );
         }
     };
-    private GraphDatabaseService neo;
-    private NeoUtil neoUtil;
+    private GraphDatabaseService graphDb;
+    private GraphDatabaseUtil graphDbUtil;
     private Map<Integer, Collection<Object[]>> toIndex =
         Collections.synchronizedMap(
             new HashMap<Integer, Collection<Object[]>>() );
@@ -105,18 +105,18 @@ public class SimpleFulltextIndex implements FulltextIndex
     private Set<String> predicateFilter;
     private IndexSearcher indexSearcher;
     
-    public SimpleFulltextIndex( GraphDatabaseService neo, File storagePath )
+    public SimpleFulltextIndex( GraphDatabaseService graphDb, File storagePath )
     {
-        this( neo, storagePath, null );
+        this( graphDb, storagePath, null );
     }
     
-    public SimpleFulltextIndex( GraphDatabaseService neo, File storagePath,
+    public SimpleFulltextIndex( GraphDatabaseService graphDb, File storagePath,
         Collection<String> predicateFilter )
     {
-        this( neo, storagePath, null, null, predicateFilter );
+        this( graphDb, storagePath, null, null, predicateFilter );
     }
     
-    public SimpleFulltextIndex( GraphDatabaseService neo, File storagePath,
+    public SimpleFulltextIndex( GraphDatabaseService graphDb, File storagePath,
         String highlightPreTag, String highlightPostTag,
         Collection<String> predicateFilter )
     {
@@ -134,8 +134,8 @@ public class SimpleFulltextIndex implements FulltextIndex
             new HashSet<String>( predicateFilter );
         this.directoryPath = storagePath.getAbsolutePath();
         this.queuePath = this.directoryPath + "-queue";
-        this.neo = neo;
-        this.neoUtil = new NeoUtil( neo );
+        this.graphDb = graphDb;
+        this.graphDbUtil = new GraphDatabaseUtil( graphDb );
         startUpDirectoryAndThread();
     }
     
@@ -233,7 +233,7 @@ public class SimpleFulltextIndex implements FulltextIndex
         try
         {
             int key =
-                neoUtil.getTransactionManager().getTransaction().hashCode();
+                graphDbUtil.getTransactionManager().getTransaction().hashCode();
             Collection<Object[]> commands = toIndex.get( key );
             if ( commands == null )
             {
@@ -484,7 +484,7 @@ public class SimpleFulltextIndex implements FulltextIndex
                 try
                 {
                     t = System.currentTimeMillis();
-                    Node node = neo.getNodeById( id );
+                    Node node = graphDb.getNodeById( id );
                     getNodeTime += ( System.currentTimeMillis() - t );
                     return new RawQueryResult( node, score, snippet );
                 }
@@ -672,7 +672,7 @@ public class SimpleFulltextIndex implements FulltextIndex
     {
         try
         {
-            end( neoUtil.getTransactionManager().getTransaction().hashCode(),
+            end( graphDbUtil.getTransactionManager().getTransaction().hashCode(),
                 commit );
         }
         catch ( SystemException e )

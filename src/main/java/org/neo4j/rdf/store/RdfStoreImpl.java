@@ -24,24 +24,24 @@ import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
  */
 public abstract class RdfStoreImpl implements RdfStore
 {
-    private final GraphDatabaseService neo;
+    private final GraphDatabaseService graphDb;
     private final RepresentationStrategy representationStrategy;
 
     /**
-     * @param neo the {@link GraphDatabaseService}.
+     * @param graphDb the {@link GraphDatabaseService}.
      * @param representationStrategy the {@link RepresentationStrategy}
      * to use when storing statements.
      */
-    public RdfStoreImpl( GraphDatabaseService neo,
+    public RdfStoreImpl( GraphDatabaseService graphDb,
         RepresentationStrategy representationStrategy )
     {
-        this.neo = neo;
+        this.graphDb = graphDb;
         this.representationStrategy = representationStrategy;
     }
 
-    protected GraphDatabaseService neo()
+    protected GraphDatabaseService graphDb()
     {
-        return this.neo;
+        return this.graphDb;
     }
 
     public RepresentationStrategy getRepresentationStrategy()
@@ -51,7 +51,7 @@ public abstract class RdfStoreImpl implements RdfStore
 
     public void addStatements( CompleteStatement... statements )
     {
-        Transaction tx = neo.beginTx();
+        Transaction tx = graphDb.beginTx();
         try
         {
             for ( Statement statement : statements )
@@ -218,7 +218,7 @@ public abstract class RdfStoreImpl implements RdfStore
 
     private void removeStatementSimple( Statement statement )
     {
-        Transaction tx = neo.beginTx();
+        Transaction tx = graphDb.beginTx();
         try
         {
             AbstractRepresentation fragment = representationStrategy

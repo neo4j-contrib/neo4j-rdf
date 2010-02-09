@@ -16,7 +16,6 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.graphmatching.PatternMatch;
 import org.neo4j.graphmatching.PatternMatcher;
 import org.neo4j.graphmatching.PatternNode;
-import org.neo4j.index.Index;
 import org.neo4j.index.IndexService;
 import org.neo4j.meta.model.MetaModel;
 import org.neo4j.rdf.fulltext.FulltextIndex;
@@ -26,11 +25,11 @@ import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractRepresentation;
 import org.neo4j.rdf.store.representation.RepresentationExecutor;
-import org.neo4j.util.NeoPropertyArraySet;
+import org.neo4j.util.PropertyArraySet;
 
 /**
  * An implementation of {@link RepresentationExecutor} which uses an
- * {@link Index}, where the indexing key is each elements {@link Uri} as a way
+ * {@link IndexService}, where the indexing key is each elements {@link Uri} as a way
  * of looking up the objects.
  * 
  * This is an attempt to implement a generic executor which tries to execute a
@@ -53,13 +52,13 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
         "literal_keys";
 
     /**
-     * @param neo the {@link GraphDatabaseService}.
+     * @param graphDb the {@link GraphDatabaseService}.
      * @param index the {@link Index} to use as the lookup for objects.
      */
-    public UriBasedExecutor( GraphDatabaseService neo, IndexService index,
-        MetaModel meta, FulltextIndex fulltextIndex )
+    public UriBasedExecutor( GraphDatabaseService graphDb, IndexService index,
+        MetaModel model, FulltextIndex fulltextIndex )
     {
-        super( neo, index, meta, fulltextIndex );
+        super( graphDb, index, model, fulltextIndex );
     }
 
     public void addToNodeSpace( AbstractRepresentation representation )
@@ -287,11 +286,11 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
         for ( Map.Entry<String, Collection<Object>> entry :
             abstractElement.properties().entrySet() )
         {
-            Collection<Object> neoValues = new NeoPropertyArraySet<Object>(
-                neo(), container, entry.getKey() );
+            Collection<Object> rawValues = new PropertyArraySet<Object>(
+                graphDB(), container, entry.getKey() );
             for ( Object value : entry.getValue() )
             {
-                boolean added = neoValues.add( value );
+                boolean added = rawValues.add( value );
                 if ( added )
                 {
 //                  debug( "\t+Property" + " (" + container + ") "
@@ -314,21 +313,21 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
             abstractRelationship.properties().entrySet() )
         {
             String key = entry.getKey();
-            Collection<Object> neoValues = new NeoPropertyArraySet<Object>(
-                neo(), relationship, key );
-            removeAll( relationship, key, neoValues,
+            Collection<Object> rawValues = new PropertyArraySet<Object>(
+                graphDB(), relationship, key );
+            removeAll( relationship, key, rawValues,
                 entry.getValue(), "Property" );
         }
     }
 
     protected boolean removeAll( PropertyContainer container, String key,
-        Collection<Object> neoValues, Collection<?> valuesToRemove,
+        Collection<Object> rawValues, Collection<?> valuesToRemove,
         String debugText )
     {
         boolean someRemoved = false;
         for ( Object value : valuesToRemove )
         {
-            boolean removed = neoValues.remove( value );
+            boolean removed = rawValues.remove( value );
             if ( removed )
             {
                 someRemoved = true;
@@ -349,11 +348,11 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
             abstractNode.properties().entrySet() )
         {
             String key = entry.getKey();
-            Collection<Object> neoValues = new NeoPropertyArraySet<Object>(
-                neo(), node, key );
+            Collection<Object> rawValues = new PropertyArraySet<Object>(
+                graphDB(), node, key );
             for ( Object value : entry.getValue() )
             {
-                boolean removed = neoValues.remove( value );
+                boolean removed = rawValues.remove( value );
                 if ( removed )
                 {
                     if ( keysWhichAreLiterals != null &&
@@ -416,7 +415,7 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
         AbstractRelationship abstractRelationship,
         Map<AbstractNode, Node> nodeMapping )
     {
-        Node node = neo().createNode();
+        Node node = graphDB().createNode();
         Relationship relationship = null;
 //        debug( "\tNo match, creating node (" + node.getId()
 //            + ") and connecting" );

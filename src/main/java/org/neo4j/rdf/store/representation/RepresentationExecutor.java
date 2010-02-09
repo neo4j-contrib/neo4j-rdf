@@ -32,7 +32,7 @@ public interface RepresentationExecutor
     
     /**
      * @param abstractNode the {@link AbstractNode} which represents the
-     * neo {@link Node}.
+     * {@link Node}.
      * @return the property key on the {@link Node} which represents the URI
      * of the node.
      */

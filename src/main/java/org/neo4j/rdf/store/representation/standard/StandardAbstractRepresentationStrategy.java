@@ -26,13 +26,13 @@ abstract class StandardAbstractRepresentationStrategy
     implements RepresentationStrategy
 {
     private final RepresentationExecutor executor;
-    private final MetaModel meta;
+    private final MetaModel model;
 
     public StandardAbstractRepresentationStrategy(
-        RepresentationExecutor executor, MetaModel meta )
+        RepresentationExecutor executor, MetaModel model )
     {
         this.executor = executor;
-        this.meta = meta;
+        this.model = model;
     }
 
     public AbstractRepresentation getAbstractRepresentation(
@@ -125,16 +125,16 @@ abstract class StandardAbstractRepresentationStrategy
 
     private PropertyRange getPropertyRange( Uri predicate )
     {
-        if ( meta == null )
+        if ( model == null )
         {
             return null;
         }
 
         MetaModelProperty property =
-            meta.getGlobalNamespace().getMetaProperty(
+            model.getGlobalNamespace().getMetaProperty(
                 predicate.getUriAsString(), false );
         return property == null ? null :
-            meta.lookup( property, MetaModel.LOOKUP_PROPERTY_RANGE );
+            model.lookup( property, MetaModel.LOOKUP_PROPERTY_RANGE );
     }
 
     private boolean pointsToObjectType( Uri predicate )
@@ -151,7 +151,7 @@ abstract class StandardAbstractRepresentationStrategy
         Object literalValue )
     {
         Object result = literalValue;
-        if ( result != null && result instanceof String && meta != null )
+        if ( result != null && result instanceof String && model != null )
         {
             PropertyRange range = getPropertyRange(
                 ( Uri ) statement.getPredicate() );

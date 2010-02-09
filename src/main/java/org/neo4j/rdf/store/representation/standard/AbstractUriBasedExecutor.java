@@ -6,13 +6,14 @@ import java.util.Map;
 
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;
-import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.NotFoundException;
 import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.index.IndexService;
+import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.kernel.impl.transaction.LockManager;
 import org.neo4j.meta.model.MetaModel;
 import org.neo4j.rdf.fulltext.FulltextIndex;
@@ -23,9 +24,8 @@ import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.AbstractRelationship;
 import org.neo4j.rdf.store.representation.AbstractRepresentation;
 import org.neo4j.rdf.store.representation.RepresentationExecutor;
-import org.neo4j.util.NeoPropertyArraySet;
-import org.neo4j.util.NeoUtil;
-import org.neo4j.index.IndexService;
+import org.neo4j.util.GraphDatabaseUtil;
+import org.neo4j.util.PropertyArraySet;
 
 public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
 {
@@ -38,19 +38,19 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
     public static final String RDF_TYPE_URI = RDF_NAMESPACE + "type";
 
-    private final GraphDatabaseService neo;
-    private final NeoUtil neoUtil;
+    private final GraphDatabaseService graphDb;
+    private final GraphDatabaseUtil graphDbUtil;
     private final IndexService index;
-    private final MetaModel meta;
+    private final MetaModel model;
     private FulltextIndex fulltextIndex;
     
-    public AbstractUriBasedExecutor( GraphDatabaseService neo, IndexService index,
-        MetaModel optionalMeta, FulltextIndex optionalFulltextIndex )
+    public AbstractUriBasedExecutor( GraphDatabaseService graphDb, IndexService index,
+        MetaModel optionalModel, FulltextIndex optionalFulltextIndex )
     {
-        this.neo = neo;
+        this.graphDb = graphDb;
         this.index = index;
-        this.neoUtil = new NeoUtil( neo );
-        this.meta = optionalMeta;
+        this.graphDbUtil = new GraphDatabaseUtil( graphDb );
+        this.model = optionalModel;
         this.fulltextIndex = optionalFulltextIndex;
     }
     
@@ -59,9 +59,9 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         return this.fulltextIndex;
     }
     
-    protected GraphDatabaseService neo()
+    protected GraphDatabaseService graphDB()
     {
-        return this.neo;
+        return this.graphDb;
     }
 
     protected IndexService index()
@@ -69,9 +69,9 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         return this.index;
     }
 
-    protected NeoUtil neoUtil()
+    protected GraphDatabaseUtil graphDbUtil()
     {
-        return this.neoUtil;
+        return this.graphDbUtil;
     }
 
 //    protected MetaStructure meta()
@@ -306,9 +306,9 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
                 continue;
             }
             Collection<Object> values = entry.getValue();
-            Collection<Object> neoValues =
-                neoUtil().getPropertyValues( container, key );
-            if ( !neoValues.containsAll( values ) )
+            Collection<Object> rawValues =
+                graphDbUtil().getPropertyValues( container, key );
+            if ( !rawValues.containsAll( values ) )
             {
                 return false;
             }
@@ -342,11 +342,11 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         for ( Map.Entry<String, Collection<Object>> entry :
             abstractElement.properties().entrySet() )
         {
-            Collection<Object> neoValues = new NeoPropertyArraySet<Object>(
-                neo(), container, entry.getKey() );
+            Collection<Object> rawValues = new PropertyArraySet<Object>(
+                graphDB(), container, entry.getKey() );
             for ( Object value : entry.getValue() )
             {
-                boolean added = neoValues.add( value );
+                boolean added = rawValues.add( value );
                 if ( added )
                 {
                     changed = true;
@@ -365,11 +365,11 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         for ( Map.Entry<String, Collection<Object>> entry :
             abstractElement.properties().entrySet() )
         {
-            Collection<Object> neoValues = new NeoPropertyArraySet<Object>(
-                neo(), container, entry.getKey() );
+            Collection<Object> rawValues = new PropertyArraySet<Object>(
+                graphDB(), container, entry.getKey() );
             for ( Object value : entry.getValue() )
             {
-                boolean removed = neoValues.remove( value );
+                boolean removed = rawValues.remove( value );
                 if ( removed )
                 {
                     changed = true;
@@ -403,11 +403,11 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         PropertyContainer container, String key )
     {
         boolean someRemoved = false;
-        Collection<Object> neoValues = new NeoPropertyArraySet<Object>(
-            neo(), container, key );
+        Collection<Object> rawValues = new PropertyArraySet<Object>(
+            graphDB(), container, key );
         for ( Object value : element.properties().get( key ) )
         {
-            boolean removed = neoValues.remove( value );
+            boolean removed = rawValues.remove( value );
             if ( removed )
             {
                 someRemoved = true;
@@ -462,7 +462,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     protected Node createNode( AbstractNode abstractNode,
     	Map<AbstractNode, Node> nodeMapping )
     {
-        Node node = neo.createNode();
+        Node node = graphDb.createNode();
         Uri uri = abstractNode.getUriOrNull();
         if ( uri != null )
         {
@@ -497,7 +497,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     
     private LockManager getLockManager()
     {
-        return ((EmbeddedGraphDatabase) neo).getConfig().getLockManager();
+        return ((EmbeddedGraphDatabase) graphDb).getConfig().getLockManager();
     }
     
     protected static class NodeContext

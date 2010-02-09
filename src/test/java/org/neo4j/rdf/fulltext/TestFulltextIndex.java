@@ -5,21 +5,21 @@ import java.io.File;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.rdf.model.Uri;
-import org.neo4j.rdf.store.NeoTestCase;
+import org.neo4j.rdf.store.Neo4jTestCase;
 
-public class TestFulltextIndex extends NeoTestCase
+public class TestFulltextIndex extends Neo4jTestCase
 {
     public void testSelfRepair() throws Exception
     {
-        FulltextIndex index = new SimpleFulltextIndex( neo(),
+        FulltextIndex index = new SimpleFulltextIndex( graphDb(),
             new File( "target/var/fulltext" ) );
         index.clear();
         Node node;
         
-        Transaction tx = neo().beginTx();
+        Transaction tx = graphDb().beginTx();
         try
         {
-            node = neo().createNode();
+            node = graphDb().createNode();
             tx.success();
         }
         finally
@@ -27,7 +27,7 @@ public class TestFulltextIndex extends NeoTestCase
             tx.finish();
         }
         
-        tx = neo().beginTx();
+        tx = graphDb().beginTx();
         try
         {
             index.index( node, new Uri( "uri" ), "Mattias Persson" );
@@ -45,7 +45,7 @@ public class TestFulltextIndex extends NeoTestCase
             Thread.sleep( 100 );
         }
         
-        tx = neo().beginTx();
+        tx = graphDb().beginTx();
         try
         {
             int count = 0;
@@ -71,7 +71,7 @@ public class TestFulltextIndex extends NeoTestCase
         index.clear();
         index.shutDown();
         
-        tx = neo().beginTx();
+        tx = graphDb().beginTx();
         try
         {
             node.delete();

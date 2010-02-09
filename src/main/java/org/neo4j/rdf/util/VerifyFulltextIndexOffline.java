@@ -18,12 +18,12 @@ public class VerifyFulltextIndexOffline
 {
     public static void main( String[] args ) throws IOException
     {
-        final GraphDatabaseService neo = new EmbeddedGraphDatabase( args[ 0 ] );
+        final GraphDatabaseService graphDb = new EmbeddedGraphDatabase( args[ 0 ] );
         final IndexService indexService =
-            new CachingLuceneIndexService( neo );
-        final FulltextIndex fulltextIndex = new SimpleFulltextIndex( neo,
+            new CachingLuceneIndexService( graphDb );
+        final FulltextIndex fulltextIndex = new SimpleFulltextIndex( graphDb,
             new File( args[ 1 ] ) );
-        final RdfStore store = new VerboseQuadStore( neo, indexService,
+        final RdfStore store = new VerboseQuadStore( graphDb, indexService,
             null, fulltextIndex );
         
         Runtime.getRuntime().addShutdownHook( new Thread()
@@ -31,10 +31,10 @@ public class VerifyFulltextIndexOffline
             @Override
             public void run()
             {
-                System.out.println( "Shutting down the store and neo n' all" );
+                System.out.println( "Shutting down the store and Neo4j n' all" );
                 store.shutDown();
                 indexService.shutdown();
-                neo.shutdown();
+                graphDb.shutdown();
                 System.out.println( "Everything shut down nicely" );
             }
         } );

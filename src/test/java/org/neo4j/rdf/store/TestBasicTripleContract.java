@@ -53,7 +53,7 @@ public class TestBasicTripleContract extends TripleStoreAbstractTestCase
     @Override
     protected RdfStore instantiateStore()
     {
-        return new DenseTripleStore( neo(), indexService(), null, null );
+        return new DenseTripleStore( graphDb(), indexService(), null, null );
     }
 
     @Override

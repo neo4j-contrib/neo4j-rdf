@@ -44,15 +44,15 @@ public class VerboseQuadExecutor extends UriBasedExecutor
         IS_A_CONTEXT,
     }
     
-    public VerboseQuadExecutor( GraphDatabaseService neo, IndexService index,
-        MetaModel meta, FulltextIndex fulltextIndex )
+    public VerboseQuadExecutor( GraphDatabaseService graphDb, IndexService index,
+        MetaModel model, FulltextIndex fulltextIndex )
     {
-        super( neo, index, meta, fulltextIndex );
+        super( graphDb, index, model, fulltextIndex );
     }
     
     public Node getContextsReferenceNode()
     {
-        return this.neoUtil().getOrCreateSubReferenceNode(
+        return this.graphDbUtil().getOrCreateSubReferenceNode(
             RelTypes.REF_CONTEXTS );
     }
 
@@ -142,7 +142,7 @@ public class VerboseQuadExecutor extends UriBasedExecutor
 
     protected Node createLiteralNode( AbstractNode abstractNode )
     {
-        Node node = neo().createNode();
+        Node node = graphDB().createNode();
         applyRepresentation( abstractNode, node );
         String predicate = ( String ) abstractNode.getSingleExecutorInfo(
             VerboseQuadStrategy.EXECUTOR_INFO_PREDICATE );
@@ -221,32 +221,32 @@ public class VerboseQuadExecutor extends UriBasedExecutor
     
     private void incrementSubjectEnergy( Node node )
     {
-//    	neoUtil().incrementAndGetCounter( node, SUBJECT_ENERGY );
+//    	graphDbUtil().incrementAndGetCounter( node, SUBJECT_ENERGY );
     }
 
     private void decrementSubjectEnergy( Node node )
     {
-//    	neoUtil().decrementAndGetCounter( node, SUBJECT_ENERGY, 0 );
+//    	graphDbUtil().decrementAndGetCounter( node, SUBJECT_ENERGY, 0 );
     }
     
     private void incrementObjectEnergy( Node node )
     {
-//    	neoUtil().incrementAndGetCounter( node, OBJECT_ENERGY );
+//    	graphDbUtil().incrementAndGetCounter( node, OBJECT_ENERGY );
     }
 
     private void decrementObjectEnergy( Node node )
     {
-//    	neoUtil().decrementAndGetCounter( node, OBJECT_ENERGY, 0 );
+//    	graphDbUtil().decrementAndGetCounter( node, OBJECT_ENERGY, 0 );
     }
     
     private void incrementContextCounter( Node node )
     {
-    	neoUtil().incrementAndGetCounter( node, STATEMENT_COUNT );
+    	graphDbUtil().incrementAndGetCounter( node, STATEMENT_COUNT );
     }
 
     private void decrementContextCounter( Node contextNode )
     {
-    	neoUtil().decrementAndGetCounter( contextNode, STATEMENT_COUNT, 0 );
+    	graphDbUtil().decrementAndGetCounter( contextNode, STATEMENT_COUNT, 0 );
     }
     
     private void handleAddObjectRepresentation(

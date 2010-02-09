@@ -10,6 +10,8 @@ import java.util.Random;
 
 import javax.transaction.SystemException;
 
+import org.neo4j.index.IndexService;
+import org.neo4j.index.lucene.LuceneIndexService;
 import org.neo4j.rdf.fulltext.FulltextIndex;
 import org.neo4j.rdf.fulltext.SimpleFulltextIndex;
 import org.neo4j.rdf.model.CompleteStatement;
@@ -22,10 +24,8 @@ import org.neo4j.rdf.model.Value;
 import org.neo4j.rdf.model.Wildcard;
 import org.neo4j.rdf.model.WildcardStatement;
 import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
-import org.neo4j.index.IndexService;
-import org.neo4j.index.impl.NeoIndexService;
 
-public abstract class StoreTestCase extends NeoWithIndexTestCase
+public abstract class StoreTestCase extends Neo4jWithIndexTestCase
 {
     public static final String BASE_URI = "http://uri.neo4j.org/";
     public static final Wildcard WILDCARD_SUBJECT = new Wildcard( "subject" );
@@ -88,7 +88,7 @@ public abstract class StoreTestCase extends NeoWithIndexTestCase
         {
             // Temporary solution
             int txId =
-                neoUtil().getTransactionManager().getTransaction().hashCode();
+                graphDbUtil().getTransactionManager().getTransaction().hashCode();
             super.restartTx();
             
             FulltextIndex fulltextIndex = 
@@ -117,12 +117,12 @@ public abstract class StoreTestCase extends NeoWithIndexTestCase
     @Override
     protected IndexService instantiateIndexService()
     {
-        return new NeoIndexService( neo() );
+        return new LuceneIndexService( graphDb() );
     }
     
     protected FulltextIndex instantiateFulltextIndex()
     {
-        return new SimpleFulltextIndex( neo(), new File( getBasePath(),
+        return new SimpleFulltextIndex( graphDb(), new File( getBasePath(),
             "fulltext" ) );
     }
 

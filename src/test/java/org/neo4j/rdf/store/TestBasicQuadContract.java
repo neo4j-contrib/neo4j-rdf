@@ -32,8 +32,8 @@ public class TestBasicQuadContract extends QuadStoreAbstractTestCase
     @Override
     protected RdfStore instantiateStore()
     {
-        return new VerboseQuadStore( neo(), indexService(), null,
-            new SimpleFulltextIndex( neo(), new File( getBasePath(),
+        return new VerboseQuadStore( graphDb(), indexService(), null,
+            new SimpleFulltextIndex( graphDb(), new File( getBasePath(),
                 "fulltext" ) ) );
     }
 

@@ -9,7 +9,7 @@ public abstract class QuadStoreAbstractTestCase extends StoreTestCase
     @Override
     protected RdfStore instantiateStore()
     {
-        return new VerboseQuadStore( neo(), indexService(), null,
+        return new VerboseQuadStore( graphDb(), indexService(), null,
             fulltextIndex() );
     }
 }

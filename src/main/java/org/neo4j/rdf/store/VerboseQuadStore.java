@@ -48,19 +48,19 @@ import org.neo4j.index.IndexService;
 
 public class VerboseQuadStore extends RdfStoreImpl
 {
-    private final MetaModel meta;
+    private final MetaModel model;
     
-    public VerboseQuadStore( GraphDatabaseService neo, IndexService indexer )
+    public VerboseQuadStore( GraphDatabaseService graphDb, IndexService indexer )
     {
-        this( neo, indexer, null, null );
+        this( graphDb, indexer, null, null );
     }
     
-    public VerboseQuadStore( GraphDatabaseService neo, IndexService indexer,
-        MetaModel meta, FulltextIndex fulltextIndex )
+    public VerboseQuadStore( GraphDatabaseService graphDb, IndexService indexer,
+        MetaModel model, FulltextIndex fulltextIndex )
     {
-        super( neo, new VerboseQuadStrategy( new VerboseQuadExecutor( neo,
-            indexer, meta, fulltextIndex ), meta ) );
-        this.meta = meta;
+        super( graphDb, new VerboseQuadStrategy( new VerboseQuadExecutor( graphDb,
+            indexer, model, fulltextIndex ), model ) );
+        this.model = model;
         debug( "I'm initialized!" );
     }
     
@@ -68,18 +68,18 @@ public class VerboseQuadStore extends RdfStoreImpl
      * Provided if you'd like to customize the {@link VerboseQuadStrategy}
      * to fit your needs.
      * 
-     * @param neo the {@link GraphDatabaseService} to use.
+     * @param graphDb the {@link GraphDatabaseService} to use.
      * @param strategy the {@link VerboseQuadStrategy} to use.
      */
-    protected VerboseQuadStore( GraphDatabaseService neo, VerboseQuadStrategy strategy )
+    protected VerboseQuadStore( GraphDatabaseService graphDb, VerboseQuadStrategy strategy )
     {
-        super( neo, strategy );
-        this.meta = null;
+        super( graphDb, strategy );
+        this.model = null;
     }
     
-    protected MetaModel meta()
+    protected MetaModel model()
     {
-        return this.meta;
+        return this.model;
     }
     
     @Override
@@ -94,7 +94,7 @@ public class VerboseQuadStore extends RdfStoreImpl
         boolean includeInferredStatements )
     {
         //        debug( "getStatements( " + statement + " )" );
-        Transaction tx = neo().beginTx();
+        Transaction tx = graphDb().beginTx();
         try
         {
             if ( includeInferredStatements )
@@ -158,7 +158,7 @@ public class VerboseQuadStore extends RdfStoreImpl
     
     public void reindexFulltextIndex( Integer maxEntries )
     {
-        Transaction tx = neo().beginTx();
+        Transaction tx = graphDb().beginTx();
         try
         {
             Iterable<Node> allMiddleNodes = getMiddleNodesFromAllContexts();
@@ -185,7 +185,7 @@ public class VerboseQuadStore extends RdfStoreImpl
                         fulltextIndex.end( true );
                         tx.success();
                         tx.finish();
-                        tx = neo().beginTx();
+                        tx = graphDb().beginTx();
                         if ( maxEntries != null && counter > maxEntries )
                         {
                             break;
@@ -273,7 +273,7 @@ public class VerboseQuadStore extends RdfStoreImpl
     
     public boolean verifyFulltextIndex( String queryOrNullForAll )
     {
-        Transaction tx = neo().beginTx();
+        Transaction tx = graphDb().beginTx();
         try
         {
             boolean result = getInitializedFulltextIndex().verify(
@@ -290,7 +290,7 @@ public class VerboseQuadStore extends RdfStoreImpl
     @Override
     public int size( Context... contexts )
     {
-        Transaction tx = neo().beginTx();
+        Transaction tx = graphDb().beginTx();
         try
         {
             Iterable<Node> contextNodes = null;
@@ -960,7 +960,7 @@ public class VerboseQuadStore extends RdfStoreImpl
             Status result = Status.OK;
             try
             {
-                Node node = neo().getNodeById( id );
+                Node node = graphDb().getNodeById( id );
                 Value value = getValueForObjectNode( predicate, node );
                 if ( !( value instanceof Literal ) )
                 {

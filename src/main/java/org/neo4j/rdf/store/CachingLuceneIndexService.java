@@ -6,9 +6,9 @@ import org.neo4j.index.lucene.LuceneIndexService;
 
 public class CachingLuceneIndexService extends LuceneIndexService
 {
-    public CachingLuceneIndexService( GraphDatabaseService neo )
+    public CachingLuceneIndexService( GraphDatabaseService graphDb )
     {
-        super( neo );
+        super( graphDb );
         enableCache( AbstractUriBasedExecutor.URI_PROPERTY_KEY,
             100000 );
     }

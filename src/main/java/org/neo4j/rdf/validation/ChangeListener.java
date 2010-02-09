@@ -17,7 +17,7 @@ public class ChangeListener implements ProActiveEventListener
 //        new HashMap<Thread, Set<OwlInstance>>() );
 //    
 //    /**
-//     * Registers this listener on the neo event manager so that it can receive
+//     * Registers this listener on the event manager so that it can receive
 //     * events.
 //     */
 //    public ChangeListener()

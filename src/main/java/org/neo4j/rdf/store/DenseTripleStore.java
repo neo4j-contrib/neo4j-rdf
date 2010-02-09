@@ -6,15 +6,16 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import org.neo4j.commons.iterator.FilteringIterator;
+import org.neo4j.commons.iterator.IteratorWrapper;
+import org.neo4j.commons.iterator.NestingIterator;
+import org.neo4j.commons.iterator.PrefetchingIterator;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
-import org.neo4j.commons.iterator.FilteringIterator;
-import org.neo4j.commons.iterator.IteratorWrapper;
-import org.neo4j.commons.iterator.NestingIterator;
-import org.neo4j.commons.iterator.PrefetchingIterator;
+import org.neo4j.index.IndexService;
 import org.neo4j.meta.model.MetaModel;
 import org.neo4j.rdf.fulltext.FulltextIndex;
 import org.neo4j.rdf.model.CompleteStatement;
@@ -28,26 +29,25 @@ import org.neo4j.rdf.model.WildcardStatement;
 import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
 import org.neo4j.rdf.store.representation.standard.DenseTripleStrategy;
 import org.neo4j.rdf.store.representation.standard.UriBasedExecutor;
-import org.neo4j.util.NeoUtil;
-import org.neo4j.index.IndexService;
+import org.neo4j.util.GraphDatabaseUtil;
 
 public class DenseTripleStore extends RdfStoreImpl
 {
-    private final MetaModel meta;
-    private final NeoUtil neoUtil;
+    private final MetaModel model;
+    private final GraphDatabaseUtil graphDbUtil;
     
-    public DenseTripleStore( GraphDatabaseService neo, IndexService indexer )
+    public DenseTripleStore( GraphDatabaseService graphDb, IndexService indexer )
     {
-        this( neo, indexer, null, null );
+        this( graphDb, indexer, null, null );
     }
     
-    public DenseTripleStore( GraphDatabaseService neo, IndexService indexer,
-        MetaModel meta, FulltextIndex fulltextIndex )
+    public DenseTripleStore( GraphDatabaseService graphDb, IndexService indexer,
+        MetaModel model, FulltextIndex fulltextIndex )
     {
-        super( neo, new DenseTripleStrategy( new UriBasedExecutor( neo,
-            indexer, meta, fulltextIndex ), meta ) );
-        this.meta = meta;
-        this.neoUtil = new NeoUtil( neo );
+        super( graphDb, new DenseTripleStrategy( new UriBasedExecutor( graphDb,
+            indexer, model, fulltextIndex ), model ) );
+        this.model = model;
+        this.graphDbUtil = new GraphDatabaseUtil( graphDb );
     }
 
     @Override
@@ -60,7 +60,7 @@ public class DenseTripleStore extends RdfStoreImpl
     public Iterable<CompleteStatement> getStatements(
         WildcardStatement statement, boolean includeInferredStatements )
     {
-        Transaction tx = neo().beginTx();
+        Transaction tx = graphDb().beginTx();
         try
         {
             if ( includeInferredStatements )
@@ -435,9 +435,9 @@ public class DenseTripleStore extends RdfStoreImpl
         
         private LiteralPredicateIterator( Node resource, String predicate )
         {
-            Object neoValue = resource.getProperty( predicate, null );
-            this.values = neoValue == null ? null :
-                neoUtil.neoPropertyAsList( neoValue ).iterator();
+            Object rawValue = resource.getProperty( predicate, null );
+            this.values = rawValue == null ? null :
+                graphDbUtil.propertyValueAsList( rawValue ).iterator();
         }
 
         @Override

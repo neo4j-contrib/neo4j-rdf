@@ -5,6 +5,6 @@ public abstract class TripleStoreAbstractTestCase extends StoreTestCase
     @Override
     protected RdfStore instantiateStore()
     {
-        return new DenseTripleStore( neo(), indexService() );
+        return new DenseTripleStore( graphDb(), indexService() );
     }
 }

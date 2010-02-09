@@ -14,16 +14,16 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.util.EntireGraphDeletor;
-import org.neo4j.util.NeoUtil;
+import org.neo4j.util.GraphDatabaseUtil;
 
 /**
  * Base class for the meta model tests.
  */
-public abstract class NeoTestCase extends TestCase
+public abstract class Neo4jTestCase extends TestCase
 {
 	private static File basePath = new File( "target/var" );
-    private static GraphDatabaseService neo;
-    private static NeoUtil neoUtil;
+    private static GraphDatabaseService graphDb;
+    private static GraphDatabaseUtil graphDbUtil;
 
     private Transaction tx;
 
@@ -31,24 +31,29 @@ public abstract class NeoTestCase extends TestCase
     protected void setUp() throws Exception
     {
         super.setUp();
-        if ( neo == null )
+        if ( graphDb == null )
         {
-            File neoPath = new File( basePath, "neo" );
-            deleteFileOrDirectory( neoPath );
-            neo = new EmbeddedGraphDatabase( neoPath.getAbsolutePath() );
+            File path = new File( basePath, "neo4j" );
+            deleteFileOrDirectory( path );
+            graphDb = new EmbeddedGraphDatabase( path.getAbsolutePath() );
             Runtime.getRuntime().addShutdownHook( new Thread()
             {
                 @Override
                 public void run()
                 {
-                    neo.shutdown();
+                    doShutdown();
                 }
             } );
-            neoUtil = new NeoUtil( neo );
+            graphDbUtil = new GraphDatabaseUtil( graphDb );
         }
-        tx = neo().beginTx();
+        tx = graphDb().beginTx();
     }
     
+    protected void doShutdown()
+    {
+        graphDb.shutdown();
+    }
+
     protected File getBasePath()
     {
         return basePath;
@@ -78,7 +83,7 @@ public abstract class NeoTestCase extends TestCase
     {
         tx.success();
         tx.finish();
-        tx = neo.beginTx();
+        tx = graphDb.beginTx();
     }
 
     @Override
@@ -89,21 +94,21 @@ public abstract class NeoTestCase extends TestCase
         super.tearDown();
     }
 
-    protected GraphDatabaseService neo()
+    protected GraphDatabaseService graphDb()
     {
-        return neo;
+        return graphDb;
     }
     
-    protected NeoUtil neoUtil()
+    protected GraphDatabaseUtil graphDbUtil()
     {
-        return neoUtil;
+        return graphDbUtil;
     }
 
     protected void deleteEntireNodeSpace()
     {
-        for ( Relationship rel : neo().getReferenceNode().getRelationships() )
+        for ( Relationship rel : graphDb().getReferenceNode().getRelationships() )
         {
-            Node node = rel.getOtherNode( neo().getReferenceNode() );
+            Node node = rel.getOtherNode( graphDb().getReferenceNode() );
             rel.delete();
             new EntireGraphDeletor().delete( node );
         }

@@ -2,7 +2,7 @@ package org.neo4j.rdf.store;
 
 import org.neo4j.index.IndexService;
 
-public abstract class NeoWithIndexTestCase extends NeoTestCase
+public abstract class Neo4jWithIndexTestCase extends Neo4jTestCase
 {
     private IndexService indexService;
     
@@ -42,14 +42,13 @@ public abstract class NeoWithIndexTestCase extends NeoTestCase
         createIndexServiceIfNeeded();
     }
     
-    @Override
-    protected void tearDown() throws Exception
+    @Override protected void doShutdown()
     {
         if ( indexService() != null )
         {
             indexService().shutdown();
             setIndexService( null );
         }
-        super.tearDown();
+        super.doShutdown();
     }
 }

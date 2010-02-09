@@ -7,17 +7,17 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.meta.model.MetaModel;
 import org.neo4j.meta.model.MetaModelClass;
 import org.neo4j.meta.model.MetaModelRelTypes;
-import org.neo4j.util.NeoRelationshipSet;
+import org.neo4j.util.RelationshipSet;
 
-public class InstanceOfCollection extends NeoRelationshipSet<MetaModelClass>
+public class InstanceOfCollection extends RelationshipSet<MetaModelClass>
 {
-    private MetaModel meta;
+    private MetaModel model;
     
-    public InstanceOfCollection( GraphDatabaseService neo, MetaModel meta, Node node )
+    public InstanceOfCollection( GraphDatabaseService graphDb, MetaModel model, Node node )
     {
-        super( neo, node, MetaModelRelTypes.META_IS_INSTANCE_OF,
+        super( graphDb, node, MetaModelRelTypes.META_IS_INSTANCE_OF,
             Direction.OUTGOING );
-        this.meta = meta;
+        this.model = model;
     }
 
     @Override
@@ -30,6 +30,6 @@ public class InstanceOfCollection extends NeoRelationshipSet<MetaModelClass>
     protected MetaModelClass newObject( Node node,
         Relationship relationship )
     {
-        return new MetaModelClass( meta, node );
+        return new MetaModelClass( model, node );
     }
 }

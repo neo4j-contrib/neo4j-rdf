@@ -29,11 +29,11 @@ public class Validator
     //		}
     //	}
     
-    private MetaModel meta;
+    private MetaModel model;
     
-    public Validator( MetaModel meta )
+    public Validator( MetaModel model )
     {
-        this.meta = meta;
+        this.model = model;
     }
     
     public void validate( Validatable instance ) throws Exception
@@ -63,7 +63,7 @@ public class Validator
         {
             validatePropertyExists( instance, key );
             MetaModelProperty property =
-                meta.getGlobalNamespace().getMetaProperty( key, false );
+                model.getGlobalNamespace().getMetaProperty( key, false );
             if ( !properties.contains( property ) )
             {
                 throw new Exception( "Property '" + key +
@@ -75,7 +75,7 @@ public class Validator
     private void validatePropertyExists( Validatable instance, String key )
         throws Exception
     {
-        if ( meta.getGlobalNamespace().getMetaProperty( key, false ) == null )
+        if ( model.getGlobalNamespace().getMetaProperty( key, false ) == null )
         {
             throw new Exception( "Invalid property " + key + " on " +
                 instance );
@@ -289,7 +289,7 @@ public class Validator
         {
             if ( range == null )
             {
-                range = meta.lookup( property,
+                range = model.lookup( property,
                     MetaModel.LOOKUP_PROPERTY_RANGE, context.getClasses() );
             }
             return range;
@@ -299,7 +299,7 @@ public class Validator
         {
             if ( minCardinality == null )
             {
-                minCardinality = meta.lookup( property,
+                minCardinality = model.lookup( property,
                     MetaModel.LOOKUP_MIN_CARDINALITY,
                     context.getClasses() );
             }
@@ -310,7 +310,7 @@ public class Validator
         {
             if ( maxCardinality == null )
             {
-                maxCardinality = meta.lookup( property,
+                maxCardinality = model.lookup( property,
                     MetaModel.LOOKUP_MAX_CARDINALITY,
                     context.getClasses() );
             }
