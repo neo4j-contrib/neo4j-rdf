@@ -15,8 +15,8 @@
   <groupId>org.neo4j</groupId>
   <artifactId>neo4j-${short-name}</artifactId>
   <version>0.6-SNAPSHOT</version>
-  <name>Neo RDF</name>
-  <description>Neo-backed RDF store</description>
+  <name>Neo4j RDF</name>
+  <description>Neo4j-backed RDF store</description>
   <url>http://components.neo4j.org/${project.artifactId}/</url>
 
   <scm>
