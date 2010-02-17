@@ -317,7 +317,7 @@ public abstract class RdfStoreImpl implements RdfStore
 
                 Iterable<PatternMatch> matches = runMatchingEngine(
                     figureOutPatternStartNode( patternToRepresentationMap ),
-                    figureOutNeoStartNode( statementRepresentation ) );
+                    figureOutGraphDbStartNode( statementRepresentation ) );
 
                 for ( PatternMatch match : matches )
                 {
@@ -342,16 +342,16 @@ public abstract class RdfStoreImpl implements RdfStore
             }
 
             private Iterable<PatternMatch> runMatchingEngine(
-                PatternNode patternStartNode, Node neoStartNode )
+                PatternNode patternStartNode, Node graphDbStartNode )
             {
                 return PatternMatcher.getMatcher().match( patternStartNode,
-                    neoStartNode );
+                    graphDbStartNode );
             }
 
-            private Node figureOutNeoStartNode( AbstractRepresentation
+            private Node figureOutGraphDbStartNode( AbstractRepresentation
                 statementRepresentation )
             {
-                // Resolve abstract nodes in representation to neo nodes
+                // Resolve abstract nodes in representation to nodes
                 // through the executor
                 // Investigate meta model, check instance counts etc
                 // Return a smart start node

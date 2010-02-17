@@ -31,7 +31,7 @@ public interface StatementMetadata
     
     /**
      * Sets a metadata value for a certain key. Accepted values are those
-     * that a neo {@link PropertyContainer} accepts.
+     * that a {@link PropertyContainer} accepts.
      * @param key the metadata key, typically a URI.
      * @param value the {@link Literal} value which will be associated with
      * the key.
