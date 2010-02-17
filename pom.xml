@@ -13,7 +13,7 @@
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.neo4j</groupId>
-  <artifactId>neo4j-${short-name}</artifactId>
+  <artifactId>neo4j-rdf</artifactId>
   <version>0.7-SNAPSHOT</version>
   <name>Neo4j RDF</name>
   <description>Neo4j-backed RDF store</description>
