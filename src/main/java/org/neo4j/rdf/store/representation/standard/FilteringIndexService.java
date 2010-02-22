@@ -95,6 +95,24 @@ public class FilteringIndexService implements IndexService
         this.indexService.removeIndex( node, key, value );
     }
 
+    public void removeIndex( Node node, String key )
+    {
+        if ( !shouldIndexKey( key ) )
+        {
+            return;
+        }
+        this.indexService.removeIndex( node, key );
+    }
+    
+    public void removeIndex( String key )
+    {
+        if ( !shouldIndexKey( key ) )
+        {
+            return;
+        }
+        this.indexService.removeIndex( key );
+    }
+    
     public void setIsolation( Isolation level )
     {
         this.indexService.setIsolation( level );
