@@ -52,7 +52,6 @@ import org.neo4j.graphdb.NotFoundException;
 import org.neo4j.rdf.fulltext.PersistentQueue.Entry;
 import org.neo4j.rdf.fulltext.VerificationHook.Status;
 import org.neo4j.rdf.model.Uri;
-import org.neo4j.rdf.util.TemporaryLogger;
 import org.neo4j.util.GraphDatabaseUtil;
 
 /**
@@ -367,14 +366,9 @@ public class SimpleFulltextIndex implements FulltextIndex
         IndexSearcher searcher = null;
         try
         {
-            TemporaryLogger.Timer timer = new TemporaryLogger.Timer();
             searcher = getSearcher();
             Query q = new QueryParser( KEY_INDEX, analyzer ).parse( query );
             Hits hits = searcher.search( q, Sort.RELEVANCE );
-            long searchTime = timer.lap();
-            TemporaryLogger.getLogger().info( "FulltextIndex.search: " +
-                "search{q:'" + query + "' time:" + searchTime +
-                " hits:" + hits.length() + "}" );
             
             Highlighter highlighter = null;
             if ( snippetCountLimit > 0 )
@@ -449,11 +443,6 @@ public class SimpleFulltextIndex implements FulltextIndex
             int docNum = counter;
             if ( counter >= hitsLength )
             {
-                TemporaryLogger.getLogger().info( "Fulltext.search DONE {" +
-                    "getId:" + getIdTime + " " +
-                    "getSnippet:" + getSnippetTime + " " +
-                    "getNode:" + getNodeTime +
-                    "}" );
                 return null;
             }
             
@@ -493,13 +482,6 @@ public class SimpleFulltextIndex implements FulltextIndex
                     // Ok, probably index lagging a bit behind, that's all.
                     // This also effectively hides many bugs, which is a
                     // BAAD thing.
-                    TemporaryLogger.getLogger().info(
-                    "Fulltext index refers " +
-                    "to missing node (" + id + "). This probably means " +
-                    "that the indexer is lagging behind a bit. If this " +
-                    "id is reported as missing a couple of more times " +
-                    "then there's probably a bug and you should " +
-                    "report it" );
                     return SPECIAL_FILTERING_INSTANCE;
                 }
             }

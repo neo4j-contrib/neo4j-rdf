@@ -11,18 +11,19 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
-import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.NotFoundException;
-import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.Transaction;
 import org.neo4j.commons.iterator.FilteringIterable;
 import org.neo4j.commons.iterator.FilteringIterator;
 import org.neo4j.commons.iterator.IterableWrapper;
 import org.neo4j.commons.iterator.NestingIterable;
 import org.neo4j.commons.iterator.NestingIterator;
 import org.neo4j.commons.iterator.PrefetchingIterator;
+import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.NotFoundException;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.Transaction;
+import org.neo4j.index.IndexService;
 import org.neo4j.meta.model.MetaModel;
 import org.neo4j.rdf.fulltext.FulltextIndex;
 import org.neo4j.rdf.fulltext.QueryResult;
@@ -42,9 +43,7 @@ import org.neo4j.rdf.store.representation.AbstractNode;
 import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
 import org.neo4j.rdf.store.representation.standard.VerboseQuadExecutor;
 import org.neo4j.rdf.store.representation.standard.VerboseQuadStrategy;
-import org.neo4j.rdf.util.TemporaryLogger;
 import org.neo4j.util.RelationshipToNodeIterable;
-import org.neo4j.index.IndexService;
 
 /**
  * An {@link RdfStore} capable of storing quads, i.e. Subject, Predicate, Object, Context.
@@ -198,8 +197,7 @@ public class VerboseQuadStore extends RdfStoreImpl
                 
                 if ( ++totalCounter % 1000 == 0 )
                 {
-                    TemporaryLogger.getLogger().info( "Reindex progress " +
-                        totalCounter + " (literals " + counter + ")" );
+                    // TODO Notify somehow?
                 }
             }
             fulltextIndex.end( true );
@@ -857,8 +855,6 @@ public class VerboseQuadStore extends RdfStoreImpl
             }
             catch ( RuntimeException e )
             {
-                TemporaryLogger.getLogger().info( "There is a node which " +
-                    "should have been a literal but isn't " + literalNode );
                 throw e;
             }
         }
