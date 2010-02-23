@@ -55,7 +55,12 @@ Instantiating an RdfStore
 	
 ---
 	GraphDatabaseService graphDb = new EmbeddedGraphDatabase( "my/path" );
-	IndexService indexService = new LuceneIndexService( graphDb );
+	LuceneIndexService indexService = new LuceneIndexService( graphDb );
+	
+	// Set the cache size for URI lookups, this will increase
+	// overall performance (and is set to 100000 by default if not set here)
+	indexService.enableCache( "uri", 100000 );
+	
 	RdfStore store = new VerboseQuadStore( graphDb, indexService );
 ---
 

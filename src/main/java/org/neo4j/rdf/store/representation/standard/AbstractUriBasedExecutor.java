@@ -13,6 +13,7 @@ import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.index.IndexService;
+import org.neo4j.index.lucene.LuceneIndexService;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.kernel.impl.transaction.LockManager;
 import org.neo4j.meta.model.MetaModel;
@@ -31,6 +32,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
 {
     public static final String START_OF_ILLEGAL_URI = "%";
 
+    public static final int DEFAULT_URI_CACHE_SIZE = 100000;
     public static final String URI_PROPERTY_KEY = "uri";
     public static final String LITERAL_VALUE_KEY = "value";
     public static final String META_EXECUTOR_INFO_KEY = "meta";
@@ -52,6 +54,20 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         this.graphDbUtil = new GraphDatabaseUtil( graphDb );
         this.model = optionalModel;
         this.fulltextIndex = optionalFulltextIndex;
+        
+        if ( this.index instanceof LuceneIndexService )
+        {
+            LuceneIndexService luceneIndex = (LuceneIndexService) this.index;
+            Integer cacheSize = luceneIndex.getEnabledCacheSize( URI_PROPERTY_KEY );
+            if ( cacheSize == null )
+            {
+                // TODO Really have System.out here?
+                System.out.println( "Cache not enabled for '" + URI_PROPERTY_KEY +
+                        "' Setting it (" + luceneIndex.getClass().getSimpleName() +
+                        "#enableCache" + ") to " + DEFAULT_URI_CACHE_SIZE );
+                luceneIndex.enableCache( URI_PROPERTY_KEY, DEFAULT_URI_CACHE_SIZE );
+            }
+        }
     }
     
     public FulltextIndex getFulltextIndex()

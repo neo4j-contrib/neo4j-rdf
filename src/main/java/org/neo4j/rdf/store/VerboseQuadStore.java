@@ -46,6 +46,9 @@ import org.neo4j.rdf.util.TemporaryLogger;
 import org.neo4j.util.RelationshipToNodeIterable;
 import org.neo4j.index.IndexService;
 
+/**
+ * An {@link RdfStore} capable of storing quads, i.e. Subject, Predicate, Object, Context.
+ */
 public class VerboseQuadStore extends RdfStoreImpl
 {
     private final MetaModel model;
