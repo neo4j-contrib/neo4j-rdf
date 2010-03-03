@@ -80,7 +80,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         return this.graphDb;
     }
 
-    protected IndexService index()
+    public IndexService index()
     {
         return this.index;
     }

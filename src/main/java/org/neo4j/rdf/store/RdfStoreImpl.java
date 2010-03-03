@@ -26,6 +26,7 @@ public abstract class RdfStoreImpl implements RdfStore
 {
     private final GraphDatabaseService graphDb;
     private final RepresentationStrategy representationStrategy;
+    private boolean shutdownNeo4jInstancesUponShutdown;
 
     /**
      * @param graphDb the {@link GraphDatabaseService}.
@@ -39,6 +40,15 @@ public abstract class RdfStoreImpl implements RdfStore
         this.representationStrategy = representationStrategy;
     }
 
+    /**
+     * @param shutdownNeo4jInstances If {@code true} then the call to
+     * {@link #shutDown()} will also shutdown.
+     */
+    public void setShutdownNeo4jInstancesUponShutdown( boolean shutdownNeo4jInstances )
+    {
+        this.shutdownNeo4jInstancesUponShutdown = shutdownNeo4jInstances;
+    }
+    
     protected GraphDatabaseService graphDb()
     {
         return this.graphDb;
@@ -243,6 +253,18 @@ public abstract class RdfStoreImpl implements RdfStore
         if ( index != null )
         {
             index.shutDown();
+        }
+        
+        // Shut down the Neo4j stuff if that flag is set.
+        if ( this.shutdownNeo4jInstancesUponShutdown )
+        {
+            // TODO This isn't a very nice check (instanceof)
+            RepresentationExecutor executor = this.getExecutor();
+            if ( executor instanceof AbstractUriBasedExecutor )
+            {
+                ( (AbstractUriBasedExecutor) executor ).index().shutdown();
+            }
+            graphDb.shutdown();
         }
     }
     

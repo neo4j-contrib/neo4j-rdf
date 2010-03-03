@@ -54,7 +54,7 @@ public abstract class Neo4jTestCase extends TestCase
         graphDb.shutdown();
     }
 
-    protected File getBasePath()
+    public static File getBasePath()
     {
         return basePath;
     }
