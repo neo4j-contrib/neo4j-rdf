@@ -2,6 +2,9 @@ package org.neo4j.rdf.store;
 
 import java.io.File;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.neo4j.rdf.fulltext.SimpleFulltextIndex;
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
@@ -37,21 +40,8 @@ public class TestBasicQuadContract extends QuadStoreAbstractTestCase
                 "fulltext" ) ) );
     }
 
-    @Override
-    protected void setUp() throws Exception
-    {
-        super.setUp();
-        addInitialStatements();
-    }
-
-    @Override
-    protected void tearDown() throws Exception
-    {
-        deleteEntireNodeSpace();
-        super.tearDown();
-    }
-
-    private void addInitialStatements()
+    @Before
+    public void addInitialStatements()
     {
         addStatements(
             EMIL_KNOWS_MATTIAS_PUBLIC,
@@ -59,7 +49,8 @@ public class TestBasicQuadContract extends QuadStoreAbstractTestCase
             EMIL_KNOWS_MATTIAS_NULL );
     }
 
-    private void clearAllStatements()
+    @After
+    public void clearAllStatements()
     {
         store().removeStatements(
             wildcardStatement(
@@ -78,6 +69,7 @@ public class TestBasicQuadContract extends QuadStoreAbstractTestCase
 
     // Test getStatements()
 
+    @Test
     public void testGetSPO()
     {
         assertResult(
@@ -91,6 +83,7 @@ public class TestBasicQuadContract extends QuadStoreAbstractTestCase
             EMIL_KNOWS_MATTIAS_NULL );
     }
 
+    @Test
     public void testGetSPONull()
     {
         assertResult(
@@ -102,6 +95,7 @@ public class TestBasicQuadContract extends QuadStoreAbstractTestCase
             EMIL_KNOWS_MATTIAS_NULL );
     }
 
+    @Test
     public void testGetSPOC()
     {
         assertResult(
@@ -113,6 +107,7 @@ public class TestBasicQuadContract extends QuadStoreAbstractTestCase
             EMIL_KNOWS_MATTIAS_PUBLIC );
     }
 
+    @Test
     public void testGetSPOC1C2()
     {
         assertResult(
@@ -133,6 +128,7 @@ public class TestBasicQuadContract extends QuadStoreAbstractTestCase
 
     // Test removeStatements()
 
+    @Test
     public void testRemoveSPO()
     {
         store().removeStatements(
@@ -149,6 +145,7 @@ public class TestBasicQuadContract extends QuadStoreAbstractTestCase
                 WILDCARD_CONTEXT ), 0 );
     }
 
+    @Test
     public void testRemoveSPONull()
     {
         store().removeStatements(
@@ -167,6 +164,7 @@ public class TestBasicQuadContract extends QuadStoreAbstractTestCase
             EMIL_KNOWS_MATTIAS_PRIVATE );
     }
 
+    @Test
     public void testRemoveSPOC()
     {
         store().removeStatements(
@@ -185,6 +183,7 @@ public class TestBasicQuadContract extends QuadStoreAbstractTestCase
             EMIL_KNOWS_MATTIAS_NULL );
     }
 
+    @Test
     public void testRemoveSPOC1C2()
     {
         store().removeStatements(
@@ -210,6 +209,7 @@ public class TestBasicQuadContract extends QuadStoreAbstractTestCase
 
     // Test addStatements()
 
+    @Test
     public void testAddSPONull()
     {
         clearAllStatements();

@@ -1,5 +1,8 @@
 package org.neo4j.rdf.store;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Literal;
 
@@ -26,21 +29,14 @@ public class TestLiteralQuadContract extends QuadStoreAbstractTestCase
             new Literal( "Empa" ),
             TestUri.EMIL_PRIVATE_GRAPH );
 
-    @Override
-    protected void setUp() throws Exception
-    {
-        super.setUp();
-        addInitialStatements();
-    }
-    
-    @Override
-    protected void tearDown() throws Exception
+    @After
+    public void cleanup() throws Exception
     {
         deleteEntireNodeSpace();
-        super.tearDown();
     }
 
-    private void addInitialStatements()
+    @Before
+    public void addInitialStatements()
     {
         addStatements(
             EMIL_NICK_EMIL_PUBLIC,
@@ -48,6 +44,7 @@ public class TestLiteralQuadContract extends QuadStoreAbstractTestCase
             EMIL_NICK_EMPA_PUBLIC );
     }
 
+    @Test
     public void testGetNick()
     {
         assertResult(

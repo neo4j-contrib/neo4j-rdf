@@ -1,8 +1,13 @@
 package org.neo4j.rdf.store;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.junit.Test;
 import org.neo4j.rdf.fulltext.QueryResult;
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
@@ -14,6 +19,7 @@ import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
 
 public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
 {
+    @Test
     public void testSameSameStatements() throws Exception
     {
         Uri uriA = new Uri( BASE_URI + "uriA" );
@@ -52,6 +58,7 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
         removeStatements( wildcardStatement );
     }
 
+    @Test
     public void testIt()
     {
         CompleteStatement mattiasKnowsEmilPublic =
@@ -123,6 +130,7 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
         deleteEntireNodeSpace();
     }
     
+    @Test
     public void testType() throws Exception
     {
         Uri rdfType = new Uri( AbstractUriBasedExecutor.RDF_TYPE_URI );
@@ -154,6 +162,7 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
         deleteEntireNodeSpace();
     }
     
+    @Test
     public void testDuplicateWithLiterals() throws Exception
     {
         CompleteStatement mattiasTypePerson =
@@ -184,6 +193,7 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
         deleteEntireNodeSpace();
     }
     
+    @Test
     public void testFulltextSearch() throws Exception
     {
         CompleteStatement mattiasTypePerson =
@@ -266,6 +276,7 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
         deleteEntireNodeSpace();
     }
     
+    @Test
     public void testReindexFulltextIndex() throws Exception
     {
         CompleteStatement mattiasTypePerson =
@@ -326,6 +337,7 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
         deleteEntireNodeSpace();
     }
     
+    @Test
     public void testMetadata() throws Exception
     {
         CompleteStatement mattiasTypePerson =

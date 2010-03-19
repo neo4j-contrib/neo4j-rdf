@@ -1,7 +1,10 @@
 package org.neo4j.rdf.fulltext;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 
+import org.junit.Test;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.rdf.model.Uri;
@@ -9,6 +12,7 @@ import org.neo4j.rdf.store.Neo4jTestCase;
 
 public class TestFulltextIndex extends Neo4jTestCase
 {
+    @Test
     public void testSelfRepair() throws Exception
     {
         FulltextIndex index = new SimpleFulltextIndex( graphDb(),

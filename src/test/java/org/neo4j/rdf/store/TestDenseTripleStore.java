@@ -1,5 +1,6 @@
 package org.neo4j.rdf.store;
 
+import org.junit.Test;
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Literal;
@@ -43,6 +44,7 @@ public class TestDenseTripleStore extends TripleStoreAbstractTestCase
 //        removeStatements( wildcardStatement );
 //    }
     
+    @Test
     public void testSome() throws Exception
     {
         CompleteStatement mattiasKnowsEmil = completeStatement(

@@ -1,17 +1,19 @@
 package org.neo4j.rdf.store;
 
+import static org.junit.Assert.fail;
+
 import java.io.File;
 
+import org.junit.Test;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.index.IndexService;
 import org.neo4j.index.lucene.LuceneIndexService;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
 
-import junit.framework.TestCase;
-
-public class TestInlineShutdown extends TestCase
+public class TestInlineShutdown
 {
+    @Test
     public void testInlineShutdown() throws Exception
     {
         GraphDatabaseService graphDb = new EmbeddedGraphDatabase(
@@ -41,6 +43,7 @@ public class TestInlineShutdown extends TestCase
         }
     }
 
+    @Test
     public void testNormalShutdown() throws Exception
     {
         GraphDatabaseService graphDb = new EmbeddedGraphDatabase(

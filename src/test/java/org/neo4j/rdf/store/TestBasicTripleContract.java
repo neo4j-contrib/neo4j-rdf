@@ -1,5 +1,8 @@
 package org.neo4j.rdf.store;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Literal;
@@ -56,21 +59,8 @@ public class TestBasicTripleContract extends TripleStoreAbstractTestCase
         return new DenseTripleStore( graphDb(), indexService(), null, null );
     }
 
-    @Override
-    protected void setUp() throws Exception
-    {
-        super.setUp();
-        addInitialStatements();
-    }
-
-    @Override
-    protected void tearDown() throws Exception
-    {
-        clearAllStatements();
-        super.tearDown();
-    }
-
-    private void addInitialStatements()
+    @Before
+    public void addInitialStatements()
     {
         addStatements( getTestStatements() );
     }
@@ -87,7 +77,8 @@ public class TestBasicTripleContract extends TripleStoreAbstractTestCase
         };
     }
 
-    private void clearAllStatements()
+    @After
+    public void clearAllStatements()
     {
         for ( CompleteStatement statement : getTestStatements() )
         {
@@ -98,6 +89,7 @@ public class TestBasicTripleContract extends TripleStoreAbstractTestCase
         }
     }
 
+    @Test
     public void testGetSPO()
     {
         assertResult(
@@ -116,6 +108,7 @@ public class TestBasicTripleContract extends TripleStoreAbstractTestCase
             EMIL_NAME );
     }
 
+    @Test
     public void testGetSP_()
     {
         assertResult(
@@ -134,6 +127,7 @@ public class TestBasicTripleContract extends TripleStoreAbstractTestCase
             EMIL_NAME );
     }
 
+    @Test
     public void testGetS__()
     {
         assertResult(
@@ -152,6 +146,7 @@ public class TestBasicTripleContract extends TripleStoreAbstractTestCase
             MATTIAS_NAME, MATTIAS_KNOWS_JOHAN );
     }
 
+    @Test
     public void testGetS_O()
     {
         assertResult(
@@ -170,6 +165,7 @@ public class TestBasicTripleContract extends TripleStoreAbstractTestCase
             EMIL_NAME );
     }
     
+    @Test
     public void testGet_PO()
     {
         assertResult(
@@ -188,6 +184,7 @@ public class TestBasicTripleContract extends TripleStoreAbstractTestCase
             EMIL_NAME );
     }
 
+    @Test
     public void testGet__O()
     {
         assertResult(

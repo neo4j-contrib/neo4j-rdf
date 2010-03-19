@@ -1,5 +1,8 @@
 package org.neo4j.rdf.store.representation;
 
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Resource;
@@ -8,12 +11,13 @@ import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Value;
 import org.neo4j.rdf.model.Wildcard;
 import org.neo4j.rdf.model.WildcardStatement;
-import org.neo4j.rdf.store.Neo4jWithIndexTestCase;
+import org.neo4j.rdf.store.Neo4jTestCase;
 import org.neo4j.rdf.store.representation.standard.VerboseQuadExecutor;
 import org.neo4j.rdf.store.representation.standard.VerboseQuadStrategy;
 
-public class TestRepresentations extends Neo4jWithIndexTestCase
+public class TestRepresentations extends Neo4jTestCase
 {
+    @Test
     public void testVerboseQuadRepresentation() throws Exception
     {
         RepresentationStrategy strategy = new VerboseQuadStrategy( null, null );
@@ -56,6 +60,7 @@ public class TestRepresentations extends Neo4jWithIndexTestCase
         assertEquals( 2, contextNodeCount );
     }
     
+    @Test
     public void testVerboseQuadWildcards() throws Exception
     {
         RepresentationExecutor executor = new VerboseQuadExecutor( graphDb(),

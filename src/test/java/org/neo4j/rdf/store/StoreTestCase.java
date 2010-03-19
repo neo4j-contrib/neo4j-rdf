@@ -1,5 +1,8 @@
 package org.neo4j.rdf.store;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,8 +13,8 @@ import java.util.Random;
 
 import javax.transaction.SystemException;
 
-import org.neo4j.index.IndexService;
-import org.neo4j.index.lucene.LuceneIndexService;
+import org.junit.After;
+import org.junit.Before;
 import org.neo4j.rdf.fulltext.FulltextIndex;
 import org.neo4j.rdf.fulltext.SimpleFulltextIndex;
 import org.neo4j.rdf.model.CompleteStatement;
@@ -25,7 +28,7 @@ import org.neo4j.rdf.model.Wildcard;
 import org.neo4j.rdf.model.WildcardStatement;
 import org.neo4j.rdf.store.representation.standard.AbstractUriBasedExecutor;
 
-public abstract class StoreTestCase extends Neo4jWithIndexTestCase
+public abstract class StoreTestCase extends Neo4jTestCase
 {
     public static final String BASE_URI = "http://uri.neo4j.org/";
     public static final Wildcard WILDCARD_SUBJECT = new Wildcard( "subject" );
@@ -39,48 +42,29 @@ public abstract class StoreTestCase extends Neo4jWithIndexTestCase
     public static final Uri KNOWS = new Uri( "http://knows" );
     public static final Context TEST_CONTEXT = new Context( "aTest" );
 
-    private RdfStore store = null;
+    private RdfStore store;
     private FulltextIndex fulltextIndex;
     
-    @Override
-    protected void setUp() throws Exception
+    @Before
+    public void setUpStore() throws Exception
     {
-        super.setUp();
-        createStoreIfNeeded();
+        fulltextIndex = instantiateFulltextIndex();
+        store = instantiateStore();
     }
 
-    @Override
-    protected void tearDown() throws Exception
+    @After
+    public void tearDownStore() throws Exception
     {
-        tearDownStoreIfNeeded();
-        super.tearDown();
-    }
-
-    private void createStoreIfNeeded()
-    {
-        if ( store() == null )
+        // TODO, not really nice
+        FulltextIndex fulltextIndex =
+            ( ( RdfStoreImpl ) this.store ).getFulltextIndex();
+        if ( fulltextIndex != null )
         {
-            this.fulltextIndex = instantiateFulltextIndex();
-            this.store = instantiateStore();
+            fulltextIndex.clear();
         }
+        this.store.shutDown();
     }
 
-    private void tearDownStoreIfNeeded()
-    {
-        if ( store() != null )
-        {
-            // TODO, not really nice
-            FulltextIndex fulltextIndex =
-                ( ( RdfStoreImpl ) this.store ).getFulltextIndex();
-            if ( fulltextIndex != null )
-            {
-                fulltextIndex.clear();
-            }
-            this.store.shutDown();
-            this.store = null;
-        }
-    }
-    
     @Override
     protected void restartTx()
     {
@@ -114,12 +98,6 @@ public abstract class StoreTestCase extends Neo4jWithIndexTestCase
         return this.fulltextIndex;
     }
 
-    @Override
-    protected IndexService instantiateIndexService()
-    {
-        return new LuceneIndexService( graphDb() );
-    }
-    
     protected FulltextIndex instantiateFulltextIndex()
     {
         return new SimpleFulltextIndex( graphDb(), new File( getBasePath(),
