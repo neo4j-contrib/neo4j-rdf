@@ -13,6 +13,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.PropertyContainer;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.graphmatching.CommonValueMatchers;
 import org.neo4j.graphmatching.PatternMatch;
 import org.neo4j.graphmatching.PatternMatcher;
 import org.neo4j.graphmatching.PatternNode;
@@ -470,9 +471,8 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
         PatternNode patternNode = new PatternNode();
         if ( node.getUriOrNull() != null )
         {
-            patternNode.addPropertyEqualConstraint(
-                getNodeUriPropertyKey( node ),
-                node.getUriOrNull().getUriAsString() );
+            patternNode.addPropertyConstraint( getNodeUriPropertyKey( node ),
+                    CommonValueMatchers.exactAny( node.getUriOrNull().getUriAsString() ) );
         }
 
         if ( isLiteralNode( node ) )
@@ -480,8 +480,8 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
             for ( Map.Entry<String, Collection<Object>> entry :
                 node.properties().entrySet() )
             {
-                patternNode.addPropertyEqualConstraint( entry.getKey(),
-                    entry.getValue().toArray() );
+                patternNode.addPropertyConstraint( entry.getKey(),
+                    CommonValueMatchers.exactAnyOf( entry.getValue().toArray() ) );
             }
         }
         return patternNode;
