@@ -28,7 +28,8 @@ import org.neo4j.rdf.store.representation.RepresentationExecutor;
 import org.neo4j.util.GraphDatabaseUtil;
 import org.neo4j.util.PropertyArraySet;
 
-public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
+public abstract class AbstractUriBasedExecutor implements
+        RepresentationExecutor
 {
     public static final String START_OF_ILLEGAL_URI = "%";
 
@@ -36,8 +37,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     public static final String URI_PROPERTY_KEY = "uri";
     public static final String LITERAL_VALUE_KEY = "value";
     public static final String META_EXECUTOR_INFO_KEY = "meta";
-    public static final String RDF_NAMESPACE =
-        "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+    public static final String RDF_NAMESPACE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
     public static final String RDF_TYPE_URI = RDF_NAMESPACE + "type";
 
     private final GraphDatabaseService graphDb;
@@ -45,16 +45,17 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     private final IndexService index;
     private final MetaModel model;
     private FulltextIndex fulltextIndex;
-    
-    public AbstractUriBasedExecutor( GraphDatabaseService graphDb, IndexService index,
-        MetaModel optionalModel, FulltextIndex optionalFulltextIndex )
+
+    public AbstractUriBasedExecutor( GraphDatabaseService graphDb,
+            IndexService index, MetaModel optionalModel,
+            FulltextIndex optionalFulltextIndex )
     {
         this.graphDb = graphDb;
         this.index = index;
         this.graphDbUtil = new GraphDatabaseUtil( graphDb );
         this.model = optionalModel;
         this.fulltextIndex = optionalFulltextIndex;
-        
+
         if ( this.index instanceof LuceneIndexService )
         {
             LuceneIndexService luceneIndex = (LuceneIndexService) this.index;
@@ -62,19 +63,22 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
             if ( cacheSize == null )
             {
                 // TODO Really have System.out here?
-                System.out.println( "Cache not enabled for '" + URI_PROPERTY_KEY +
-                        "' Setting it (" + luceneIndex.getClass().getSimpleName() +
-                        "#enableCache" + ") to " + DEFAULT_URI_CACHE_SIZE );
-                luceneIndex.enableCache( URI_PROPERTY_KEY, DEFAULT_URI_CACHE_SIZE );
+                System.out.println( "Cache not enabled for '"
+                                    + URI_PROPERTY_KEY + "' Setting it ("
+                                    + luceneIndex.getClass().getSimpleName()
+                                    + "#enableCache" + ") to "
+                                    + DEFAULT_URI_CACHE_SIZE );
+                luceneIndex.enableCache( URI_PROPERTY_KEY,
+                        DEFAULT_URI_CACHE_SIZE );
             }
         }
     }
-    
+
     public FulltextIndex getFulltextIndex()
     {
         return this.fulltextIndex;
     }
-    
+
     protected GraphDatabaseService graphDB()
     {
         return this.graphDb;
@@ -90,45 +94,45 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         return this.graphDbUtil;
     }
 
-//    protected MetaStructure meta()
-//    {
-//        return this.meta;
-//    }
+    // protected MetaStructure meta()
+    // {
+    // return this.meta;
+    // }
 
-//    protected void debug( String message )
-//    {
-//        System.out.println( message );
-//    }
-//
-//    private void debugRelationship( Relationship relationship,
-//        boolean create )
-//    {
-//        String sign = create ? "+" : "-";
-//        debug( "\t" + sign + "Relationship (" + relationship + ") " +
-//            relationship.getStartNode() + " --[" +
-//            relationship.getType().name() + "]--> " +
-//            relationship.getEndNode() );
-//    }
+    // protected void debug( String message )
+    // {
+    // System.out.println( message );
+    // }
+    //
+    // private void debugRelationship( Relationship relationship,
+    // boolean create )
+    // {
+    // String sign = create ? "+" : "-";
+    // debug( "\t" + sign + "Relationship (" + relationship + ") " +
+    // relationship.getStartNode() + " --[" +
+    // relationship.getType().name() + "]--> " +
+    // relationship.getEndNode() );
+    // }
 
-//    protected void debugCreateRelationship( Relationship relationship )
-//    {
-//        debugRelationship( relationship, true );
-//    }
+    // protected void debugCreateRelationship( Relationship relationship )
+    // {
+    // debugRelationship( relationship, true );
+    // }
 
-//    protected void debugDeleteRelationship( Relationship relationship )
-//    {
-//        debugRelationship( relationship, false );
-//    }
+    // protected void debugDeleteRelationship( Relationship relationship )
+    // {
+    // debugRelationship( relationship, false );
+    // }
 
-//    protected void debugCreateNode( Node node, String uri )
-//    {
-//        debug( "\t+Node (" + node.getId() + ") " + ( uri == null ? "" : uri ) );
-//    }
+    // protected void debugCreateNode( Node node, String uri )
+    // {
+    // debug( "\t+Node (" + node.getId() + ") " + ( uri == null ? "" : uri ) );
+    // }
 
-//    protected void debugDeleteNode( Node node, String uri )
-//    {
-//        debug( "\t-Node (" + node.getId() + ") " + ( uri == null ? "" : uri ) );
-//    }
+    // protected void debugDeleteNode( Node node, String uri )
+    // {
+    // debug( "\t-Node (" + node.getId() + ") " + ( uri == null ? "" : uri ) );
+    // }
 
     protected String getNodeUri( AbstractNode node )
     {
@@ -139,21 +143,30 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     public Node lookupNode( AbstractNode abstractNode )
     {
         Node result = null;
-//        if ( isMeta( abstractNode ) )
-//        {
-//            MetaStructureThing thing = getMetaStructureThing( abstractNode );
-//            result = thing == null ? null : thing.node();
-//        }
-//        else
-//        {
-            result = index().getSingleNode( URI_PROPERTY_KEY,
-                getNodeUri( abstractNode ) );
-//        }
+        // if ( isMeta( abstractNode ) )
+        // {
+        // MetaStructureThing thing = getMetaStructureThing( abstractNode );
+        // result = thing == null ? null : thing.node();
+        // }
+        // else
+        // {
+        String nodeUri = getNodeUri( abstractNode );
+        if ( null != nodeUri )
+        {
+            result = index().getSingleNode( URI_PROPERTY_KEY, nodeUri );
+        }
+        else
+        {
+            throw new UnsupportedOperationException(
+                    "Nodes without URIs (e.g. Blank Nodes) not supported at the moment: "
+                            + abstractNode.toString() );
+        }
+        // }
         return result;
     }
 
     protected NodeContext lookupOrCreateNode( AbstractNode abstractNode,
-    	Map<AbstractNode, Node> nodeMapping )
+            Map<AbstractNode, Node> nodeMapping )
     {
         Node node = lookupNode( abstractNode );
         boolean created = false;
@@ -174,13 +187,13 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
 
     protected void deleteNode( Node node, Uri uriOrNull )
     {
-//        debugDeleteNode( node, uriOrNull == null ? null :
-//            uriOrNull.getUriAsString() );
+        // debugDeleteNode( node, uriOrNull == null ? null :
+        // uriOrNull.getUriAsString() );
         node.delete();
         if ( uriOrNull != null )
         {
             index().removeIndex( node, URI_PROPERTY_KEY,
-                uriOrNull.getUriAsString() );
+                    uriOrNull.getUriAsString() );
         }
     }
 
@@ -192,45 +205,44 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
         }
     }
 
-//    protected MetaStructureThing getMetaStructureThing( AbstractNode node )
-//    {
-//        MetaStructureThing thing = null;
-//        String metaInfo = getMetaExecutorInfo( node );
-//        if ( node.getUriOrNull() == null )
-//        {
-//        }
-//        else if ( metaInfo.equals( "class" ) )
-//        {
-//            thing = meta().getGlobalNamespace().getMetaClass(
-//                node.getUriOrNull().getUriAsString(), false );
-//        }
-//        else if ( metaInfo.equals( "property" ) )
-//        {
-//            thing = meta().getGlobalNamespace().getMetaProperty(
-//                node.getUriOrNull().getUriAsString(), false );
-//        }
-//        else
-//        {
-//            throw new IllegalArgumentException( "Strange meta info '" +
-//                metaInfo + "'" );
-//        }
-//        return thing;
-//    }
+    // protected MetaStructureThing getMetaStructureThing( AbstractNode node )
+    // {
+    // MetaStructureThing thing = null;
+    // String metaInfo = getMetaExecutorInfo( node );
+    // if ( node.getUriOrNull() == null )
+    // {
+    // }
+    // else if ( metaInfo.equals( "class" ) )
+    // {
+    // thing = meta().getGlobalNamespace().getMetaClass(
+    // node.getUriOrNull().getUriAsString(), false );
+    // }
+    // else if ( metaInfo.equals( "property" ) )
+    // {
+    // thing = meta().getGlobalNamespace().getMetaProperty(
+    // node.getUriOrNull().getUriAsString(), false );
+    // }
+    // else
+    // {
+    // throw new IllegalArgumentException( "Strange meta info '" +
+    // metaInfo + "'" );
+    // }
+    // return thing;
+    // }
 
     public String getNodeUriPropertyKey( AbstractNode abstractNode )
     {
-//        return isMeta( abstractNode ) ? MetaStructureObject.KEY_NAME :
-//            URI_PROPERTY_KEY;
+        // return isMeta( abstractNode ) ? MetaStructureObject.KEY_NAME :
+        // URI_PROPERTY_KEY;
         return URI_PROPERTY_KEY;
     }
 
     protected Relationship findDirectRelationship( Node startNode,
-        RelationshipType relType, Node endNode, Direction directionOrNull )
+            RelationshipType relType, Node endNode, Direction directionOrNull )
     {
         Relationship relationship = null;
-        Iterable<Relationship> relationships = directionOrNull == null ?
-            startNode.getRelationships( relType ) :
-                startNode.getRelationships( relType, directionOrNull );
+        Iterable<Relationship> relationships = directionOrNull == null ? startNode.getRelationships( relType )
+                : startNode.getRelationships( relType, directionOrNull );
         for ( Relationship rel : relationships )
         {
             if ( rel.getOtherNode( startNode ).equals( endNode ) )
@@ -243,25 +255,24 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     }
 
     protected void ensureDirectlyDisconnected( Node startNode,
-        AbstractRelationship abstractRelationship, Node endNode )
+            AbstractRelationship abstractRelationship, Node endNode )
     {
         ensureDirectlyDisconnected( startNode, abstractRelationship, endNode,
-            Direction.OUTGOING );
+                Direction.OUTGOING );
     }
-    
+
     protected void ensureDirectlyDisconnected( Node startNode,
-        AbstractRelationship abstractRelationship, Node endNode,
-        Direction optimizeDirection )
+            AbstractRelationship abstractRelationship, Node endNode,
+            Direction optimizeDirection )
     {
-        Node start = optimizeDirection == Direction.OUTGOING ?
-            startNode : endNode;
-        Node end = optimizeDirection == Direction.OUTGOING ?
-            endNode : startNode;
-        
-        RelationshipType relType = relationshipType(
-            abstractRelationship.getRelationshipTypeName() );
+        Node start = optimizeDirection == Direction.OUTGOING ? startNode
+                : endNode;
+        Node end = optimizeDirection == Direction.OUTGOING ? endNode
+                : startNode;
+
+        RelationshipType relType = relationshipType( abstractRelationship.getRelationshipTypeName() );
         Relationship relationship = findDirectRelationship( start, relType,
-            end, optimizeDirection );
+                end, optimizeDirection );
         if ( relationship != null )
         {
             deleteRelationship( relationship );
@@ -269,24 +280,23 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     }
 
     protected Relationship ensureDirectlyConnected( Node startNode,
-        AbstractRelationship abstractRelationship, Node endNode )
+            AbstractRelationship abstractRelationship, Node endNode )
     {
         return ensureDirectlyConnected( startNode, abstractRelationship,
-            endNode, Direction.OUTGOING );
+                endNode, Direction.OUTGOING );
     }
-    
+
     protected Relationship ensureDirectlyConnected( Node startNode,
-        AbstractRelationship abstractRelationship, Node endNode,
-        Direction optimizeDirection )
+            AbstractRelationship abstractRelationship, Node endNode,
+            Direction optimizeDirection )
     {
-        Node start = optimizeDirection == Direction.OUTGOING ?
-            startNode : endNode;
-        Node end = optimizeDirection == Direction.OUTGOING ?
-            endNode : startNode;
-        RelationshipType relType = relationshipType(
-            abstractRelationship.getRelationshipTypeName() );
-        Relationship relationship = findDirectRelationship(
-            start, relType, end, optimizeDirection );
+        Node start = optimizeDirection == Direction.OUTGOING ? startNode
+                : endNode;
+        Node end = optimizeDirection == Direction.OUTGOING ? endNode
+                : startNode;
+        RelationshipType relType = relationshipType( abstractRelationship.getRelationshipTypeName() );
+        Relationship relationship = findDirectRelationship( start, relType,
+                end, optimizeDirection );
         if ( relationship == null )
         {
             createRelationship( start, abstractRelationship, end );
@@ -301,20 +311,19 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
 
     protected String getMetaExecutorInfo( AbstractNode node )
     {
-        return ( String ) node.getSingleExecutorInfo( META_EXECUTOR_INFO_KEY );
+        return (String) node.getSingleExecutorInfo( META_EXECUTOR_INFO_KEY );
     }
 
-//    protected boolean isMeta( AbstractNode node )
-//    {
-//        return meta() != null && getMetaExecutorInfo( node ) != null;
-//    }
+    // protected boolean isMeta( AbstractNode node )
+    // {
+    // return meta() != null && getMetaExecutorInfo( node ) != null;
+    // }
 
     protected boolean containsProperties( PropertyContainer container,
-        Map<String, Collection<Object>> containingProperties,
-        Collection<String> excludeThese )
+            Map<String, Collection<Object>> containingProperties,
+            Collection<String> excludeThese )
     {
-        for ( Map.Entry<String, Collection<Object>> entry :
-            containingProperties.entrySet() )
+        for ( Map.Entry<String, Collection<Object>> entry : containingProperties.entrySet() )
         {
             String key = entry.getKey();
             if ( excludeThese.contains( key ) )
@@ -322,8 +331,8 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
                 continue;
             }
             Collection<Object> values = entry.getValue();
-            Collection<Object> rawValues =
-                graphDbUtil().getPropertyValues( container, key );
+            Collection<Object> rawValues = graphDbUtil().getPropertyValues(
+                    container, key );
             if ( !rawValues.containsAll( values ) )
             {
                 return false;
@@ -333,7 +342,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     }
 
     protected Map<AbstractNode, Node> getWellKnownNodeMappings(
-        AbstractRepresentation representation )
+            AbstractRepresentation representation )
     {
         Map<AbstractNode, Node> nodeMapping = new HashMap<AbstractNode, Node>();
         for ( AbstractNode abstractNode : representation.nodes() )
@@ -352,22 +361,21 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     }
 
     protected boolean applyRepresentation( AbstractElement abstractElement,
-        PropertyContainer container )
+            PropertyContainer container )
     {
         boolean changed = false;
-        for ( Map.Entry<String, Collection<Object>> entry :
-            abstractElement.properties().entrySet() )
+        for ( Map.Entry<String, Collection<Object>> entry : abstractElement.properties().entrySet() )
         {
             Collection<Object> rawValues = new PropertyArraySet<Object>(
-                graphDB(), container, entry.getKey() );
+                    graphDB(), container, entry.getKey() );
             for ( Object value : entry.getValue() )
             {
                 boolean added = rawValues.add( value );
                 if ( added )
                 {
                     changed = true;
-//                    debug( "\t+Property" + " (" + container + ") "
-//                        + entry.getKey() + " " + "[" + value + "]" );
+                    // debug( "\t+Property" + " (" + container + ") "
+                    // + entry.getKey() + " " + "[" + value + "]" );
                 }
             }
         }
@@ -375,22 +383,21 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     }
 
     protected boolean removeRepresentation( AbstractElement abstractElement,
-        PropertyContainer container )
+            PropertyContainer container )
     {
         boolean changed = false;
-        for ( Map.Entry<String, Collection<Object>> entry :
-            abstractElement.properties().entrySet() )
+        for ( Map.Entry<String, Collection<Object>> entry : abstractElement.properties().entrySet() )
         {
             Collection<Object> rawValues = new PropertyArraySet<Object>(
-                graphDB(), container, entry.getKey() );
+                    graphDB(), container, entry.getKey() );
             for ( Object value : entry.getValue() )
             {
                 boolean removed = rawValues.remove( value );
                 if ( removed )
                 {
                     changed = true;
-//                    debug( "\t-Property" + " (" + container + ") "
-//                        + entry.getKey() + " " + "[" + value + "]" );
+                    // debug( "\t-Property" + " (" + container + ") "
+                    // + entry.getKey() + " " + "[" + value + "]" );
                 }
             }
         }
@@ -398,7 +405,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     }
 
     protected boolean nodeIsEmpty( AbstractNode abstractNode, Node node,
-        boolean checkRelationships )
+            boolean checkRelationships )
     {
         if ( checkRelationships && node.hasRelationship() )
         {
@@ -416,19 +423,19 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     }
 
     protected boolean removeRepresentation( AbstractElement element,
-        PropertyContainer container, String key )
+            PropertyContainer container, String key )
     {
         boolean someRemoved = false;
-        Collection<Object> rawValues = new PropertyArraySet<Object>(
-            graphDB(), container, key );
+        Collection<Object> rawValues = new PropertyArraySet<Object>( graphDB(),
+                container, key );
         for ( Object value : element.properties().get( key ) )
         {
             boolean removed = rawValues.remove( value );
             if ( removed )
             {
                 someRemoved = true;
-//                debug( "\t-Property (" + container + ") "
-//                    + key + " " + "[" + value + "]" );
+                // debug( "\t-Property (" + container + ") "
+                // + key + " " + "[" + value + "]" );
             }
         }
         return someRemoved;
@@ -436,7 +443,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
 
     protected Object getRealLiteralValue( Literal literal )
     {
-    	// TODO Conversion?
+        // TODO Conversion?
         return literal.getValue();
     }
 
@@ -448,9 +455,9 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
             getFulltextIndex().index( node, predicate, literalValue );
         }
     }
-    
+
     protected void removeLiteralIndex( Node node, Uri predicate,
-        Object literalValue )
+            Object literalValue )
     {
         index().removeIndex( node, LITERAL_VALUE_KEY, literalValue );
         if ( getFulltextIndex() != null )
@@ -465,18 +472,18 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
     }
 
     protected Relationship createRelationship( Node from,
-        AbstractRelationship abstractRelationship, Node to )
+            AbstractRelationship abstractRelationship, Node to )
     {
-        Relationship relationship = from.createRelationshipTo( to,
-            relationshipType( abstractRelationship.
-                getRelationshipTypeName() ) );
+        Relationship relationship = from.createRelationshipTo(
+                to,
+                relationshipType( abstractRelationship.getRelationshipTypeName() ) );
         applyRepresentation( abstractRelationship, relationship );
-//        debugCreateRelationship( relationship );
+        // debugCreateRelationship( relationship );
         return relationship;
     }
 
     protected Node createNode( AbstractNode abstractNode,
-    	Map<AbstractNode, Node> nodeMapping )
+            Map<AbstractNode, Node> nodeMapping )
     {
         Node node = graphDb.createNode();
         Uri uri = abstractNode.getUriOrNull();
@@ -486,7 +493,7 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
             index().index( node, URI_PROPERTY_KEY, uri.getUriAsString() );
         }
         applyRepresentation( abstractNode, node );
-//        debugCreateNode( node, uri == null ? null : uri.toString() );
+        // debugCreateNode( node, uri == null ? null : uri.toString() );
         if ( nodeMapping != null )
         {
             nodeMapping.put( abstractNode, node );
@@ -510,28 +517,28 @@ public abstract class AbstractUriBasedExecutor implements RepresentationExecutor
             getLockManager().releaseReadLock( relationship );
         }
     }
-    
+
     private LockManager getLockManager()
     {
-        return ((EmbeddedGraphDatabase) graphDb).getConfig().getLockManager();
+        return ( (EmbeddedGraphDatabase) graphDb ).getConfig().getLockManager();
     }
-    
+
     protected static class NodeContext
     {
         private Node node;
         private boolean created;
-        
+
         protected NodeContext( Node node, boolean created )
         {
             this.node = node;
             this.created = created;
         }
-        
+
         protected Node getNode()
         {
             return this.node;
         }
-        
+
         protected boolean wasCreated()
         {
             return this.created;
