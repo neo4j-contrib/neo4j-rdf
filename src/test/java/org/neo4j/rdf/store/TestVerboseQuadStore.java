@@ -7,8 +7,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import javax.naming.OperationNotSupportedException;
-
 import org.junit.Test;
 import org.neo4j.rdf.fulltext.QueryResult;
 import org.neo4j.rdf.model.BlankNode;
