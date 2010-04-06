@@ -68,8 +68,14 @@ public abstract class AbstractUriBasedExecutor implements
                                     + luceneIndex.getClass().getSimpleName()
                                     + "#enableCache" + ") to "
                                     + DEFAULT_URI_CACHE_SIZE );
-                luceneIndex.enableCache( URI_PROPERTY_KEY,
+                try 
+                {
+                    luceneIndex.enableCache( URI_PROPERTY_KEY,
                         DEFAULT_URI_CACHE_SIZE );
+                } catch (UnsupportedOperationException uoe)
+                {
+                    System.out.println("INFO: Could not enable cache: " + uoe);
+                }
             }
         }
     }

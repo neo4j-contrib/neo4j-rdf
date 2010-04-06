@@ -6,8 +6,11 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 
 import org.junit.Test;
+import org.neo4j.index.IndexService;
+import org.neo4j.index.lucene.LuceneFulltextQueryIndexService;
 import org.neo4j.rdf.fulltext.QueryResult;
 import org.neo4j.rdf.model.BlankNode;
 import org.neo4j.rdf.model.CompleteStatement;
@@ -324,5 +327,38 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
         addedNick.getMetadata().remove( key1 );
         assertFalse( addedNick.getMetadata().has( key1 ) );
         deleteEntireNodeSpace();
+    }
+    
+    @Test
+    public void testFulltextLuceneIndexer()
+    {
+        IndexService indexer = new LuceneFulltextQueryIndexService( graphDb() );
+        VerboseQuadStore store = new VerboseQuadStore(graphDb(), indexer);
+        CompleteStatement mattiasTypePerson = completeStatement(
+                TestUri.MATTIAS, TestUri.RDF_TYPE, TestUri.PERSON,
+                TestUri.MATTIAS_PUBLIC_GRAPH );
+        store.addStatement( mattiasTypePerson );
+        restartTx();
+        //a full URI search
+        Iterable<CompleteStatement> results = store.getStatements( wildcardStatement(
+                new Uri("\"" + TestUri.MATTIAS.uriAsString() + "\""),
+                TestUri.RDF_TYPE.toUri(), TestUri.PERSON.toUri(),
+                TestUri.MATTIAS_PUBLIC_GRAPH.toUri() ), false );
+        Iterator<CompleteStatement> iterator = results.iterator();
+        assertTrue( "should get a result", iterator.hasNext() );
+        // wildcard search on "http*person/mattias
+        results = store.getStatements( wildcardStatement(
+                new Uri("http*person/mattias"),
+                TestUri.RDF_TYPE.toUri(), TestUri.PERSON.toUri(),
+                TestUri.MATTIAS_PUBLIC_GRAPH.toUri() ), false );
+        iterator = results.iterator();
+        assertTrue( "should get a result", iterator.hasNext() );
+        //escaping with lucene query syntax
+        results = store.getStatements( wildcardStatement(
+                new Uri("http\\://*person/mattias"),
+                TestUri.RDF_TYPE.toUri(), TestUri.PERSON.toUri(),
+                TestUri.MATTIAS_PUBLIC_GRAPH.toUri() ), false );
+        iterator = results.iterator();
+        assertTrue( "should get a result", iterator.hasNext() );
     }
 }
