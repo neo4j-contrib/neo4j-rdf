@@ -8,8 +8,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
 
 import javax.transaction.SystemException;
 
@@ -139,8 +137,7 @@ public abstract class StoreTestCase extends Neo4jTestCase
         }
     }
 
-    protected void remove( RdfStore store, WildcardStatement statement,
-        int numberOfTimes )
+    protected void remove( WildcardStatement statement, int numberOfTimes )
     {
         while ( numberOfTimes-- > 0 )
         {
@@ -162,23 +159,18 @@ public abstract class StoreTestCase extends Neo4jTestCase
         return new CompleteStatement( new Uri( subject ), new Uri( predicate ),
             new Literal( object ), context, null );
     }
-
-    protected void removeStatements( RdfStore store,
-        List<CompleteStatement> statements )
+    
+    protected void removeStatements( CompleteStatement... statements )
     {
-        removeStatements( store, statements, 1 );
+        removeStatements( 1, statements );
     }
-
-    protected void removeStatements( RdfStore store,
-        List<CompleteStatement> statements, int numberOfTimesForEach )
+    
+    protected void removeStatements( int numberOfTimesForEach, CompleteStatement... statements )
     {
-        while ( !statements.isEmpty() )
+        for ( CompleteStatement statement : statements )
         {
-            CompleteStatement statement = statements.remove(
-                new Random().nextInt( statements.size() ) );
-            WildcardStatement wildcardStatement =
-                statement.asWildcardStatement();
-            remove( store, wildcardStatement, numberOfTimesForEach );
+            WildcardStatement wildcardStatement = statement.asWildcardStatement();
+            remove( wildcardStatement, numberOfTimesForEach );
         }
     }
 

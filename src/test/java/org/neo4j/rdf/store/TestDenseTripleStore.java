@@ -70,4 +70,17 @@ public class TestDenseTripleStore extends TripleStoreAbstractTestCase
         removeStatements( new WildcardStatement( TestUri.MATTIAS.toUri(),
             new Wildcard( "p" ), new Wildcard( "o" ), new Wildcard( "c" ) ) );
     }
+    
+    @Test
+    public void shouldBeAbleToHaveMoreThanOneLiteralStatementOnSameSubject()
+    {
+        CompleteStatement mattiasName = completeStatement( TestUri.MATTIAS, TestUri.FOAF_NAME,
+                new Literal( "Mattias" ), Context.NULL );
+        CompleteStatement mattiasSecondName = completeStatement( TestUri.MATTIAS, TestUri.FOAF_NAME,
+                new Literal( "Matte" ), Context.NULL );
+        addStatements( mattiasName, mattiasSecondName );
+        assertResult( wildcardStatement( TestUri.MATTIAS.toUri(), TestUri.FOAF_NAME.toUri(),
+                new Wildcard( "name" ), Context.NULL ), mattiasName, mattiasSecondName );
+        removeStatements( mattiasName, mattiasSecondName );
+    }
 }
