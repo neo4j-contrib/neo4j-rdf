@@ -1,5 +1,8 @@
 package org.neo4j.rdf.store;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
@@ -220,9 +223,15 @@ public abstract class RdfStoreImpl implements RdfStore
 
     public void removeStatements( WildcardStatement statement )
     {
+        Collection<Statement> statementsToRemove = new ArrayList<Statement>();
         for ( Statement statementFromGet : getStatements( statement, false ) )
         {
-            removeStatementSimple( statementFromGet );
+            statementsToRemove.add( statementFromGet );
+        }
+        
+        for ( Statement statementToRemove : statementsToRemove )
+        {
+            removeStatementSimple( statementToRemove );
         }
     }
 
