@@ -67,7 +67,7 @@ public abstract class Neo4jTestCase
         return basePath;
     }
     
-    protected static void deleteFileOrDirectory( File file )
+    public static void deleteFileOrDirectory( File file )
     {
         if ( !file.exists() )
         {
