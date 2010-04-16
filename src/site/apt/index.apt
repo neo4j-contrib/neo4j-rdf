@@ -55,6 +55,8 @@ Instantiating an RdfStore
 	
 %{source-code|snippet=rdfStoreUsage|file=src/test/java/examples/SiteExamples.java}
 
+	The correct shut down order is RdfStore, IndexService, GraphDatabaseService
+
 Fulltext index
 
 	There's an extra feature you can use to enable fulltext search in all
