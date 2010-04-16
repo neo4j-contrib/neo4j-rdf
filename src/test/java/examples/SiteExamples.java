@@ -29,9 +29,9 @@ public class SiteExamples
     }
     
     @Test
-    // START SNIPPET: rdfStoreUsage
     public void rdfStoreUsage()
     {
+        // START SNIPPET: rdfStoreUsage
         GraphDatabaseService graphDb = new EmbeddedGraphDatabase( "target/var/examples" );
         LuceneIndexService indexService = new LuceneIndexService( graphDb );
         RdfStore store = new VerboseQuadStore( graphDb, indexService );
@@ -53,17 +53,13 @@ public class SiteExamples
         {
             System.out.println( "Found statement " + statement );
         }
-        
-        store.shutDown();
-        indexService.shutdown();
-        graphDb.shutdown();
+        // END SNIPPET: rdfStoreUsage
     }
-    // END SNIPPET: rdfStoreUsage
     
     @Test
-    // START SNIPPET: fulltextIndexing
     public void fulltextIndexing()
     {
+        // START SNIPPET: fulltextIndexing
         GraphDatabaseService graphDb = new EmbeddedGraphDatabase( "target/var/examples" );
         LuceneIndexService indexService = new LuceneIndexService( graphDb );
         FulltextIndex fulltextIndex = new SimpleFulltextIndex( graphDb,
@@ -76,10 +72,10 @@ public class SiteExamples
         {
             System.out.println( searchHit.getStatement() );
         }
+        // END SNIPPET: fulltextIndexing
                 
         store.shutDown();
         indexService.shutdown();
         graphDb.shutdown();
     }
-    // END SNIPPET: fulltextIndexing
 }
