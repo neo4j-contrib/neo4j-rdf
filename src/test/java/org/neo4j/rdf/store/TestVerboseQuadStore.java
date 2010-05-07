@@ -16,6 +16,7 @@ import org.neo4j.rdf.model.BlankNode;
 import org.neo4j.rdf.model.CompleteStatement;
 import org.neo4j.rdf.model.Context;
 import org.neo4j.rdf.model.Literal;
+import org.neo4j.rdf.model.Resource;
 import org.neo4j.rdf.model.Uri;
 import org.neo4j.rdf.model.Wildcard;
 import org.neo4j.rdf.model.WildcardStatement;
@@ -360,5 +361,50 @@ public class TestVerboseQuadStore extends QuadStoreAbstractTestCase
                 TestUri.MATTIAS_PUBLIC_GRAPH.toUri() ), false );
         iterator = results.iterator();
         assertTrue( "should get a result", iterator.hasNext() );
+    }
+    
+    @Test
+    public void testRenameContext()
+    {
+        Context context1 = new Context( BASE_URI + "majn" );
+        Context context2 = new Context( BASE_URI + "yours" );
+        Resource resource1 = new Uri( BASE_URI + "r1" );
+        Resource resource2 = new Uri( BASE_URI + "r2" );
+        CompleteStatement statement1c1 = new CompleteStatement(
+                resource1, new Uri( BASE_URI + "knows" ),
+                resource2, context1 );
+        CompleteStatement statement2c1 = new CompleteStatement(
+                resource1, new Uri( BASE_URI + "name" ),
+                new Literal( "Mattias" ), context1 );
+        CompleteStatement statement1c2 = new CompleteStatement(
+                resource1, new Uri( BASE_URI + "knows" ),
+                resource2, context2 );
+        addStatements( statement1c1, statement2c1, statement1c2 );
+        assertResult( new WildcardStatement( new Wildcard( "s" ),
+                new Wildcard( "r" ), new Wildcard( "o" ), context1 ),
+                statement1c1, statement2c1 );
+        assertResult( new WildcardStatement( new Wildcard( "s" ),
+                new Wildcard( "r" ), new Wildcard( "o" ), context2 ),
+                statement1c2 );
+        
+        Context newContext1 = new Context( BASE_URI + "mine" );
+        CompleteStatement statement1nc1 = new CompleteStatement(
+                resource1, new Uri( BASE_URI + "knows" ),
+                resource2, newContext1 );
+        CompleteStatement statement2nc1 = new CompleteStatement(
+                resource1, new Uri( BASE_URI + "name" ),
+                new Literal( "Mattias" ), newContext1 );
+        
+        new RdfStoreTools( store() ).renameContext( context1, newContext1 );
+        assertResult( new WildcardStatement( new Wildcard( "s" ),
+                new Wildcard( "r" ), new Wildcard( "o" ), context1 ) );
+        assertResult( new WildcardStatement( new Wildcard( "s" ),
+                new Wildcard( "r" ), new Wildcard( "o" ), context2 ),
+                statement1c2 );
+        assertResult( new WildcardStatement( new Wildcard( "s" ),
+                new Wildcard( "r" ), new Wildcard( "o" ), newContext1 ),
+                statement1nc1, statement2nc1 );
+        
+        deleteEntireNodeSpace();
     }
 }
