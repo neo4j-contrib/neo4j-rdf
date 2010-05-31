@@ -10,7 +10,6 @@ import java.util.HashSet;
 import org.neo4j.graphdb.Node;
 import org.neo4j.index.IndexHits;
 import org.neo4j.index.IndexService;
-import org.neo4j.index.Isolation;
 
 public class FilteringIndexService implements IndexService
 {
@@ -113,11 +112,6 @@ public class FilteringIndexService implements IndexService
         this.indexService.removeIndex( key );
     }
     
-    public void setIsolation( Isolation level )
-    {
-        this.indexService.setIsolation( level );
-    }
-
     public void shutdown()
     {
         this.indexService.shutdown();
