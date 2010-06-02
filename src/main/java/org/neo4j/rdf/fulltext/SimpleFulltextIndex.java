@@ -44,7 +44,7 @@ import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.neo4j.commons.iterator.FilteringIterator;
-import org.neo4j.commons.iterator.IteratorAsIterable;
+import org.neo4j.commons.iterator.IteratorUtil;
 import org.neo4j.commons.iterator.PrefetchingIterator;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -380,7 +380,7 @@ public class SimpleFulltextIndex implements FulltextIndex
             Iterator<RawQueryResult> resultIterator =
                 new ResultIterator( hits, snippetCountLimit,
                     highlighter );
-            return new IteratorAsIterable<RawQueryResult>( resultIterator );
+            return IteratorUtil.asIterable( resultIterator );
         }
         catch ( IOException e )
         {
