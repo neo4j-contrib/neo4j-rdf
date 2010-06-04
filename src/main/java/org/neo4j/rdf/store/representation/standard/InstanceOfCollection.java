@@ -1,7 +1,6 @@
 package org.neo4j.rdf.store.representation.standard;
 
 import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.meta.model.MetaModel;
@@ -13,9 +12,9 @@ public class InstanceOfCollection extends RelationshipSet<MetaModelClass>
 {
     private MetaModel model;
     
-    public InstanceOfCollection( GraphDatabaseService graphDb, MetaModel model, Node node )
+    public InstanceOfCollection( MetaModel model, Node node )
     {
-        super( graphDb, node, MetaModelRelTypes.META_IS_INSTANCE_OF,
+        super( node, MetaModelRelTypes.META_IS_INSTANCE_OF,
             Direction.OUTGOING );
         this.model = model;
     }

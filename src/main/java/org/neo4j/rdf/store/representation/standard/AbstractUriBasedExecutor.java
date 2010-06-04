@@ -373,7 +373,7 @@ public abstract class AbstractUriBasedExecutor implements
         for ( Map.Entry<String, Collection<Object>> entry : abstractElement.properties().entrySet() )
         {
             Collection<Object> rawValues = new PropertyArraySet<Object>(
-                    graphDB(), container, entry.getKey() );
+                    container, entry.getKey() );
             for ( Object value : entry.getValue() )
             {
                 boolean added = rawValues.add( value );
@@ -395,7 +395,7 @@ public abstract class AbstractUriBasedExecutor implements
         for ( Map.Entry<String, Collection<Object>> entry : abstractElement.properties().entrySet() )
         {
             Collection<Object> rawValues = new PropertyArraySet<Object>(
-                    graphDB(), container, entry.getKey() );
+                    container, entry.getKey() );
             for ( Object value : entry.getValue() )
             {
                 boolean removed = rawValues.remove( value );
@@ -432,7 +432,7 @@ public abstract class AbstractUriBasedExecutor implements
             PropertyContainer container, String key )
     {
         boolean someRemoved = false;
-        Collection<Object> rawValues = new PropertyArraySet<Object>( graphDB(),
+        Collection<Object> rawValues = new PropertyArraySet<Object>(
                 container, key );
         for ( Object value : element.properties().get( key ) )
         {

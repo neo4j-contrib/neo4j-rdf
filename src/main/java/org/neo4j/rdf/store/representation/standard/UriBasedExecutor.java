@@ -288,7 +288,7 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
             abstractElement.properties().entrySet() )
         {
             Collection<Object> rawValues = new PropertyArraySet<Object>(
-                graphDB(), container, entry.getKey() );
+                container, entry.getKey() );
             for ( Object value : entry.getValue() )
             {
                 boolean added = rawValues.add( value );
@@ -315,7 +315,7 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
         {
             String key = entry.getKey();
             Collection<Object> rawValues = new PropertyArraySet<Object>(
-                graphDB(), relationship, key );
+                relationship, key );
             removeAll( relationship, key, rawValues,
                 entry.getValue(), "Property" );
         }
@@ -350,7 +350,7 @@ public class UriBasedExecutor extends AbstractUriBasedExecutor
         {
             String key = entry.getKey();
             Collection<Object> rawValues = new PropertyArraySet<Object>(
-                graphDB(), node, key );
+                node, key );
             for ( Object value : entry.getValue() )
             {
                 boolean removed = rawValues.remove( value );
