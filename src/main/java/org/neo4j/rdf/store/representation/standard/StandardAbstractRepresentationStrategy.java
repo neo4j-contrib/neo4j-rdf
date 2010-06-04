@@ -4,7 +4,10 @@ import java.text.ParseException;
 
 import org.neo4j.meta.model.MetaModel;
 import org.neo4j.meta.model.MetaModelProperty;
+import org.neo4j.meta.model.MetaModelRelationship;
 import org.neo4j.meta.model.PropertyRange;
+import org.neo4j.meta.model.Range;
+import org.neo4j.meta.model.RelationshipRange;
 import org.neo4j.rdf.model.Literal;
 import org.neo4j.rdf.model.Resource;
 import org.neo4j.rdf.model.Statement;
@@ -123,7 +126,7 @@ abstract class StandardAbstractRepresentationStrategy
 //            contextKeys );
     }
 
-    private PropertyRange getPropertyRange( Uri predicate )
+    private Range<?> getPropertyRange( Uri predicate )
     {
         if ( model == null )
         {
@@ -133,18 +136,30 @@ abstract class StandardAbstractRepresentationStrategy
         MetaModelProperty property =
             model.getGlobalNamespace().getMetaProperty(
                 predicate.getUriAsString(), false );
-        return property == null ? null :
-            model.lookup( property, MetaModel.LOOKUP_PROPERTY_RANGE );
+        if ( property != null )
+        {
+            return model.lookup( property, MetaModel.LOOKUP_PROPERTY_RANGE );
+        }
+        else
+        {
+            MetaModelRelationship relationship = model.getGlobalNamespace().getMetaRelationship(
+                    predicate.getUriAsString(), false );
+            if ( relationship != null )
+            {
+                return model.lookup( relationship, MetaModel.LOOKUP_RELATIONSHIPTYPE_RANGE );
+            }
+        }
+        return null;
     }
 
     private boolean pointsToObjectType( Uri predicate )
     {
-        PropertyRange range = getPropertyRange( predicate );
+        Range<?> range = getPropertyRange( predicate );
         if ( range == null )
         {
         	return false;
         }
-        return !range.isDatatype();
+        return range instanceof RelationshipRange;
     }
 
     protected Object convertLiteralValueToRealValue( Statement statement,
@@ -153,7 +168,7 @@ abstract class StandardAbstractRepresentationStrategy
         Object result = literalValue;
         if ( result != null && result instanceof String && model != null )
         {
-            PropertyRange range = getPropertyRange(
+            PropertyRange range = (PropertyRange) getPropertyRange(
                 ( Uri ) statement.getPredicate() );
             if ( range != null && range.isDatatype() )
             {
