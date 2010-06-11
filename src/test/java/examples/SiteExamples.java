@@ -54,6 +54,9 @@ public class SiteExamples
             System.out.println( "Found statement " + statement );
         }
         // END SNIPPET: rdfStoreUsage
+        store.shutDown();
+        indexService.shutdown();
+        graphDb.shutdown();
     }
     
     @Test
