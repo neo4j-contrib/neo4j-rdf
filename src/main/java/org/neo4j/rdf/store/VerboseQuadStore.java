@@ -11,6 +11,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
+import org.neo4j.commons.Predicate;
 import org.neo4j.commons.iterator.FilteringIterable;
 import org.neo4j.commons.iterator.FilteringIterator;
 import org.neo4j.commons.iterator.IterableWrapper;
@@ -385,23 +386,22 @@ public class VerboseQuadStore extends RdfStoreImpl
         
         return new NestingIterable<Node, Node>( contexts )
         {
-            private Set<Long> visitedMiddleNodes = new HashSet<Long>();
+            private Predicate<Node> predicate = new Predicate<Node>()
+            {
+                private final Set<Long> set = new HashSet<Long>();
+                
+                public boolean accept( Node item )
+                {
+                    return set.add( item.getId() );
+                }
+            };
             
             @Override
             protected Iterator<Node> createNestedIterator( Node contextNode )
             {
-                return new FilteringIterator<Node>(
-                    new RelationshipToNodeIterable( contextNode,
-                        contextNode.getRelationships(
-                            VerboseQuadStrategy.RelTypes.
-                            IN_CONTEXT, Direction.INCOMING ) ).iterator() )
-                {
-                    @Override
-                    protected boolean passes( Node middleNode )
-                    {
-                        return visitedMiddleNodes.add( middleNode.getId() );
-                    }
-                };
+                return new FilteringIterator<Node>( new RelationshipToNodeIterable( contextNode,
+                        contextNode.getRelationships( VerboseQuadStrategy.RelTypes.
+                                IN_CONTEXT, Direction.INCOMING ) ).iterator(), predicate );
             }
         };
         
@@ -722,16 +722,15 @@ public class VerboseQuadStore extends RdfStoreImpl
             
             if ( !statement.getContext().isWildcard() )
             {
-                iterator = new FilteringIterator<Node>( iterator )
+                iterator = new FilteringIterator<Node>( iterator, new Predicate<Node>()
                 {
-                    @Override
-                    protected boolean passes( Node contextNode )
+                    public boolean accept( Node contextNode )
                     {
                         String contextUri = getNodeUriOrNull( contextNode );
                         return new Context( contextUri ).equals(
                             statement.getContext() );
                     }
-                };
+                });
             }
             return iterator;
         }
@@ -768,50 +767,44 @@ public class VerboseQuadStore extends RdfStoreImpl
     
     private class PredicateFilteredNodes extends FilteringIterable<Node>
     {
-        private Statement statement;
-        
-        PredicateFilteredNodes( Statement statment, Iterable<Node> source )
+        PredicateFilteredNodes( final Statement statement, Iterable<Node> source )
         {
-            super( source );
-            this.statement = statment;
-        }
-        
-        @Override
-        protected boolean passes( Node middleNode )
-        {
-            Iterator<Relationship> rels = middleNode.getRelationships(
-                Direction.INCOMING ).iterator();
-            if ( !rels.hasNext() )
+            super( source, new Predicate<Node>()
             {
-                return false;
-            }
-            Relationship relationship = rels.next();
-            return relationship.getType().name().equals( ( ( Uri )
-                statement.getPredicate() ).getUriAsString() );
+                public boolean accept( Node middleNode )
+                {
+                    Iterator<Relationship> rels = middleNode.getRelationships(
+                            Direction.INCOMING ).iterator();
+                    if ( !rels.hasNext() )
+                    {
+                        return false;
+                    }
+                    Relationship relationship = rels.next();
+                    return relationship.getType().name().equals( ( ( Uri )
+                        statement.getPredicate() ).getUriAsString() );
+                }
+            } );
         }
     }
     
     private class ObjectFilteredRelationships
         extends FilteringIterable<Relationship>
     {
-        private Statement statement;
-        
-        ObjectFilteredRelationships( Statement statement,
-            Iterable<Relationship> source )
+        ObjectFilteredRelationships( final Statement statement,
+                Iterable<Relationship> source )
         {
-            super( source );
-            this.statement = statement;
-        }
-        
-        @Override
-        protected boolean passes( Relationship subjectToMiddleRel )
-        {
-            Node middleNode = subjectToMiddleRel.getEndNode();
-            Node objectNode = middleNode.getSingleRelationship(
-                subjectToMiddleRel.getType(), Direction.OUTGOING ).getEndNode();
-            Value objectValue = getValueForObjectNode(
-                subjectToMiddleRel.getType().name(), objectNode );
-            return objectValue.equals( statement.getObject() );
+            super( source, new Predicate<Relationship>()
+            {
+                public boolean accept( Relationship subjectToMiddleRel )
+                {
+                    Node middleNode = subjectToMiddleRel.getEndNode();
+                    Node objectNode = middleNode.getSingleRelationship(
+                        subjectToMiddleRel.getType(), Direction.OUTGOING ).getEndNode();
+                    Value objectValue = getValueForObjectNode(
+                        subjectToMiddleRel.getType().name(), objectNode );
+                    return objectValue.equals( statement.getObject() );
+                }
+            });
         }
     }
     

@@ -43,6 +43,7 @@ import org.apache.lucene.search.highlight.QueryScorer;
 import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.neo4j.commons.Predicate;
 import org.neo4j.commons.iterator.FilteringIterator;
 import org.neo4j.commons.iterator.IteratorUtil;
 import org.neo4j.commons.iterator.PrefetchingIterator;
@@ -396,19 +397,21 @@ public class SimpleFulltextIndex implements FulltextIndex
         }
     }
     
+    private static Predicate<RawQueryResult> OK_RESULT = new Predicate<RawQueryResult>()
+    {
+        public boolean accept( RawQueryResult result )
+        {
+            return result != null && result != SPECIAL_FILTERING_INSTANCE;
+        }
+    };
+    
     private class ResultIterator extends FilteringIterator<RawQueryResult>
     {
         ResultIterator( Hits hits, int snippetCountLimit,
             Highlighter highlighter )
         {
             super( new RawResultIterator( hits, snippetCountLimit,
-                highlighter ) );
-        }
-
-        @Override
-        protected boolean passes( RawQueryResult result )
-        {
-            return result != null && result != SPECIAL_FILTERING_INSTANCE;
+                highlighter ), OK_RESULT );
         }
     }
     

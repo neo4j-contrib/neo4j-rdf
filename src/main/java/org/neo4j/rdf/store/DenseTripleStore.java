@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import org.neo4j.commons.Predicate;
 import org.neo4j.commons.iterator.FilteringIterator;
 import org.neo4j.commons.iterator.IteratorWrapper;
 import org.neo4j.commons.iterator.NestingIterator;
@@ -372,6 +373,14 @@ public class DenseTripleStore extends RdfStoreImpl
         }
     }
     
+    private static Predicate<String> NOT_URI_PROPERTY = new Predicate<String>()
+    {
+        public boolean accept( String item )
+        {
+            return !item.equals( AbstractUriBasedExecutor.URI_PROPERTY_KEY );
+        }
+    };
+    
     private class ResourceToLiteralTripleIterator
         extends PrefetchingIterator<Object[]>
     {
@@ -392,15 +401,7 @@ public class DenseTripleStore extends RdfStoreImpl
         private Iterator<String> getResourceLiteralPredicates( Node resource )
         {
             return new FilteringIterator<String>(
-                resource.getPropertyKeys().iterator() )
-            {
-                @Override
-                protected boolean passes( String item )
-                {
-                    return !item.equals(
-                        AbstractUriBasedExecutor.URI_PROPERTY_KEY );
-                }
-            };
+                resource.getPropertyKeys().iterator(), NOT_URI_PROPERTY );
         }
 
         @Override
@@ -449,20 +450,17 @@ public class DenseTripleStore extends RdfStoreImpl
     
     private class ObjectFilteredIterator extends FilteringIterator<Object[]>
     {
-        private Value object;
-        
         private ObjectFilteredIterator( Iterator<Object[]> source,
-            Value object )
+            final Value object )
         {
-            super( source );
-            this.object = object;
-        }
-
-        @Override
-        protected boolean passes( Object[] triple )
-        {
-            Value tripleObject = getValueForObject( triple[ 2 ] );
-            return this.object.equals( tripleObject );
+            super( source, new Predicate<Object[]>()
+            {
+                public boolean accept( Object[] triple )
+                {
+                    Value tripleObject = getValueForObject( triple[ 2 ] );
+                    return object.equals( tripleObject );
+                }
+            });
         }
     }
     
