@@ -576,9 +576,9 @@ public class VerboseQuadStore extends RdfStoreImpl
             statement, middleNodes ) );
         
         // Enable this when we implement inferencing.
-        //    	return new QuadToStatementIterable(
-        //    		new QuadWithInferencingIterable(
-        //    		new MiddleNodeToQuadIterable( statement, middleNodes ) ) );
+//        return new QuadToStatementIterable(
+//                new QuadWithInferencingIterable(
+//                        new MiddleNodeToQuadIterable( statement, middleNodes ) ) );
     }
     
     private class QuadToStatementIterable
@@ -611,38 +611,38 @@ public class VerboseQuadStore extends RdfStoreImpl
         }
     }
     
-    //    private class QuadWithInferencingIterable
-    //        extends NestingIterable<Object[]>
-    //    {
-    //        QuadWithInferencingIterable( Iterable<Object[]> quads )
-    //        {
-    //            super( quads );
-    //        }
-    //        
-    //        @Override
-    //        protected Iterator<Object[]> createNestedIterator( Object[] item )
-    //        {
-    //            return new SingleIterator<Object[]>( item );
-    //        }
-    //    }
-    
-    //    private class SingleIterator<T> extends PrefetchingIterator<T>
-    //    {
-    //        private T item;
-    //    	
-    //        SingleIterator( T item )
-    //        {
-    //            this.item = item;
-    //        }
-    //    	
-    //        @Override
-    //        protected T fetchNextOrNull()
-    //        {
-    //            T result = item;
-    //            item = null;
-    //            return result;
-    //        }
-    //    }
+//    private class QuadWithInferencingIterable
+//            extends NestingIterable<Object[], Object[]>
+//    {
+//        QuadWithInferencingIterable( Iterable<Object[]> quads )
+//        {
+//            super( quads );
+//        }
+//
+//        @Override
+//        protected Iterator<Object[]> createNestedIterator( Object[] item )
+//        {
+//            return new SingleIterator<Object[]>( item );
+//        }
+//    }
+//
+//    private class SingleIterator<T> extends PrefetchingIterator<T>
+//    {
+//        private T item;
+//
+//        SingleIterator( T item )
+//        {
+//            this.item = item;
+//        }
+//
+//        @Override
+//        protected T fetchNextOrNull()
+//        {
+//            T result = item;
+//            item = null;
+//            return result;
+//        }
+//    }
     
     /**
      * The Object[] will contain
