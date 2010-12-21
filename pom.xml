@@ -15,9 +15,9 @@
   <groupId>org.neo4j</groupId>
   <artifactId>neo4j-rdf</artifactId>
   <version>0.7-SNAPSHOT</version>
-  <name>Neo4j RDF</name>
+  <name>Neo4j - RDF</name>
   <description>Neo4j-backed RDF store</description>
-  <url>http://components.neo4j.org/${project.artifactId}/</url>
+  <url>http://components.neo4j.org/${project.artifactId}/${project.version}</url>
 
   <scm>
     <connection>scm:svn:https://svn.neo4j.org/components/${short-name}/trunk/</connection>
@@ -117,4 +117,13 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <distributionManagement>
+    <site>
+      <id>neo4j-site</id>
+      <url>scpexe://components.neo4j.org/home/neo/components/${project.artifactId}/${project.version}</url>
+    </site>
+  </distributionManagement>
+
 </project>
+
