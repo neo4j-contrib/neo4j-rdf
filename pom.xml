@@ -19,6 +19,17 @@
   <description>Neo4j-backed RDF store</description>
   <url>http://components.neo4j.org/${project.artifactId}/${project.version}</url>
 
+<repositories>
+ <repository>
+                  <id>neo4j-public-repository</id>
+                  <name>Publically available Maven 2 repository for Neo4j</name>
+                  <url>http://m2.neo4j.org</url>
+                  <snapshots>
+                    <enabled>true</enabled>
+                  </snapshots>
+                </repository>
+              </repositories>
+
   <scm>
     <connection>scm:svn:https://svn.neo4j.org/components/${short-name}/trunk/</connection>
     <url>https://trac.neo4j.org/browser/components/${short-name}</url>
@@ -82,7 +93,7 @@
     <dependency>
       <groupId>org.neo4j</groupId>
       <artifactId>neo4j-shell</artifactId>
-      <version>1.1-SNAPSHOT</version>
+      <version>1.1</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -93,12 +104,12 @@
     <dependency>
       <groupId>org.neo4j</groupId>
       <artifactId>neo4j-utils</artifactId>
-      <version>1.1-SNAPSHOT</version>
+      <version>1.1</version>
     </dependency>
     <dependency>
       <groupId>org.neo4j</groupId>
       <artifactId>neo4j-index</artifactId>
-      <version>1.1-SNAPSHOT</version>
+      <version>1.1</version>
     </dependency>
     <dependency>
       <groupId>org.neo4j</groupId>
